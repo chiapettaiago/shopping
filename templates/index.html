@@ -9,15 +9,15 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </head>
 <body>
-    <h2>Carrinho de Compras</h2>
+    <h2 class="text-center">Carrinho de Compras</h2>
 
     <!-- Exibição do Valor Total da Compra -->
     <div>
-        <h4 class="text-success">Valor Total da Compra: R$ {{ total_price }}</h3>
+        <h4 class="text-success text-center">Valor Total da Compra: R$ {{ total_price }}</h3>
     </div>
     
     <!-- Botão para abrir o modal de adição -->
-    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addItemModal">
+    <button type="button" class="btn btn-primary ml-3" data-toggle="modal" data-target="#addItemModal">
         Adicionar Item
     </button>
 
