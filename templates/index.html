@@ -1,0 +1,167 @@
+<html>
+<head>
+    <title>Aplicativo de Lista de Compras</title>
+    <!-- Inclua os links para o Bootstrap CSS e JavaScript -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
+<body>
+    <h1>Aplicativo de Lista de Compras</h1>
+
+    <!-- Exibição do Valor Total da Compra -->
+    <div>
+        <h4 class="text-success">Valor Total da Compra: R$ {{ total_price }}</h3>
+    </div>
+    
+    <!-- Botão para abrir o modal de adição -->
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addItemModal">
+        Adicionar Item
+    </button>
+
+    {% set categories = ['Alimentos', 'Bebidas', 'Limpeza'] %}
+
+    {% for category in categories %}
+        <h2 class="text-center">{{ category }}</h2>
+        <div class="table-responsive">
+        <table class="table text-center">
+            <thead>
+                <tr>
+                    <th>Selecionar</th>
+                    <th>Nome</th>
+                    <th>Quantidade</th>
+                    <th>Preço</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in shopping_list %}
+                    {% if item.category == category %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" name="selected_items" value="{{ item.id }}">
+                            </td>
+                            <td>{{ item.name }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>{{ item.price }}</td>
+                            <td>
+                                <!-- Botões de Ação -->
+                                <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteItemModal{{ item.id }}">
+                                    Excluir
+                                </button>
+                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editItemModal{{ item.id }}">
+                                    Editar
+                                </button>
+                            </td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+        <!-- Modal de Exclusão -->
+        {% for item in shopping_list %}
+            {% if item.category == category %}
+                <div class="modal fade" id="deleteItemModal{{ item.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteItemModalLabel{{ item.id }}" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="deleteItemModalLabel{{ item.id }}">Confirmar Exclusão</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                Tem certeza de que deseja excluir o item "{{ item.name }}"?
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                                <a href="{{ url_for('delete', id=item.id) }}" class="btn btn-danger">Excluir</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+
+        <!-- Modal de Edição -->
+        {% for item in shopping_list %}
+            {% if item.category == category %}
+                <div class="modal fade" id="editItemModal{{ item.id }}" tabindex="-1" role="dialog" aria-labelledby="editItemModalLabel{{ item.id }}" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="editItemModalLabel{{ item.id }}">Editar Item</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <!-- Formulário de Edição de Item -->
+                                <form action="{{ url_for('edit', id=item.id) }}" method="POST">
+                                    <div class="form-group">
+                                        <label for="editName{{ item.id }}">Nome:</label>
+                                        <input type="text" class="form-control" id="editName{{ item.id }}" name="name" value="{{ item.name }}" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="editQuantity{{ item.id }}">Quantidade:</label>
+                                        <input type="number" class="form-control" id="editQuantity{{ item.id }}" name="quantity" value="{{ item.quantity }}" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="editPrice{{ item.id }}">Preço:</label>
+                                        <input type="number" step="0.01" class="form-control" id="editPrice{{ item.id }}" name="price" value="{{ item.price }}" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Salvar</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+
+    <!-- Modal de Adição de Item -->
+    <div class="modal fade" id="addItemModal" tabindex="-1" role="dialog" aria-labelledby="addItemModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addItemModalLabel">Adicionar Item</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- Formulário de Adição de Item -->
+                    <form action="{{ url_for('add') }}" method="POST">
+                        <div class="form-group">
+                            <label for="name">Nome:</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="quantity">Quantidade:</label>
+                            <input type="number" class="form-control" id="quantity" name="quantity" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="price">Preço:</label>
+                            <input type="number" step="0.01" class="form-control" id="price" name="price" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="category">Categoria:</label>
+                            <select class="form-control" id="category" name="category" required>
+                                <option value="Alimentos">Alimentos</option>
+                                <option value="Bebidas">Bebidas</option>
+                                <option value="Limpeza">Limpeza</option>
+                                <!-- Adicione outras categorias conforme necessário -->
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Adicionar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
