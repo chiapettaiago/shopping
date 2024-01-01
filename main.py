@@ -29,6 +29,10 @@ def history():
     total_price = sum(item.quantity * item.price for item in shopping_list)
     return render_template('history.html', shopping_list=shopping_list, total_price=total_price)
 
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
 @app.route('/add', methods=['POST'])
 def add():
     name = request.form['name']
