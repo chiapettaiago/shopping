@@ -24,7 +24,6 @@
         <table class="table table-bordered text-center">
             <thead>
                 <tr>
-                    <th>Selecionar</th>
                     <th>Nome</th>
                     <th>Quantidade</th>
                     <th>Preço</th>
@@ -34,9 +33,6 @@
             <tbody>
                 {% for item in shopping_list %}
                         <tr>
-                            <td>
-                                <input type="checkbox" name="selected_items" value="{{ item.id }}">
-                            </td>
                             <td>{{ item.name }}</td>
                             <td>{{ item.quantity }}</td>
                             <td>{{ item.price }}</td>
