@@ -1,6 +1,6 @@
 <html>
 <head>
-    <title>Aplicativo de Lista de Compras</title>
+    <title>Dispensa</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Inclua os links para o Bootstrap CSS e JavaScript -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
@@ -9,6 +9,7 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </head>
 <body>
+    {% include 'navbar.html' %}
     <h2 class="text-center">Carrinho de Compras</h2>
 
     <!-- Exibição do Valor Total da Compra -->
@@ -26,7 +27,7 @@
     {% for category in categories %}
         <h2 class="text-center">{{ category }}</h2>
         <div class="table-responsive">
-        <table class="table table-bordered text-center">
+        <table class="table table-striped-collumns text-center">
             <thead>
                 <tr>
                     <th>Selecionar</th>
@@ -54,6 +55,7 @@
                                 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editItemModal{{ item.id }}">
                                     <i class="fa-solid fa-pencil"></i>
                                 </button>
+                                <a href="{{ url_for('buy', id=item.id) }}" class="btn btn-success"><i class="fa-solid fa-cart-plus"></i></a>
                             </td>
                         </tr>
                     {% endif %}

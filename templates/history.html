@@ -1,0 +1,51 @@
+<html>
+<head>
+    <title>Dispensa</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Inclua os links para o Bootstrap CSS e JavaScript -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
+<body>
+    {% include 'navbar.html' %}
+    <h2 class="text-center">Todas as compras</h2>
+
+    <!-- Exibição do Valor Total da Compra -->
+    <div>
+        <h4 class="text-success text-center">Valor Total da Compra: R$ {{ total_price }}</h3>
+    </div>
+
+    {% set categories = ['Alimentos', 'Bebidas', 'Limpeza'] %}
+
+        <div class="table-responsive">
+        <table class="table table-bordered text-center">
+            <thead>
+                <tr>
+                    <th>Selecionar</th>
+                    <th>Nome</th>
+                    <th>Quantidade</th>
+                    <th>Preço</th>
+                     <th>Data</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in shopping_list %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" name="selected_items" value="{{ item.id }}">
+                            </td>
+                            <td>{{ item.name }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>{{ item.price }}</td>
+                            <td>{{ item.date.date() }}</td>
+                        </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script src="https://kit.fontawesome.com/39df25bfda.js" crossorigin="anonymous"></script>
+</body>
+</html>
