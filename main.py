@@ -2,11 +2,20 @@ from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from datetime import datetime
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shopping_list.db'
+app.config['SECRET_KEY'] = 'homium-001'  # Defina uma chave secreta única e segura
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'  # Define a rota para redirecionamento quando o usuário não estiver logado
+
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    password = db.Column(db.String(80), nullable=False)
 
 class ShoppingList(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -16,24 +25,67 @@ class ShoppingList(db.Model):
     category = db.Column(db.String(50), nullable=False)
     status = db.Column(db.Integer)
     date = db.Column(db.DateTime)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        user = User.query.filter_by(username=username, password=password).first()
+        if user:
+            login_user(user)  # Login do usuário
+            return redirect(url_for('index'))
+        else:
+            return render_template('login.html', error='Usuário ou senha incorretos.')
+    return render_template('login.html')
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user:
+            return render_template('register.html', error='Nome de usuário já existe.')
+        new_user = User(username=username, password=password)
+        db.session.add(new_user)
+        db.session.commit()
+        return redirect(url_for('login'))
+    return render_template('register.html')
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()  # Logout do usuário
+    return redirect(url_for('index'))
+
     
 @app.route('/')
+@login_required
 def index():
     shopping_list = ShoppingList.query.filter_by(status=0).all()
     total_price = sum(item.quantity * item.price for item in shopping_list)
     return render_template('index.html', shopping_list=shopping_list, total_price=total_price)
 
 @app.route('/history')
+@login_required
 def history():
     shopping_list = ShoppingList.query.filter_by(status=1).all()
     total_price = sum(item.quantity * item.price for item in shopping_list)
     return render_template('history.html', shopping_list=shopping_list, total_price=total_price)
 
 @app.route('/about')
+@login_required
 def about():
     return render_template('about.html')
 
 @app.route('/add', methods=['POST'])
+@login_required
 def add():
     name = request.form['name']
     quantity = request.form['quantity']
@@ -50,6 +102,7 @@ def add():
 
 # Rota para excluir um item
 @app.route('/delete/<int:id>', methods=['GET'])
+@login_required
 def delete(id):
     item_to_delete = ShoppingList.query.get(id)
     if item_to_delete:
@@ -59,6 +112,7 @@ def delete(id):
 
 # Rota para editar um item
 @app.route('/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
 def edit(id):
     item_to_edit = ShoppingList.query.get(id)
     if request.method == 'POST':
@@ -71,6 +125,7 @@ def edit(id):
 
 # Rota para comprar um item
 @app.route('/buy/<int:id>', methods=['GET'])
+@login_required
 def buy(id):
     item_to_buy = ShoppingList.query.get(id)
     if item_to_buy:
