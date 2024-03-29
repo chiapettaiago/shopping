@@ -4,105 +4,49 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chat GPT</title>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    background-color: #f5f5f5;
-    scroll-behavior: smooth;
-  }
-  .container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    margin-top: 50px;
-  }
-  .message {
-    margin-bottom: 20px;
-    padding: 10px 15px;
-    border-radius: 10px;
-  }
-  .user-message {
-    background-color: #007bff;
-    color: #fff;
-    align-self: flex-end;
-  }
-  .bot-message {
-    background-color: #28a745;
-    color: #fff;
-    
-  }
-  .message p {
-    margin: 0;
-  }
-  .input-container {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    background-color: #333; /* Cor de fundo da sua escolha */
-    color: #fff; /* Cor do texto da sua escolha */
-    padding: 10px; /* Espaçamento interno para o conteúdo dentro do rodapé */
-    text-align: center; /* Alinhamento do texto ao centro */
-    z-index: 999;
-    height: auto;
-  }
-  input[type="text"] {
-    width: calc(100% - 75px);
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px 0 0 5px;
-  }
-  input[type="submit"] {
-    width: 75px;
-    padding: 10px;
-    border: none;
-    background-color: #007bff;
-    color: #fff;
-    border-radius: 0 5px 5px 0;
-    cursor: pointer;
-    margin-top: 1%;
+    .response-container {
+    margin-bottom: 20px; /* Adiciona espaço entre a resposta e a caixa de entrada */
   }
 </style>
 </head>
 <body>
     {% include 'navbar.html' %}
-  <div class="container" id="chat-container">
-    <div class="message bot-message">
-      <p>Olá, sou Assistente de finanças. Estou aqui para ajudar...</p>
+  <div class="container mt-5">
+    <div class="message alert shadow alert-primary" role="alert">
+      <p>Olá {{username}},  sou seu Assistente de finanças. Estou aqui para ajudar...</p>
     </div>
   </div>
-  <div class="input-container">
-    <form action="" method="post">
-    <input type="text" id="entrada" name="entrada" placeholder="Digite sua mensagem...">
-    <input type="submit" value="Enviar" onclick="sendMessage()">
-        </form>
-  </div>
-  <div class="resposta">
-    {% if response %}
-    <div class="container" id="chat-container">
-        <div class="message bot-message">
-          <p> Usuário: <span> {{ entrada }} </span></p>
-          <p> Assistente: <span> {{ response }} </span></p>
-        </div>
+
+  <div class="container fixed-bottom mb-3 p-3">
+    <form action="" method="post" class="input-group">
+      <input type="text" id="entrada" name="entrada" class="form-control" placeholder="Digite sua mensagem...">
+      <div class="input-group-append shadow mb-3">
+        <input type="submit" value="Enviar" class="btn btn-primary" onclick="sendMessage()">
       </div>
-      {% endif %}
+    </form>
+  </div>
+
+  <div class="container mt-3 resposta">
+    {% if response %}
+    <div class="message alert shadow alert-success" style="overflow-y: auto;" role="alert">
+      <p>Usuário: <span>{{ entrada }}</span></p><br>
+      <p>Assistente: <span>{{ response }}</span></p><br>
+    </div>
+    {% endif %}
   </div>
 
   <script>
     function sendMessage() {
       var userInput = document.getElementById("user-input").value;
       if (userInput.trim() !== "") {
-        var chatContainer = document.getElementById("chat-container");
+        var chatContainer = document.querySelector(".resposta");
         var userMessage = document.createElement("div");
-        userMessage.classList.add("message", "user-message");
+        userMessage.classList.add("message", "alert", "alert-primary");
         userMessage.innerHTML = "<p>" + userInput + "</p>";
         chatContainer.appendChild(userMessage);
-        document.getElementById("entrada").value = "";
+        document.getElementById("user-input").value = "";
         // Aqui você pode adicionar a lógica para a resposta do bot GPT
       }
     }

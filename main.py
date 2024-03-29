@@ -99,8 +99,6 @@ def register():
 def ai():
     if request.method == 'POST':
         entrada = request.form['entrada']
-        convo = model.start_chat(history=[
-        ])
 
         # Interagir com o modelo
         convo = model.start_chat(history=[])
@@ -111,7 +109,7 @@ def ai():
         print("Entrada do usuário:", entrada)
         print("Resposta do modelo:", response)
         return render_template('ai.html', response=response, entrada=entrada)
-    return render_template('ai.html')
+    return render_template('ai.html', username=current_user.username)
 
 @app.route('/logout')
 @login_required
