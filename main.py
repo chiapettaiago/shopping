@@ -2,7 +2,9 @@ from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from datetime import datetime
-from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+import google.generativeai as genai
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shopping_list.db'
@@ -11,6 +13,40 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'  # Define a rota para redirecionamento quando o usuário não estiver logado
+
+# Configurar a API uma única vez
+genai.configure(api_key="AIzaSyACwhkVuzzzK4tXoSarhqaL9Y4CJ-FUc3M")
+
+# Configuração do modelo
+generation_config = {
+    "temperature": 0.9,
+    "top_p": 1,
+    "top_k": 1,
+    "max_output_tokens": 2048,
+}
+
+safety_settings = [
+    {
+        "category": "HARM_CATEGORY_HARASSMENT",
+        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+    },
+    {
+        "category": "HARM_CATEGORY_HATE_SPEECH",
+        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+    },
+    {
+        "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+    },
+    {
+        "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+    },
+]
+
+model = genai.GenerativeModel(model_name="gemini-1.0-pro",
+                              generation_config=generation_config,
+                              safety_settings=safety_settings)
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -25,6 +61,7 @@ class ShoppingList(db.Model):
     category = db.Column(db.String(50), nullable=False)
     status = db.Column(db.Integer)
     date = db.Column(db.DateTime)
+    username = db.Column(db.String(50), db.ForeignKey('user.username'))
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -57,6 +94,24 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html')
 
+@app.route('/ai', methods=['GET' , 'POST'])
+@login_required
+def ai():
+    if request.method == 'POST':
+        entrada = request.form['entrada']
+        convo = model.start_chat(history=[
+        ])
+
+        # Interagir com o modelo
+        convo = model.start_chat(history=[])
+        convo.send_message(entrada)
+
+        # Obter a resposta do modelo
+        response = convo.last.text
+        print("Entrada do usuário:", entrada)
+        print("Resposta do modelo:", response)
+        return render_template('ai.html', response=response, entrada=entrada)
+    return render_template('ai.html')
 
 @app.route('/logout')
 @login_required
@@ -68,7 +123,7 @@ def logout():
 @app.route('/')
 @login_required
 def index():
-    shopping_list = ShoppingList.query.filter_by(status=0).all()
+    shopping_list = ShoppingList.query.filter_by(status=0, username=current_user.username).all()
     total_price = sum(item.quantity * item.price for item in shopping_list)
     return render_template('index.html', shopping_list=shopping_list, total_price=total_price)
 
@@ -95,7 +150,7 @@ def add():
 
     # Adicione validações e formatação necessárias aqui
 
-    new_item = ShoppingList(name=name, quantity=quantity, price=price, category=category, status=0, date=current_time)
+    new_item = ShoppingList(name=name, quantity=quantity, price=price, category=category, status=0, date=current_time, username=current_user.username)
     db.session.add(new_item)
     db.session.commit()
     return redirect(url_for('index'))
@@ -104,7 +159,7 @@ def add():
 @app.route('/delete/<int:id>', methods=['GET'])
 @login_required
 def delete(id):
-    item_to_delete = ShoppingList.query.get(id)
+    item_to_delete = ShoppingList.session.get(id)
     if item_to_delete:
         db.session.delete(item_to_delete)
         db.session.commit()
@@ -114,7 +169,7 @@ def delete(id):
 @app.route('/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit(id):
-    item_to_edit = ShoppingList.query.get(id)
+    item_to_edit = ShoppingList.session.get(id)
     if request.method == 'POST':
         item_to_edit.name = request.form['name']
         item_to_edit.quantity = request.form['quantity']
@@ -127,7 +182,7 @@ def edit(id):
 @app.route('/buy/<int:id>', methods=['GET'])
 @login_required
 def buy(id):
-    item_to_buy = ShoppingList.query.get(id)
+    item_to_buy = ShoppingList.session.get(id)
     if item_to_buy:
         item_to_buy.status = 1
         db.session.commit()
