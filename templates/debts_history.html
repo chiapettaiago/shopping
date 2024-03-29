@@ -1,0 +1,44 @@
+<html>
+<head>
+    <title>Histórico</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="300">
+    <!-- Inclua os links para o Bootstrap CSS e JavaScript -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
+<body>
+    {% include 'navbar.html' %}
+    <h2 class="text-center">Todas as dívidas</h2>
+
+    <!-- Exibição do Valor Total da Compra -->
+    <div>
+        <h4 class="text-success text-center">Valor Total das Dividas: R$ {{ total_value }}</h3>
+    </div>
+
+        <div class="table-responsive">
+        <table class="table table-bordered text-center">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Vencimento</th>
+                    <th>Valor</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in debts_history %}
+                        <tr>
+                            <td>{{ item.name }}</td>
+                            <td>{{ item.maturity }}</td>
+                            <td> R$ {{ item.value }}</td>
+                        </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script src="https://kit.fontawesome.com/39df25bfda.js" crossorigin="anonymous"></script>
+</body>
+</html>

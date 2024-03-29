@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 import google.generativeai as genai
 
@@ -59,6 +59,15 @@ class ShoppingList(db.Model):
     quantity = db.Column(db.Integer, nullable=False)
     price = db.Column(db.Float, nullable=False)
     category = db.Column(db.String(50), nullable=False)
+    status = db.Column(db.Integer)
+    date = db.Column(db.DateTime)
+    username = db.Column(db.String(50), db.ForeignKey('user.username'))
+    
+class debts(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), nullable=False)
+    maturity = db.Column(db.Integer, nullable=False)
+    value = db.Column(db.Float, nullable=False)
     status = db.Column(db.Integer)
     date = db.Column(db.DateTime)
     username = db.Column(db.String(50), db.ForeignKey('user.username'))
@@ -128,9 +137,17 @@ def index():
 @app.route('/history')
 @login_required
 def history():
-    shopping_list = ShoppingList.query.filter_by(status=1).all()
+    shopping_list = ShoppingList.query.filter_by(status=1,).all()
     total_price = sum(item.quantity * item.price for item in shopping_list)
     return render_template('history.html', shopping_list=shopping_list, total_price=total_price)
+
+
+@app.route('/debts_history')
+@login_required
+def debts_history():
+    debts_history = debts.query.filter_by(status=1).all()
+    total_value = sum(item.value for item in debts_history)
+    return render_template('debts_history.html', debts_history=debts_history, total_value=total_value)
 
 @app.route('/about')
 @login_required
@@ -153,21 +170,52 @@ def add():
     db.session.commit()
     return redirect(url_for('index'))
 
+@app.route('/debts', methods=['GET','POST'])
+@login_required
+def debitos():
+    debts_list = debts.query.filter_by(status=0, username=current_user.username).all()
+    total_price = sum(item.value for item in debts_list)
+    return render_template('finance.html', debts_list=debts_list, total_price=total_price)
+
+@app.route('/add_debts', methods=['POST'])
+@login_required
+def add_debts():
+    name = request.form['name']
+    maturity = request.form['maturity']
+    value = request.form['value']
+    current_time = datetime.now()
+
+    # Adicione validações e formatação necessárias aqui
+
+    new_item = debts(name=name, maturity=maturity, value=value, date=current_time, status=0, username=current_user.username)
+    db.session.add(new_item)
+    db.session.commit()
+    return redirect(url_for('debitos'))
 # Rota para excluir um item
 @app.route('/delete/<int:id>', methods=['GET'])
 @login_required
 def delete(id):
-    item_to_delete = ShoppingList.session.get(id)
+    item_to_delete = ShoppingList.query.get(id)
     if item_to_delete:
         db.session.delete(item_to_delete)
         db.session.commit()
     return redirect(url_for('index'))
 
+
+@app.route('/delete_debts/<int:id>', methods=['GET'])
+@login_required
+def delete_debts(id):
+    item_to_delete = debts.query.get(id)
+    if item_to_delete:
+        db.session.delete(item_to_delete)
+        db.session.commit()
+    return redirect(url_for('debitos'))
+
 # Rota para editar um item
 @app.route('/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit(id):
-    item_to_edit = ShoppingList.session.get(id)
+    item_to_edit = ShoppingList.query.get(id)
     if request.method == 'POST':
         item_to_edit.name = request.form['name']
         item_to_edit.quantity = request.form['quantity']
@@ -176,15 +224,38 @@ def edit(id):
         return redirect(url_for('index'))
     return render_template('edit.html', item=item_to_edit)
 
+# Rota para editar um item
+@app.route('/edit_debts/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_debts(id):
+    item_to_edit = debts.query.get(id)
+    if request.method == 'POST':
+        item_to_edit.name = request.form['name']
+        item_to_edit.maturity = request.form['maturity']
+        item_to_edit.value = request.form['value']
+        db.session.commit()
+        return redirect(url_for('debitos'))
+    return render_template('edit.html', item=item_to_edit)
+
 # Rota para comprar um item
 @app.route('/buy/<int:id>', methods=['GET'])
 @login_required
 def buy(id):
-    item_to_buy = ShoppingList.session.get(id)
+    item_to_buy = ShoppingList.query.get(id)
     if item_to_buy:
         item_to_buy.status = 1
         db.session.commit()
     return redirect(url_for('index'))
+
+# Rota para comprar um item
+@app.route('/pay/<int:id>', methods=['GET'])
+@login_required
+def pay(id):
+    item_to_buy = debts.query.get(id)
+    if item_to_buy:
+        item_to_buy.status = 1
+        db.session.commit()
+    return redirect(url_for('debitos'))
 
 if __name__ == '__main__':
     with app.app_context():
