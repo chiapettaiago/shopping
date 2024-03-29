@@ -137,7 +137,7 @@ def index():
 @app.route('/history')
 @login_required
 def history():
-    shopping_list = ShoppingList.query.filter_by(status=1,).all()
+    shopping_list = ShoppingList.query.filter_by(status=1, username=current_user.username).all()
     total_price = sum(item.quantity * item.price for item in shopping_list)
     return render_template('history.html', shopping_list=shopping_list, total_price=total_price)
 
@@ -145,7 +145,7 @@ def history():
 @app.route('/debts_history')
 @login_required
 def debts_history():
-    debts_history = debts.query.filter_by(status=1).all()
+    debts_history = debts.query.filter_by(status=1, username=current_user.username).all()
     total_value = sum(item.value for item in debts_history)
     return render_template('debts_history.html', debts_history=debts_history, total_value=total_value)
 
