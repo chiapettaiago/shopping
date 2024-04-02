@@ -7,7 +7,8 @@ import google.generativeai as genai
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shopping_list.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://casaos:casaos@shoppinglist.ddns.net/casaos'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Desativar o rastreamento de modificações para evitar avisos
 app.config['SECRET_KEY'] = 'homium-001'  # Defina uma chave secreta única e segura
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
@@ -66,10 +67,9 @@ class ShoppingList(db.Model):
 class debts(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable=False)
-    maturity = db.Column(db.Integer, nullable=False)
+    maturity = db.Column(db.DateTime(50), nullable=False)
     value = db.Column(db.Float, nullable=False)
     status = db.Column(db.Integer)
-    date = db.Column(db.DateTime)
     username = db.Column(db.String(50), db.ForeignKey('user.username'))
 
 @login_manager.user_loader
@@ -177,17 +177,17 @@ def debitos():
     total_price = sum(item.value for item in debts_list)
     return render_template('finance.html', debts_list=debts_list, total_price=total_price)
 
+
 @app.route('/add_debts', methods=['POST'])
 @login_required
 def add_debts():
     name = request.form['name']
     maturity = request.form['maturity']
     value = request.form['value']
-    current_time = datetime.now()
 
     # Adicione validações e formatação necessárias aqui
 
-    new_item = debts(name=name, maturity=maturity, value=value, date=current_time, status=0, username=current_user.username)
+    new_item = debts(name=name, maturity=maturity, value=value, status=0, username=current_user.username)
     db.session.add(new_item)
     db.session.commit()
     return redirect(url_for('debitos'))
