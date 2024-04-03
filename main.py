@@ -72,6 +72,13 @@ class debts(db.Model):
     value = db.Column(db.Float, nullable=False)
     status = db.Column(db.Integer)
     username = db.Column(db.String(50), db.ForeignKey('user.username'))
+    
+class Balance(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), nullable=False)
+    value = db.Column(db.Float, nullable=False)
+    status = db.Column(db.Integer)
+    username = db.Column(db.String(50), db.ForeignKey('user.username'))
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -179,6 +186,28 @@ def debitos():
     total_price = sum(item.value for item in debts_list)
     total_price_formatado = round(total_price, 2)
     return render_template('finance.html', debts_list=debts_list, total_price=total_price_formatado)
+
+@app.route('/balance', methods=['GET','POST'])
+@login_required
+def balance():
+    balance_list = Balance.query.filter_by(status=0, username=current_user.username).all()
+    total_price = sum(item.value for item in balance_list)
+    total_price_formatado = round(total_price, 2)
+    return render_template('finance.html', debts_list=balance_list, total_price=total_price_formatado)
+
+@app.route('/add_balance', methods=['POST'])
+@login_required
+def add_balance():
+    name = request.form['name']
+    maturity = request.form['maturity']
+    value = request.form['value']
+
+    # Adicione validações e formatação necessárias aqui
+
+    new_item = Balance(name=name, maturity=maturity, value=value, status=0, username=current_user.username)
+    db.session.add(new_item)
+    db.session.commit()
+    return redirect(url_for('balance'))
 
 
 @app.route('/add_debts', methods=['POST'])
