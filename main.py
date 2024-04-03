@@ -140,7 +140,8 @@ def index():
 def history():
     shopping_list = ShoppingList.query.filter_by(status=1, username=current_user.username).all()
     total_price = sum(item.quantity * item.price for item in shopping_list)
-    return render_template('history.html', shopping_list=shopping_list, total_price=total_price)
+    total_price_formatado = round(total_price, 2)
+    return render_template('history.html', shopping_list=shopping_list, total_price=total_price_formatado)
 
 
 @app.route('/debts_history')
@@ -176,7 +177,8 @@ def add():
 def debitos():
     debts_list = debts.query.filter_by(status=0, username=current_user.username).all()
     total_price = sum(item.value for item in debts_list)
-    return render_template('finance.html', debts_list=debts_list, total_price=total_price)
+    total_price_formatado = round(total_price, 2)
+    return render_template('finance.html', debts_list=debts_list, total_price=total_price_formatado)
 
 
 @app.route('/add_debts', methods=['POST'])
