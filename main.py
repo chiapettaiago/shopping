@@ -4,10 +4,11 @@ from flask_migrate import Migrate
 from datetime import datetime, timedelta
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 import google.generativeai as genai
+import mysql.connector
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://casaos:casaos@shoppinglist.ddns.net/casaos'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://casaos:casaos@shoppinglist.ddns.net/casaos'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Desativar o rastreamento de modificações para evitar avisos
 app.config['SECRET_KEY'] = 'homium-001'  # Defina uma chave secreta única e segura
 db = SQLAlchemy(app)
