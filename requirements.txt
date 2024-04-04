@@ -4,3 +4,4 @@ flask_migrate
 flask_login
 Flask-MySQLdb
 google-generativeai
+reportlab

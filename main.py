@@ -1,10 +1,12 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, make_response, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from datetime import datetime, timedelta
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 import google.generativeai as genai
 import mysql.connector
+from reportlab.pdfgen import canvas
+import io
 
 
 app = Flask(__name__)
@@ -288,6 +290,37 @@ def pay(id):
         item_to_buy.status = 1
         db.session.commit()
     return redirect(url_for('debitos'))
+
+@app.route('/export_pdf', methods=['GET'])
+def export_pdf():
+    # Obtenha a lista de contas a pagar do banco de dados (ou de onde você a obtém)
+    debts_list = debts.query.filter_by(status=0, username=current_user.username).all()
+
+    # Crie um buffer de memória para armazenar o PDF
+    buffer = io.BytesIO()
+
+    # Crie um documento PDF usando o ReportLab
+    pdf = canvas.Canvas(buffer)
+
+    # Adicione o conteúdo ao documento PDF
+    y_position = 750
+    for debt in debts_list:
+        pdf.drawString(100, y_position, f"{debt.name}: R${debt.value}")
+        y_position -= 20
+
+    # Salve o PDF no buffer
+    pdf.save()
+
+    # Reinicie a posição do buffer
+    buffer.seek(0)
+
+    # Crie uma resposta Flask para enviar o arquivo PDF como anexo
+    response = make_response(buffer.getvalue())
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = 'attachment; filename=contas_a_pagar.pdf'
+
+    return response
+
 
 if __name__ == '__main__':
     with app.app_context():
