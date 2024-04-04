@@ -8,6 +8,12 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <style>
+        .btn-height {
+        height: 38px; /* Ajuste conforme necessário */
+        }
+
+    </style>
 </head>
 <body>
     {% include 'navbar.html' %}
@@ -19,11 +25,11 @@
     </div>
     
     <!-- Botão para abrir o modal de adição -->
-    <button type="button" class="btn btn-primary ml-3 mb-2 mt-2" data-toggle="modal" data-target="#addItemModal">
+    <button type="button" class="btn btn-primary ml-3 mb-2 mt-2 btn-height" title="Adicionar Item" data-toggle="modal" data-target="#addItemModal">
         <i class="fa-thin fa-plus"></i>
     </button>
     <!-- Botão para abrir o modal de adição -->
-    <button type="button" class="btn btn-danger ml-3 mb-2 mt-2" onclick="downloadPDF()">
+    <button type="button" class="btn btn-danger ml-3 mb-2 mt-2 btn-height" title="Exportar como PDF" onclick="downloadPDF()">
         <i class="fa-solid fa-file-pdf"></i>
     </button>
         <div class="table-responsive">
