@@ -11,11 +11,11 @@
 </head>
 <body>
     {% include 'navbar.html' %}
-    <h2 class="text-center">Todas as compras</h2>
+    <h2 class="text-center">Compras realizadas</h2>
 
     <!-- Exibição do Valor Total da Compra -->
     <div>
-        <h4 class="text-success text-center">Valor Total da Compra: R$ {{ total_price }}</h3>
+        <h4 class="text-success text-center">Valor Total das Compras Realizadas: R$ {{ total_price }}</h3>
     </div>
 
     {% set categories = ['Alimentos', 'Bebidas', 'Limpeza'] %}

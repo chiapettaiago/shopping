@@ -188,9 +188,16 @@ def add():
 @login_required
 def debitos():
     debts_list = debts.query.filter_by(status=0, username=current_user.username).all()
+    balance_list = Balance.query.filter_by(status=0, username=current_user.username).all()
+    debts_1 = debts.query.filter_by(status=1, username=current_user.username).all()
+    balance_total = sum(item.value for item in balance_list)
+    debts_total = sum(item.value for item in debts_1)
+    balance_total_formatado = round(balance_total, 2)
+    debts_1_formatado = round(debts_total, 2)
     total_price = sum(item.value for item in debts_list)
     total_price_formatado = round(total_price, 2)
-    return render_template('finance.html', debts_list=debts_list, total_price=total_price_formatado)
+    saldo_atualizado = balance_total_formatado - debts_1_formatado
+    return render_template('finance.html', debts_list=debts_list, total_price=total_price_formatado, saldo_atualizado=saldo_atualizado)
 
 @app.route('/balance', methods=['GET','POST'])
 @login_required
@@ -198,18 +205,17 @@ def balance():
     balance_list = Balance.query.filter_by(status=0, username=current_user.username).all()
     total_price = sum(item.value for item in balance_list)
     total_price_formatado = round(total_price, 2)
-    return render_template('finance.html', debts_list=balance_list, total_price=total_price_formatado)
+    return render_template('balance.html', balance_list=balance_list, total_price=total_price_formatado)
 
 @app.route('/add_balance', methods=['POST'])
 @login_required
 def add_balance():
     name = request.form['name']
-    maturity = request.form['maturity']
     value = request.form['value']
 
     # Adicione validações e formatação necessárias aqui
 
-    new_item = Balance(name=name, maturity=maturity, value=value, status=0, username=current_user.username)
+    new_item = Balance(name=name, value=value, status=0, username=current_user.username)
     db.session.add(new_item)
     db.session.commit()
     return redirect(url_for('balance'))
