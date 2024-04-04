@@ -6,6 +6,9 @@ from flask_login import LoginManager, UserMixin, login_user, logout_user, login_
 import google.generativeai as genai
 import mysql.connector
 from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 import io
 
 
@@ -296,20 +299,44 @@ def export_pdf():
     # Obtenha a lista de contas a pagar do banco de dados (ou de onde você a obtém)
     debts_list = debts.query.filter_by(status=0, username=current_user.username).all()
 
+    # Defina a largura da página
+    page_width, page_height = letter
+
+    # Defina a largura das colunas da tabela
+    col_widths = [page_width * 0.4, page_width * 0.6]
+
     # Crie um buffer de memória para armazenar o PDF
     buffer = io.BytesIO()
 
     # Crie um documento PDF usando o ReportLab
-    pdf = canvas.Canvas(buffer)
+    pdf = SimpleDocTemplate(buffer, pagesize=letter)
+    elements = []
 
-    # Adicione o conteúdo ao documento PDF
-    y_position = 750
+    # Crie uma lista de dados para a tabela
+    data = [["Nome", "Valor"]]
+
     for debt in debts_list:
-        pdf.drawString(100, y_position, f"{debt.name}: R${debt.value}")
-        y_position -= 20
+        data.append([debt.name, f"R${debt.value}"])
 
-    # Salve o PDF no buffer
-    pdf.save()
+    # Crie a tabela
+    table = Table(data, colWidths=col_widths)
+
+    # Estilize a tabela
+    style = TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.gray),
+                        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                        ('GRID', (0, 0), (-1, -1), 1, colors.black)])
+
+    table.setStyle(style)
+
+    # Adicione a tabela aos elementos do PDF
+    elements.append(table)
+
+    # Construa o PDF
+    pdf.build(elements)
 
     # Reinicie a posição do buffer
     buffer.seek(0)
