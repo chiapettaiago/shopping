@@ -2,6 +2,6 @@ flask
 flask_sqlalchemy
 flask_migrate
 flask_login
-Flask-MySQLdb
+mysql_connector_python
 google-generativeai
 reportlab

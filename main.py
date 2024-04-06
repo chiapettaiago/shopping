@@ -197,7 +197,8 @@ def debitos():
     total_price = sum(item.value for item in debts_list)
     total_price_formatado = round(total_price, 2)
     saldo_atualizado = balance_total_formatado - debts_1_formatado
-    return render_template('finance.html', debts_list=debts_list, total_price=total_price_formatado, saldo_atualizado=saldo_atualizado)
+    saldo_atualizado_formatado = round(saldo_atualizado, 2)
+    return render_template('finance.html', debts_list=debts_list, total_price=total_price_formatado, saldo_atualizado=saldo_atualizado_formatado)
 
 @app.route('/balance', methods=['GET','POST'])
 @login_required
