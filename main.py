@@ -145,7 +145,8 @@ def logout():
 def index():
     shopping_list = ShoppingList.query.filter_by(status=0, username=current_user.username).all()
     total_price = sum(item.quantity * item.price for item in shopping_list)
-    return render_template('index.html', shopping_list=shopping_list, total_price=total_price)
+    total_price_formatado = round(total_price, 2)
+    return render_template('index.html', shopping_list=shopping_list, total_price=total_price_formatado)
 
 @app.route('/history')
 @login_required
