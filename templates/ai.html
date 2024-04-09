@@ -13,14 +13,29 @@
     .response-container {
     margin-bottom: 20px; /* Adiciona espaço entre a resposta e a caixa de entrada */
   }
+
+  .message {
+    overflow-x: hidden; /* Remove a rolagem horizontal */
+    overflow-y: auto; /* Permite a rolagem vertical */
+    max-height: 300px; /* Define a altura máxima do card de resposta */
+  }
 </style>
 </head>
 <body>
     {% include 'navbar.html' %}
   <div class="container mt-5">
     <div class="message alert shadow alert-primary" role="alert">
-      <p>Olá {{username}},  sou seu Assistente de finanças. Estou aqui para ajudar...</p>
+      <p>Olá {{username}}, meu nome é Echo sou seu Assistente de finanças. O que posso fazer por você?</p>
     </div>
+  </div>
+
+  <div class="container mt-3 mb-5">
+    {% if response %}
+    <div class="message alert shadow alert-success" role="alert">
+      <p>Usuário: <span>{{ entrada }}</span></p><br>
+      <pre>Assistente: <span>{{ response|safe }}</span></pre><br>
+    </div>
+    {% endif %}
   </div>
 
   <div class="container fixed-bottom mb-3 p-3">
@@ -30,15 +45,6 @@
         <input type="submit" value="Enviar" class="btn btn-primary" onclick="sendMessage()">
       </div>
     </form>
-  </div>
-
-  <div class="container mt-3 resposta">
-    {% if response %}
-    <div class="message alert shadow alert-success" style="overflow-y: auto;" role="alert">
-      <p>Usuário: <span>{{ entrada }}</span></p><br>
-      <p>Assistente: <span>{{ response }}</span></p><br>
-    </div>
-    {% endif %}
   </div>
 
   <script>
