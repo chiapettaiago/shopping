@@ -172,6 +172,7 @@ def index():
     shopping_list = ShoppingList.query.filter_by(status=0, username=current_user.username).all()
     total_price = sum(item.quantity * item.price for item in shopping_list)
     total_price_formatado = round(total_price, 2)
+    db.session.remove()
     return render_template('index.html', shopping_list=shopping_list, total_price=total_price_formatado)
 
 @app.route('/history')
@@ -180,6 +181,7 @@ def history():
     shopping_list = ShoppingList.query.filter_by(status=1, username=current_user.username).all()
     total_price = sum(item.quantity * item.price for item in shopping_list)
     total_price_formatado = round(total_price, 2)
+    db.session.remove()
     return render_template('history.html', shopping_list=shopping_list, total_price=total_price_formatado)
 
 
@@ -188,6 +190,7 @@ def history():
 def debts_history():
     debts_history = debts.query.filter_by(status=1, username=current_user.username).all()
     total_value = sum(item.value for item in debts_history)
+    db.session.remove()
     return render_template('debts_history.html', debts_history=debts_history, total_value=total_value)
 
 @app.route('/about')
@@ -225,6 +228,7 @@ def debitos():
     total_price_formatado = round(total_price, 2)
     saldo_atualizado = balance_total_formatado - debts_1_formatado
     saldo_atualizado_formatado = round(saldo_atualizado, 2)
+    db.session.remove()
     return render_template('finance.html', debts_list=debts_list, total_price=total_price_formatado, saldo_atualizado=saldo_atualizado_formatado)
 
 @app.route('/balance', methods=['GET','POST'])
@@ -233,6 +237,7 @@ def balance():
     balance_list = Balance.query.filter_by(status=0, username=current_user.username).all()
     total_price = sum(item.value for item in balance_list)
     total_price_formatado = round(total_price, 2)
+    db.session.remove()
     return render_template('balance.html', balance_list=balance_list, total_price=total_price_formatado)
 
 @app.route('/add_balance', methods=['POST'])
