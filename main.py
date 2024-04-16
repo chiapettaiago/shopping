@@ -387,6 +387,60 @@ def export_pdf():
 
     return response
 
+@app.route('/export_pdf_list', methods=['GET'])
+def export_pdf_list():
+    # Obtenha a lista de contas a pagar do banco de dados (ou de onde você a obtém)
+    shopping_list = ShoppingList.query.filter_by(status=0, username=current_user.username).all()
+
+    # Defina a largura da página
+    page_width, page_height = letter
+
+    # Defina a largura das colunas da tabela
+    col_widths = [page_width * 0.4, page_width * 0.6]
+
+    # Crie um buffer de memória para armazenar o PDF
+    buffer = io.BytesIO()
+
+    # Crie um documento PDF usando o ReportLab
+    pdf = SimpleDocTemplate(buffer, pagesize=letter)
+    elements = []
+
+    # Crie uma lista de dados para a tabela
+    data = [["Nome", "Quantidade"]]
+
+    for item in shopping_list:
+        data.append([item.name, f"{item.quantity}"])
+
+    # Crie a tabela
+    table = Table(data, colWidths=col_widths)
+
+    # Estilize a tabela
+    style = TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.gray),
+                        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                        ('GRID', (0, 0), (-1, -1), 1, colors.black)])
+
+    table.setStyle(style)
+
+    # Adicione a tabela aos elementos do PDF
+    elements.append(table)
+
+    # Construa o PDF
+    pdf.build(elements)
+
+    # Reinicie a posição do buffer
+    buffer.seek(0)
+
+    # Crie uma resposta Flask para enviar o arquivo PDF como anexo
+    response = make_response(buffer.getvalue())
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = 'attachment; filename=lista_de_compras.pdf'
+
+    return response
+
 
 if __name__ == '__main__':
     with app.app_context():
