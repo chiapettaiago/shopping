@@ -97,6 +97,7 @@ def login():
         user = User.query.filter_by(username=username, password=password).first()
         if user:
             login_user(user)  # Login do usuário
+            db.session.remove()
             return redirect(url_for('index'))
         else:
             return render_template('login.html', error='Usuário ou senha incorretos.')
@@ -212,6 +213,7 @@ def add():
     new_item = ShoppingList(name=name, quantity=quantity, price=price, category=category, status=0, date=current_time, username=current_user.username)
     db.session.add(new_item)
     db.session.commit()
+    db.session.remove()
     return redirect(url_for('index'))
 
 @app.route('/debts', methods=['GET','POST'])
@@ -251,6 +253,7 @@ def add_balance():
     new_item = Balance(name=name, value=value, status=0, username=current_user.username)
     db.session.add(new_item)
     db.session.commit()
+    db.session.remove()
     return redirect(url_for('balance'))
 
 
@@ -266,6 +269,7 @@ def add_debts():
     new_item = debts(name=name, maturity=maturity, value=value, status=0, username=current_user.username)
     db.session.add(new_item)
     db.session.commit()
+    db.session.remove()
     return redirect(url_for('debitos'))
 # Rota para excluir um item
 @app.route('/delete/<int:id>', methods=['GET'])
@@ -275,6 +279,7 @@ def delete(id):
     if item_to_delete:
         db.session.delete(item_to_delete)
         db.session.commit()
+        db.session.remove()
     return redirect(url_for('index'))
 
 
@@ -285,6 +290,7 @@ def delete_debts(id):
     if item_to_delete:
         db.session.delete(item_to_delete)
         db.session.commit()
+        db.session.remove()
     return redirect(url_for('debitos'))
 
 # Rota para editar um item
@@ -297,6 +303,7 @@ def edit(id):
         item_to_edit.quantity = request.form['quantity']
         item_to_edit.price = request.form['price']
         db.session.commit()
+        db.session.remove()
         return redirect(url_for('index'))
     return render_template('edit.html', item=item_to_edit)
 
@@ -310,6 +317,7 @@ def edit_debts(id):
         item_to_edit.maturity = request.form['maturity']
         item_to_edit.value = request.form['value']
         db.session.commit()
+        db.session.remove()
         return redirect(url_for('debitos'))
     return render_template('edit.html', item=item_to_edit)
 
@@ -321,6 +329,7 @@ def buy(id):
     if item_to_buy:
         item_to_buy.status = 1
         db.session.commit()
+        db.session.remove()
     return redirect(url_for('index'))
 
 # Rota para comprar um item
@@ -331,6 +340,7 @@ def pay(id):
     if item_to_buy:
         item_to_buy.status = 1
         db.session.commit()
+        db.session.remove()
     return redirect(url_for('debitos'))
 
 @app.route('/export_pdf', methods=['GET'])
