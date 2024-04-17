@@ -366,6 +366,8 @@ def export_pdf():
 
     for debt in debts_list:
         data.append([debt.name, f"R${debt.value}"])
+        
+    db.session.remove()
 
     # Crie a tabela
     table = Table(data, colWidths=col_widths)
@@ -420,6 +422,8 @@ def export_pdf_list():
 
     for item in shopping_list:
         data.append([item.name, f"{item.quantity}"])
+        
+    db.session.remove()
 
     # Crie a tabela
     table = Table(data, colWidths=col_widths)
