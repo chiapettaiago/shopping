@@ -179,7 +179,8 @@ def index():
 @app.route('/history')
 @login_required
 def history():
-    shopping_list = ShoppingList.query.filter_by(status=1, username=current_user.username).all()
+    current_month = datetime.now().replace(day=1)
+    shopping_list = ShoppingList.query.filter_by(status=1, username=current_user.username).filter(ShoppingList.date >= current_month).all()
     total_price = sum(item.quantity * item.price for item in shopping_list)
     total_price_formatado = round(total_price, 2)
     db.session.remove()
@@ -189,7 +190,8 @@ def history():
 @app.route('/debts_history')
 @login_required
 def debts_history():
-    debts_history = debts.query.filter_by(status=1, username=current_user.username).all()
+    current_month = datetime.now().replace(day=1)
+    debts_history = debts.query.filter_by(status=1, username=current_user.username).filter(debts.maturity >= current_month).all()
     total_value = sum(item.value for item in debts_history)
     db.session.remove()
     return render_template('debts_history.html', debts_history=debts_history, total_value=total_value)
