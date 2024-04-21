@@ -83,11 +83,21 @@ class Balance(db.Model):
     name = db.Column(db.String(80), nullable=False)
     value = db.Column(db.Float, nullable=False)
     status = db.Column(db.Integer)
+    date = db.Column(db.DateTime)
     username = db.Column(db.String(50), db.ForeignKey('user.username'))
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+# Função para verificar e atualizar automaticamente os itens antigos do balanço com a data atual
+def update_old_balance_items():
+    data_atual = datetime.now()
+    old_balance_items = Balance.query.filter_by(date=None, username=current_user.username).all()
+    for item in old_balance_items:
+        item.date = data_atual
+    db.session.commit()
+    db.session.remove()
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -170,6 +180,7 @@ def logout():
 @app.route('/')
 @login_required
 def index():
+    update_old_balance_items()
     shopping_list = ShoppingList.query.filter_by(status=0, username=current_user.username).all()
     total_price = sum(item.quantity * item.price for item in shopping_list)
     total_price_formatado = round(total_price, 2)
@@ -238,7 +249,8 @@ def debitos():
 @app.route('/balance', methods=['GET','POST'])
 @login_required
 def balance():
-    balance_list = Balance.query.filter_by(status=0, username=current_user.username).all()
+    current_month = datetime.now().replace(day=1)
+    balance_list = Balance.query.filter_by(status=0, username=current_user.username).filter(Balance.date >= current_month).all()
     total_price = sum(item.value for item in balance_list)
     total_price_formatado = round(total_price, 2)
     db.session.remove()
@@ -249,10 +261,11 @@ def balance():
 def add_balance():
     name = request.form['name']
     value = request.form['value']
+    data = datetime.now()
 
     # Adicione validações e formatação necessárias aqui
 
-    new_item = Balance(name=name, value=value, status=0, username=current_user.username)
+    new_item = Balance(name=name, value=value, status=0, date=data, username=current_user.username)
     db.session.add(new_item)
     db.session.commit()
     db.session.remove()
