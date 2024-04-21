@@ -181,7 +181,8 @@ def logout():
 @login_required
 def index():
     update_old_balance_items()
-    shopping_list = ShoppingList.query.filter_by(status=0, username=current_user.username).all()
+    current_month = datetime.now().replace(day=1)
+    shopping_list = ShoppingList.query.filter_by(status=0, username=current_user.username).filter(ShoppingList.date >= current_month).all()
     total_price = sum(item.quantity * item.price for item in shopping_list)
     total_price_formatado = round(total_price, 2)
     db.session.remove()
