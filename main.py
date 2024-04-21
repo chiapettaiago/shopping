@@ -97,7 +97,6 @@ def update_old_balance_items():
     for item in old_balance_items:
         item.date = data_atual
     db.session.commit()
-    db.session.remove()
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
