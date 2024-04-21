@@ -232,9 +232,10 @@ def add():
 @app.route('/debts', methods=['GET','POST'])
 @login_required
 def debitos():
-    debts_list = debts.query.filter_by(status=0, username=current_user.username).all()
-    balance_list = Balance.query.filter_by(status=0, username=current_user.username).all()
-    debts_1 = debts.query.filter_by(status=1, username=current_user.username).all()
+    current_month = datetime.now().replace(day=1)
+    debts_list = debts.query.filter_by(status=0, username=current_user.username).filter(debts.maturity >= current_month).all()
+    balance_list = Balance.query.filter_by(status=0, username=current_user.username).filter(Balance.date >= current_month).all()
+    debts_1 = debts.query.filter_by(status=1, username=current_user.username).filter(debts.maturity >= current_month).all()
     balance_total = sum(item.value for item in balance_list)
     debts_total = sum(item.value for item in debts_1)
     balance_total_formatado = round(balance_total, 2)
