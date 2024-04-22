@@ -10,6 +10,8 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 import io
+import calendar
+import time
 
 
 app = Flask(__name__)
@@ -232,6 +234,16 @@ def add():
 @app.route('/debts', methods=['GET','POST'])
 @login_required
 def debitos():
+    
+    # Obter o número total de dias no mês atual
+    ano_atual = time.localtime().tm_year
+    mes_atual = time.localtime().tm_mon
+    dias_no_mes = calendar.monthrange(ano_atual, mes_atual)[1]
+
+    # Calcular quantos dias faltam até o final do mês
+    dias_faltando = dias_no_mes - time.localtime().tm_mday
+    
+    
     current_month = datetime.now().replace(day=1)
     debts_list = debts.query.filter_by(status=0, username=current_user.username).filter(debts.maturity >= current_month).all()
     balance_list = Balance.query.filter_by(status=0, username=current_user.username).filter(Balance.date >= current_month).all()
@@ -244,8 +256,10 @@ def debitos():
     total_price_formatado = round(total_price, 2)
     saldo_atualizado = balance_total_formatado - debts_1_formatado
     saldo_atualizado_formatado = round(saldo_atualizado, 2)
+    por_dia = saldo_atualizado_formatado / dias_faltando
+    por_dia_atualizado = round(por_dia, 2)
     db.session.remove()
-    return render_template('finance.html', debts_list=debts_list, total_price=total_price_formatado, saldo_atualizado=saldo_atualizado_formatado)
+    return render_template('finance.html', debts_list=debts_list, total_price=total_price_formatado, saldo_atualizado=saldo_atualizado_formatado, por_dia=por_dia_atualizado)
 
 @app.route('/balance', methods=['GET','POST'])
 @login_required
