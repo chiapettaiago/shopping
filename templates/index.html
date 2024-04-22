@@ -20,7 +20,7 @@
 </head>
 <body>
     {% include 'navbar.html' %}
-    <h2 class="text-center">Carrinho de Compras</h2>
+    <h2 class="text-center mt-3">Carrinho de Compras</h2>
 
     <!-- Exibição do Valor Total da Compra -->
     <div>
@@ -37,13 +37,20 @@
         <i class="fa-solid fa-file-pdf"></i>
     </button>
 
+    <!-- Botão flutuante para alternar modo claro/escuro -->
+    <div class="position-fixed fixed-bottom mb-3 mr-3 ml-2">
+        <button type="button" class="btn btn-dark" id="btnSwitch">
+            <i class="fa-solid fa-circle-half-stroke fa-bounce"></i>
+        </button>
+    </div>
+
     {% set categories = ['Alimentos', 'Bebidas', 'Limpeza'] %}
 
     {% for category in categories %}
         <h2 class="text-center">{{ category }}</h2>
         <div class="table-responsive">
-        <table class="table table-striped-collumns text-center">
-            <thead>
+        <table class="table table-bordered text-center">
+            <thead class="table-light" >
                 <tr>
                     <th>Nome</th>
                     <th>Quantidade</th>
@@ -180,6 +187,19 @@
         function downloadPDF() {
             // Redireciona o usuário para a rota que gera o PDF
             window.location.href = "/export_pdf_list";
+        }
+
+        document.getElementById('btnSwitch').addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+
+        // Verifica se há um tema armazenado no armazenamento local
+        const storedTheme = localStorage.getItem('theme');
+        if (storedTheme) {
+            document.documentElement.setAttribute('data-bs-theme', storedTheme);
         }
     </script>
     <script src="https://kit.fontawesome.com/39df25bfda.js" crossorigin="anonymous"></script>

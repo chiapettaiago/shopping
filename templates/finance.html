@@ -21,7 +21,7 @@
 </head>
 <body>
     {% include 'navbar.html' %}
-    <h2 class="text-center">Contas a pagar</h2>
+    <h2 class="text-center mt-3">Contas a pagar</h2>
 
     <!-- Exibição do Valor Total da Compra -->
     <div>
@@ -43,9 +43,17 @@
     <button type="button" class="btn btn-danger ml-3 mb-2 mt-2 btn-height" title="Exportar como PDF" onclick="downloadPDF()">
         <i class="fa-solid fa-file-pdf"></i>
     </button>
+
+    <!-- Botão flutuante para alternar modo claro/escuro -->
+    <div class="position-fixed fixed-bottom mb-3 mr-3 ml-2">
+        <button type="button" class="btn btn-dark" id="btnSwitch">
+            <i class="fa-solid fa-circle-half-stroke fa-bounce"></i>
+        </button>
+    </div>
+
         <div class="table-responsive">
-        <table class="table table-striped-collumns text-center">
-            <thead>
+        <table class="table table-bordered text-center">
+            <thead class="table-light">
                 <tr>
                     <th>Nome</th>
                     <th>Vencimento</th>
@@ -167,6 +175,19 @@
         function downloadPDF() {
             // Redireciona o usuário para a rota que gera o PDF
             window.location.href = "/export_pdf";
+        }
+
+        document.getElementById('btnSwitch').addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+
+        // Verifica se há um tema armazenado no armazenamento local
+        const storedTheme = localStorage.getItem('theme');
+        if (storedTheme) {
+            document.documentElement.setAttribute('data-bs-theme', storedTheme);
         }
     </script>
 </body>
