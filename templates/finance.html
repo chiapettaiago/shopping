@@ -46,7 +46,7 @@
 
     <!-- Botão flutuante para alternar modo claro/escuro -->
     <div class="position-fixed fixed-bottom mb-3 mr-3 ml-2">
-        <button type="button" class="btn btn-dark" id="btnSwitch">
+        <button type="button" class="btn btn-dark border shadow" id="btnSwitch">
             <i class="fa-solid fa-circle-half-stroke fa-bounce"></i>
         </button>
     </div>
@@ -61,7 +61,7 @@
                     <th>Ações</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="table-body">
                 {% for item in debts_list %}
                         <tr>
                             <td>{{ item.name }}</td>
@@ -183,12 +183,21 @@
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-bs-theme', newTheme);
             localStorage.setItem('theme', newTheme);
+
+            const tableBody = document.querySelector('.table-body');
+            tableBody.classList.toggle('table-dark');
         });
 
         // Verifica se há um tema armazenado no armazenamento local
         const storedTheme = localStorage.getItem('theme');
         if (storedTheme) {
             document.documentElement.setAttribute('data-bs-theme', storedTheme);
+            const tableBody = document.querySelector('.table-body');
+            if (storedTheme === 'dark') {
+                tableBody.classList.add('table-dark');
+            } else {
+                tableBody.classList.remove('table-dark');
+            }
         }
     </script>
 </body>
