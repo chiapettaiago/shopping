@@ -25,17 +25,24 @@
     {% include 'navbar.html' %}
   <div class="container mt-5">
     <div class="message alert shadow alert-primary" role="alert">
-      <p>Olá {{username}}, meu nome é Echo, sou seu Assistente de finanças. O que posso fazer por você?</p>
+      <p class="text-center">Olá {{username}}, meu nome é Echo, sou seu Assistente de finanças. O que posso fazer por você?</p>
     </div>
   </div>
 
   <div class="container mt-3 mb-5">
     {% if response %}
     <div class="message alert shadow alert-success" role="alert">
-      <p>Usuário: <span>{{ entrada }}</span></p><br>
-      <pre>Assistente: <span>{{ response|safe }}</span></pre><br>
+      <p class="text-center">Usuário: <span>{{ entrada }}</span></p><br>
+      <pre class="text-center">Assistente: <span>{{ response|safe }}</span></pre><br>
     </div>
     {% endif %}
+  </div>
+
+  <!-- Botão flutuante para alternar modo claro/escuro -->
+  <div class="position-fixed fixed-bottom mb-3 mr-3 ml-2">
+    <button type="button" class="btn btn-dark border shadow" title="Alternar entre Modo Claro e Escuro" id="btnSwitch">
+        <i class="fa-solid fa-circle-half-stroke fa-bounce"></i>
+    </button>
   </div>
 
   <div class="container fixed-bottom mb-3 p-3">
@@ -60,6 +67,30 @@
         // Aqui você pode adicionar a lógica para a resposta do bot GPT
       }
     }
+
+    document.getElementById('btnSwitch').addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            const tableBody = document.querySelector('.table-body');
+            tableBody.classList.toggle('table-dark');
+        });
+
+        // Verifica se há um tema armazenado no armazenamento local
+        const storedTheme = localStorage.getItem('theme');
+        if (storedTheme) {
+            document.documentElement.setAttribute('data-bs-theme', storedTheme);
+            const tableBody = document.querySelector('.table-body');
+            if (storedTheme === 'dark') {
+                tableBody.classList.add('table-dark');
+            } else {
+                tableBody.classList.remove('table-dark');
+            }
+        }
   </script>
+  <script src="https://kit.fontawesome.com/39df25bfda.js" crossorigin="anonymous"></script>
+
 </body>
 </html>

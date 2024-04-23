@@ -206,8 +206,9 @@ def debts_history():
     current_month = datetime.now().replace(day=1)
     debts_history = debts.query.filter_by(status=1, username=current_user.username).filter(debts.maturity >= current_month).all()
     total_value = sum(item.value for item in debts_history)
+    total_value_formatado = round(total_value, 2)
     db.session.remove()
-    return render_template('debts_history.html', debts_history=debts_history, total_value=total_value)
+    return render_template('debts_history.html', debts_history=debts_history, total_value=total_value_formatado)
 
 @app.route('/about')
 @login_required
