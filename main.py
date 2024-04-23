@@ -375,6 +375,7 @@ def pay(id):
     return redirect(url_for('debitos'))
 
 @app.route('/export_pdf', methods=['GET'])
+@login_required
 def export_pdf():
     # Obtenha a lista de contas a pagar do banco de dados (ou de onde você a obtém)
     debts_list = debts.query.filter_by(status=0, username=current_user.username).all()
@@ -431,6 +432,7 @@ def export_pdf():
     return response
 
 @app.route('/export_pdf_list', methods=['GET'])
+@login_required
 def export_pdf_list():
     # Obtenha a lista de contas a pagar do banco de dados (ou de onde você a obtém)
     shopping_list = ShoppingList.query.filter_by(status=0, username=current_user.username).all()
