@@ -15,7 +15,7 @@
 </head>
 <body>
     {% include 'navbar.html' %}
-    <h2 class="text-center">Recebimentos</h2>
+    <h2 class="text-center mt-3">Recebimentos</h2>
 
     <!-- Exibição do Valor Total da Compra -->
     <div>
@@ -26,15 +26,23 @@
     <button type="button" class="btn btn-primary ml-3 mb-2 mt-2" data-toggle="modal" data-target="#addItemModal">
         <i class="fa-thin fa-plus"></i>
     </button>
+
+    <!-- Botão flutuante para alternar modo claro/escuro -->
+    <div class="position-fixed fixed-bottom mb-3 mr-3 ml-2">
+        <button type="button" class="btn btn-dark border shadow" title="Alternar entre Modo Claro e Escuro" id="btnSwitch">
+            <i class="fa-solid fa-circle-half-stroke fa-bounce"></i>
+        </button>
+    </div>
+
         <div class="table-responsive">
-        <table class="table table-striped-collumns text-center">
-            <thead>
-                <tr>
-                    <th>Nome</th>
+        <table class="table table-bordered text-center">
+            <thead class="table-light">
+                <tr >
+                    <th>Desc.</th>
                     <th>Valor</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="table-body">
                 {% for item in balance_list %}
                         <tr>
                             <td>{{ item.name }}</td>
@@ -72,6 +80,29 @@
             </div>
         </div>
     </div>
+    <script>
+        document.getElementById('btnSwitch').addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            const tableBody = document.querySelector('.table-body');
+            tableBody.classList.toggle('table-dark');
+        });
+
+        // Verifica se há um tema armazenado no armazenamento local
+        const storedTheme = localStorage.getItem('theme');
+        if (storedTheme) {
+            document.documentElement.setAttribute('data-bs-theme', storedTheme);
+            const tableBody = document.querySelector('.table-body');
+            if (storedTheme === 'dark') {
+                tableBody.classList.add('table-dark');
+            } else {
+                tableBody.classList.remove('table-dark');
+            }
+        }
+    </script>
     <script src="https://kit.fontawesome.com/39df25bfda.js" crossorigin="anonymous"></script>
 </body>
 </html>
