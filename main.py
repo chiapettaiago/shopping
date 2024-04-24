@@ -18,6 +18,11 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://casaos:casaos@shoppinglist.ddns.net/casaos'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Desativar o rastreamento de modificações para evitar avisos
 app.config['SECRET_KEY'] = 'homium-001'  # Defina uma chave secreta única e segura
+
+# Configure a sessão permanente com tempo limite de 10 minutos
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
+app.config['SESSION_REFRESH_EACH_REQUEST'] = True
+
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 login_manager = LoginManager(app)
