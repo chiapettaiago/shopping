@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, make_response, send_file
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import exc, text
 from flask_migrate import Migrate
 from datetime import datetime, timedelta
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
@@ -12,6 +13,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 import io
 import calendar
 import time
+import threading
 
 
 app = Flask(__name__)
@@ -28,6 +30,24 @@ migrate = Migrate(app, db)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'  # Define a rota para redirecionamento quando o usuário não estiver logado
 
+def keep_alive():
+
+    with app.app_context():
+        while True:
+            try:
+                # Faça uma consulta simples para verificar a conexão
+                db.session.execute(text('SELECT 1'))
+            except exc.OperationalError:
+                # Se a conexão caiu, tente reconectar
+                print('Reconectando ao banco de dados...')
+                db.engine.dispose()
+                db.session.remove()
+                db.engine.connect()
+            time.sleep(60)  # Aguarda 1 minuto antes de verificar novamente
+            
+
+threading.Thread(target=keep_alive, daemon=True).start()
+            
 # Configurar a API uma única vez
 genai.configure(api_key="AIzaSyACwhkVuzzzK4tXoSarhqaL9Y4CJ-FUc3M")
 
