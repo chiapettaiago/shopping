@@ -50,6 +50,17 @@
         </table>
     </div>
     <script>
+
+        $(window).scroll(function() {
+                    if ($(this).scrollTop() > 0) {
+                        $('nav').addClass('bg-light');
+                        $('nav').addClass('bg-opacity-75');
+                    } else {
+                        $('nav').removeClass('bg-light');
+                        $('nav').removeClass('bg-opacity-75');
+                    }
+        });
+
         document.getElementById('btnSwitch').addEventListener('click', () => {
             const currentTheme = document.documentElement.getAttribute('data-bs-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
