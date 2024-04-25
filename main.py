@@ -125,7 +125,6 @@ def login():
         user = User.query.filter_by(username=username, password=password).first()
         if user:
             login_user(user)  # Login do usuário
-            db.session.remove()
             return redirect(url_for('index'))
         else:
             return render_template('login.html', error='Usuário ou senha incorretos.')

@@ -37,7 +37,7 @@
     </div>
     <!-- Botão para abrir o modal de adição -->
     <button type="button" class="btn btn-primary ml-3 mb-2 mt-2 btn-height" title="Adicionar Item" data-toggle="modal" data-target="#addItemModal">
-        <i class="fa-thin fa-plus"></i>
+        <i class="fa-solid fa-plus"></i>
     </button>
     <!-- Botão para abrir o modal de adição -->
     <button type="button" class="btn btn-danger ml-3 mb-2 mt-2 btn-height" title="Exportar como PDF" onclick="downloadPDF()">
@@ -171,7 +171,7 @@
             </div>
         </div>
     </div>
-    <script src="https://kit.fontawesome.com/39df25bfda.js" crossorigin="anonymous"></script>
+    <script src="{{url_for('static', filename='fonts/js/all.js')}}" crossorigin="anonymous"></script>
     <script>
         function downloadPDF() {
             // Redireciona o usuário para a rota que gera o PDF
