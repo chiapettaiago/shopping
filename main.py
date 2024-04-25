@@ -14,7 +14,6 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 import io
 import calendar
 import time
-import threading
 
 
 app = Flask(__name__)
@@ -26,7 +25,9 @@ engine = create_engine(
   app.config['SQLALCHEMY_DATABASE_URI'],
   poolclass=QueuePool,
   pool_size=20,
-  max_overflow=0
+  max_overflow=0,
+  pool_recycle=3600,
+  execution_options={'autoflush': False, 'expire_on_commit': False}
 )
 
 # Configure a sessão permanente com tempo limite de 10 minutos
@@ -38,24 +39,7 @@ migrate = Migrate(app, db)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'  # Define a rota para redirecionamento quando o usuário não estiver logado
 
-def keep_alive():
-
-    with app.app_context():
-        while True:
-            try:
-                # Faça uma consulta simples para verificar a conexão
-                db.session.execute(text('SELECT 1'))
-            except exc.OperationalError:
-                # Se a conexão caiu, tente reconectar
-                print('Reconectando ao banco de dados...')
-                db.engine.dispose()
-                db.session.remove()
-                db.engine.connect()
-            time.sleep(60)  # Aguarda 1 minuto antes de verificar novamente
-            
-
-threading.Thread(target=keep_alive, daemon=True).start()
-            
+        
 # Configurar a API uma única vez
 genai.configure(api_key="AIzaSyACwhkVuzzzK4tXoSarhqaL9Y4CJ-FUc3M")
 
@@ -148,6 +132,7 @@ def login():
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
+@login_required
 def register():
     if request.method == 'POST':
         username = request.form['username']
