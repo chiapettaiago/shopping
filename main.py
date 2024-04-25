@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, make_response, send_file
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import exc, text
+from sqlalchemy import exc, text, create_engine
+from sqlalchemy.pool import QueuePool
 from flask_migrate import Migrate
 from datetime import datetime, timedelta
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
@@ -20,6 +21,13 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://casaos:casaos@shoppinglist.ddns.net/casaos'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Desativar o rastreamento de modificações para evitar avisos
 app.config['SECRET_KEY'] = 'homium-001'  # Defina uma chave secreta única e segura
+
+engine = create_engine(
+  app.config['SQLALCHEMY_DATABASE_URI'],
+  poolclass=QueuePool,
+  pool_size=20,
+  max_overflow=0
+)
 
 # Configure a sessão permanente com tempo limite de 10 minutos
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
