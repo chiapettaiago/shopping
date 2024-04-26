@@ -204,7 +204,7 @@ def index():
     total_price = sum(item.quantity * item.price for item in shopping_list)
     total_price_formatado = round(total_price, 2)
     db.session.remove()
-    return render_template('index.html', shopping_list=shopping_list, total_price=total_price_formatado)
+    return render_template('index.html', shopping_list=shopping_list, total_price=total_price_formatado, username=current_user.username)
 
 @app.route('/history')
 @login_required
@@ -214,7 +214,7 @@ def history():
     total_price = sum(item.quantity * item.price for item in shopping_list)
     total_price_formatado = round(total_price, 2)
     db.session.remove()
-    return render_template('history.html', shopping_list=shopping_list, total_price=total_price_formatado)
+    return render_template('history.html', shopping_list=shopping_list, total_price=total_price_formatado, username=current_user.username)
 
 
 @app.route('/debts_history')
@@ -225,12 +225,12 @@ def debts_history():
     total_value = sum(item.value for item in debts_history)
     total_value_formatado = round(total_value, 2)
     db.session.remove()
-    return render_template('debts_history.html', debts_history=debts_history, total_value=total_value_formatado)
+    return render_template('debts_history.html', debts_history=debts_history, total_value=total_value_formatado, username=current_user.username)
 
 @app.route('/about')
 @login_required
 def about():
-    return render_template('about.html')
+    return render_template('about.html', username=current_user.username)
 
 @app.route('/add', methods=['POST'])
 @login_required
@@ -277,7 +277,7 @@ def debitos():
     por_dia = saldo_atualizado_formatado / dias_faltando
     por_dia_atualizado = round(por_dia, 2)
     db.session.remove()
-    return render_template('finance.html', debts_list=debts_list, total_price=total_price_formatado, saldo_atualizado=saldo_atualizado_formatado, por_dia=por_dia_atualizado)
+    return render_template('finance.html', debts_list=debts_list, total_price=total_price_formatado, saldo_atualizado=saldo_atualizado_formatado, por_dia=por_dia_atualizado, username=current_user.username)
 
 @app.route('/balance', methods=['GET','POST'])
 @login_required
@@ -287,7 +287,7 @@ def balance():
     total_price = sum(item.value for item in balance_list)
     total_price_formatado = round(total_price, 2)
     db.session.remove()
-    return render_template('balance.html', balance_list=balance_list, total_price=total_price_formatado)
+    return render_template('balance.html', balance_list=balance_list, total_price=total_price_formatado, username=current_user.username)
 
 @app.route('/add_balance', methods=['POST'])
 @login_required
