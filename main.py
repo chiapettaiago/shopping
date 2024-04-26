@@ -1,10 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for, make_response, send_file
-from flask_sqlalchemy import SQLAlchemy
+from models.models import db, User, ShoppingList, debts, Balance
 from sqlalchemy import exc, text, create_engine
 from sqlalchemy.pool import QueuePool
 from flask_migrate import Migrate
 from datetime import datetime, timedelta
-from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 import google.generativeai as genai
 import mysql.connector
 from reportlab.pdfgen import canvas
@@ -34,7 +34,7 @@ engine = create_engine(
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
 app.config['SESSION_REFRESH_EACH_REQUEST'] = True
 
-db = SQLAlchemy(app)
+db.init_app(app)
 migrate = Migrate(app, db)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'  # Define a rota para redirecionamento quando o usuário não estiver logado
@@ -73,37 +73,6 @@ safety_settings = [
 model = genai.GenerativeModel(model_name="gemini-1.0-pro",
                               generation_config=generation_config,
                               safety_settings=safety_settings)
-
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True, nullable=False)
-    password = db.Column(db.String(80), nullable=False)
-
-class ShoppingList(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), nullable=False)
-    quantity = db.Column(db.Integer, nullable=False)
-    price = db.Column(db.Float, nullable=False)
-    category = db.Column(db.String(50), nullable=False)
-    status = db.Column(db.Integer)
-    date = db.Column(db.DateTime)
-    username = db.Column(db.String(50), db.ForeignKey('user.username'))
-    
-class debts(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), nullable=False)
-    maturity = db.Column(db.DateTime(50), nullable=False)
-    value = db.Column(db.Float, nullable=False)
-    status = db.Column(db.Integer)
-    username = db.Column(db.String(50), db.ForeignKey('user.username'))
-    
-class Balance(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), nullable=False)
-    value = db.Column(db.Float, nullable=False)
-    status = db.Column(db.Integer)
-    date = db.Column(db.DateTime)
-    username = db.Column(db.String(50), db.ForeignKey('user.username'))
 
 @login_manager.user_loader
 def load_user(user_id):
