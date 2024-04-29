@@ -228,7 +228,7 @@ def debitos():
     dias_no_mes = calendar.monthrange(ano_atual, mes_atual)[1]
 
     # Calcular quantos dias faltam até o final do mês
-    dias_faltando = dias_no_mes - time.localtime().tm_mday
+    dias_faltando = dias_no_mes - time.localtime().tm_mday + 1
     
     
     current_month = datetime.now().replace(day=1)
