@@ -19,7 +19,7 @@
 
     <!-- Exibição do Valor Total da Compra -->
     <div>
-        <h4 class="text-success text-center">Dívidas quitadas: R$ {{ total_value }}</h3>
+        <h4 class="text-success text-center">Dívidas quitadas: R$ {{ '{:.2f}'.format(total_value) }}</h3>
     </div>
 
     <!-- Botão flutuante para alternar modo claro/escuro -->
@@ -43,7 +43,7 @@
                         <tr>
                             <td>{{ item.name }}</td>
                             <td>{{ item.maturity }}</td>
-                            <td> R$ {{ item.value }}</td>
+                            <td> R$ {{ '{:.2f}'.format(item.value) }}</td>
                         </tr>
                 {% endfor %}
             </tbody>

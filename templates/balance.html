@@ -19,7 +19,7 @@
 
     <!-- Exibição do Valor Total da Compra -->
     <div>
-        <h4 class="text-success text-center">Valor Total dos Recebimentos: R$ {{ total_price }}</h3>
+        <h4 class="text-success text-center">Valor Total dos Recebimentos: R$ {{ '{:.2f}'.format(total_price) }}</h3>
     </div>
     
     <!-- Botão para abrir o modal de adição -->
@@ -46,7 +46,7 @@
                 {% for item in balance_list %}
                         <tr>
                             <td>{{ item.name }}</td>
-                            <td> R$ {{ item.value }}</td>
+                            <td> R$ {{ '{:.2f}'.format(item.value) }}</td>
                         </tr>
                     {% endfor %}
             </tbody>

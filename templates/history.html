@@ -19,7 +19,7 @@
 
     <!-- Exibição do Valor Total da Compra -->
     <div>
-        <h4 class="text-success text-center">Valor Total das Compras Realizadas: R$ {{ total_price }}</h3>
+        <h4 class="text-success text-center">Valor Total das Compras Realizadas: R$ {{ '{:.2f}'.format(total_price) }}</h3>
     </div>
 
     <!-- Botão flutuante para alternar modo claro/escuro -->
@@ -47,8 +47,8 @@
                         <tr>
                             <td>{{ item.name }}</td>
                             <td>{{ item.quantity }}</td>
-                            <td>{{ item.price }}</td>
-                            <td>{{ item.date.date() }}</td>
+                            <td>{{ '{:.2f}'.format(item.price) }}</td>
+                            <td>{{ item.date.strftime("%d/%m/%Y") }}</td>
                         </tr>
                 {% endfor %}
             </tbody>

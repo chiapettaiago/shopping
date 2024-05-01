@@ -173,7 +173,7 @@ def logout():
 @login_required
 def index():
     update_old_balance_items()
-    current_month = datetime.now().replace(day=1)
+    current_month = datetime.now().date().replace(day=1)
     shopping_list = ShoppingList.query.filter_by(status=0, username=current_user.username).filter(ShoppingList.date >= current_month).all()
     total_price = sum(item.quantity * item.price for item in shopping_list)
     total_price_formatado = round(total_price, 2)
@@ -183,7 +183,7 @@ def index():
 @app.route('/history')
 @login_required
 def history():
-    current_month = datetime.now().replace(day=1)
+    current_month = datetime.now().date().replace(day=1)
     shopping_list = ShoppingList.query.filter_by(status=1, username=current_user.username).filter(ShoppingList.date >= current_month).all()
     total_price = sum(item.quantity * item.price for item in shopping_list)
     total_price_formatado = round(total_price, 2)
@@ -213,14 +213,13 @@ def add():
     quantity = request.form['quantity']
     price = request.form['price']
     category = request.form['category']
-    current_time = datetime.now()
+    current_time = datetime.now().date()
 
     # Adicione validações e formatação necessárias aqui
 
     new_item = ShoppingList(name=name, quantity=quantity, price=price, category=category, status=0, date=current_time, username=current_user.username)
     db.session.add(new_item)
     db.session.commit()
-    db.session.remove()
     return redirect(url_for('index'))
 
 @app.route('/debts', methods=['GET','POST'])
@@ -256,7 +255,7 @@ def debitos():
 @app.route('/balance', methods=['GET','POST'])
 @login_required
 def balance():
-    current_month = datetime.now().replace(day=1)
+    current_month = datetime.now().date().replace(day=1)
     balance_list = Balance.query.filter_by(status=0, username=current_user.username).filter(Balance.date >= current_month).all()
     total_price = sum(item.value for item in balance_list)
     total_price_formatado = round(total_price, 2)

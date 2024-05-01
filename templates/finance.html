@@ -25,15 +25,15 @@
 
     <!-- Exibição do Valor Total da Compra -->
     <div>
-        <h4 class="text-success text-center">Valor Total das Dívidas: R$ {{ total_price }}</h3>
+        <h4 class="text-success text-center">Valor Total das Dívidas: R$ {{ '{:.2f}'.format(total_price) }}</h3>
     </div>
     <!-- Exibição do Valor Total da Compra -->
     <div>
-        <h4 class="text-success text-center">Saldo Atualizado: R$ {{ saldo_atualizado }}</h3>
+        <h4 class="text-success text-center">Saldo Atualizado: R$ {{ '{:.2f}'.format(saldo_atualizado) }}</h3>
     </div>
     
     <div>
-        <h4 class="text-success text-center">Limite diário recomendado: R$ {{ por_dia }}</h3>
+        <h4 class="text-success text-center">Limite diário recomendado: R$ {{ '{:.2f}'.format(por_dia) }}</h3>
     </div>
     <!-- Botão para abrir o modal de adição -->
     <button type="button" class="btn btn-primary ml-3 mb-2 mt-2 btn-height" title="Adicionar Item" data-toggle="modal" data-target="#addItemModal">
@@ -65,8 +65,8 @@
                 {% for item in debts_list %}
                         <tr>
                             <td>{{ item.name }}</td>
-                            <td>{{ item.maturity }}</td>
-                            <td> R$ {{ item.value }}</td>
+                            <td>{{ item.maturity.strftime("%d/%m/%Y") }}</td>
+                            <td> R$ {{ '{:.2f}'.format(item.value) }}</td>
                             <td>
                                 <!-- Botões de Ação -->
                                 <button type="button" class="btn btn-danger" data-toggle="modal" title="Excluir" data-target="#deleteItemModal{{ item.id }}">
@@ -125,11 +125,11 @@
                                         <input type="text" class="form-control" id="editName{{ item.id }}" name="name" value="{{ item.name }}" required>
                                     </div>
                                     <div class="form-group">
-                                        <label for="editQuantity{{ item.id }}">Vencimento:</label>
+                                        <label for="editQuantity{{ item.maturity }}">Vencimento:</label>
                                         <input type="date" class="form-control" id="editMaturity{{ item.id }}" name="maturity" value="{{ item.maturity }}" required>
                                     </div>
                                     <div class="form-group">
-                                        <label for="editPrice{{ item.id }}">Valor:</label>
+                                        <label for="editPrice{{ item.value }}">Valor:</label>
                                         <input type="number" step="0.01" class="form-control" id="editValue{{ item.id }}" name="value" value="{{ item.value }}" required>
                                     </div>
                                     <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i></button>

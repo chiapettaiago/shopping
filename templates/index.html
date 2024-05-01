@@ -24,7 +24,7 @@
 
     <!-- Exibição do Valor Total da Compra -->
     <div>
-        <h4 class="text-success text-center">Valor Total da Compra: R$ {{ total_price }}</h3>
+        <h4 class="text-success text-center">Valor Total da Compra: R$ {{ '{:.2f}'.format(total_price) }}</h3>
     </div>
     
     <!-- Botão para abrir o modal de adição -->
@@ -64,7 +64,7 @@
                         <tr>
                             <td>{{ item.name }}</td>
                             <td>{{ item.quantity }}</td>
-                            <td> R$ {{ item.price }}</td>
+                            <td> R$ {{ '{:.2f}'.format(item.price) }}</td>
                             <td>
                                 <!-- Botões de Ação -->
                                 <button type="button" class="btn btn-danger" data-toggle="modal" title="Excluir" data-target="#deleteItemModal{{ item.id }}">
@@ -127,11 +127,11 @@
                                         <input type="text" class="form-control" id="editName{{ item.id }}" name="name" value="{{ item.name }}" required>
                                     </div>
                                     <div class="form-group">
-                                        <label for="editQuantity{{ item.id }}">Quantidade:</label>
+                                        <label for="editQuantity{{ item.quantity }}">Quantidade:</label>
                                         <input type="number" class="form-control" id="editQuantity{{ item.id }}" name="quantity" value="{{ item.quantity }}" required>
                                     </div>
                                     <div class="form-group">
-                                        <label for="editPrice{{ item.id }}">Preço:</label>
+                                        <label for="editPrice{{ '{:.2f}'.format(item.price) }}">Preço:</label>
                                         <input type="number" step="0.01" class="form-control" id="editPrice{{ item.id }}" name="price" value="{{ item.price }}" required>
                                     </div>
                                     <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i></button>
