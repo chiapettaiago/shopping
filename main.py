@@ -194,7 +194,7 @@ def history():
 @app.route('/debts_history')
 @login_required
 def debts_history():
-    current_month = datetime.now().replace(day=1)
+    current_month = datetime.now().date().replace(day=1)
     debts_history = debts.query.filter_by(status=1, username=current_user.username).filter(debts.maturity >= current_month).all()
     total_value = sum(item.value for item in debts_history)
     total_value_formatado = round(total_value, 2)
@@ -235,7 +235,7 @@ def debitos():
     dias_faltando = dias_no_mes - time.localtime().tm_mday + 1
     
     
-    current_month = datetime.now().replace(day=1)
+    current_month = datetime.now().date().replace(day=1)
     debts_list = debts.query.filter_by(status=0, username=current_user.username).filter(debts.maturity >= current_month).all()
     balance_list = Balance.query.filter_by(status=0, username=current_user.username).filter(Balance.date >= current_month).all()
     debts_1 = debts.query.filter_by(status=1, username=current_user.username).filter(debts.maturity >= current_month).all()
