@@ -42,7 +42,7 @@
                 {% for item in debts_history %}
                         <tr>
                             <td>{{ item.name }}</td>
-                            <td>{{ item.maturity }}</td>
+                            <td>{{ item.maturity.strftime("%d/%m/%Y") }}</td>
                             <td> R$ {{ '{:.2f}'.format(item.value) }}</td>
                         </tr>
                 {% endfor %}

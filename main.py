@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, make_response, send_file
 from models.models import db, User, ShoppingList, debts, Balance
-from sqlalchemy import exc, text, create_engine
+from sqlalchemy import exc, text, create_engine,desc
 from sqlalchemy.pool import QueuePool
 from flask_migrate import Migrate
 from datetime import datetime, timedelta
@@ -184,7 +184,7 @@ def index():
 @login_required
 def history():
     current_month = datetime.now().date().replace(day=1)
-    shopping_list = ShoppingList.query.filter_by(status=1, username=current_user.username).filter(ShoppingList.date >= current_month).all()
+    shopping_list = ShoppingList.query.filter_by(status=1, username=current_user.username).filter(ShoppingList.date >= current_month).order_by(ShoppingList.date.desc()).all()
     total_price = sum(item.quantity * item.price for item in shopping_list)
     total_price_formatado = round(total_price, 2)
     db.session.remove()
@@ -195,7 +195,7 @@ def history():
 @login_required
 def debts_history():
     current_month = datetime.now().date().replace(day=1)
-    debts_history = debts.query.filter_by(status=1, username=current_user.username).filter(debts.maturity >= current_month).all()
+    debts_history = debts.query.filter_by(status=1, username=current_user.username).filter(debts.maturity >= current_month).order_by(debts.maturity.desc()).all()
     total_value = sum(item.value for item in debts_history)
     total_value_formatado = round(total_value, 2)
     db.session.remove()
@@ -236,7 +236,7 @@ def debitos():
     
     
     current_month = datetime.now().date().replace(day=1)
-    debts_list = debts.query.filter_by(status=0, username=current_user.username).filter(debts.maturity >= current_month).all()
+    debts_list = debts.query.filter_by(status=0, username=current_user.username).filter(debts.maturity >= current_month).order_by(debts.value.desc()).all()
     balance_list = Balance.query.filter_by(status=0, username=current_user.username).filter(Balance.date >= current_month).all()
     debts_1 = debts.query.filter_by(status=1, username=current_user.username).filter(debts.maturity >= current_month).all()
     balance_total = sum(item.value for item in balance_list)
@@ -256,7 +256,7 @@ def debitos():
 @login_required
 def balance():
     current_month = datetime.now().date().replace(day=1)
-    balance_list = Balance.query.filter_by(status=0, username=current_user.username).filter(Balance.date >= current_month).all()
+    balance_list = Balance.query.filter_by(status=0, username=current_user.username).filter(Balance.date >= current_month).order_by(Balance.date.desc()).all()
     total_price = sum(item.value for item in balance_list)
     total_price_formatado = round(total_price, 2)
     db.session.remove()

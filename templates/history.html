@@ -47,7 +47,7 @@
                         <tr>
                             <td>{{ item.name }}</td>
                             <td>{{ item.quantity }}</td>
-                            <td>{{ '{:.2f}'.format(item.price) }}</td>
+                            <td>R$ {{ '{:.2f}'.format(item.price) }}</td>
                             <td>{{ item.date.strftime("%d/%m/%Y") }}</td>
                         </tr>
                 {% endfor %}
