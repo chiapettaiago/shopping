@@ -322,6 +322,7 @@ def edit(id):
     if request.method == 'POST':
         item_to_edit.name = request.form['name']
         item_to_edit.quantity = request.form['quantity']
+        item_to_edit.category = request.form['category']
         item_to_edit.price = request.form['price']
         db.session.commit()
         db.session.remove()
