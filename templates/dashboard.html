@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="300">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='images/site.webmanifest') }}">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <title>Dashboard</title>
+</head>
+<body>
+    {% include 'navbar.html' %}
+    <h1 class="text-center mt-3">Bem-vindo, {{ username }}!</h1>
+    <!-- Div onde o gráfico será renderizado -->
+    <div id="chart"></div>
+    <!-- Script para renderizar o gráfico -->
+    <script>
+        // Converter HTML do gráfico para um elemento DOM
+        var tempDiv = document.createElement('div');
+        tempDiv.innerHTML = '{{ graph_html|safe }}';
+        document.getElementById('chart').appendChild(tempDiv.firstChild);
+    </script>
+    <script src="{{url_for('static', filename='fonts/js/all.js')}}" crossorigin="anonymous"></script>
+</body>
+</html>

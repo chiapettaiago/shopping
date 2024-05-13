@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, make_response, send_file
+from flask import Flask, render_template, request, redirect, url_for, make_response, send_file, session
 from models.models import db, User, ShoppingList, debts, Balance
 from sqlalchemy import exc, text, create_engine,desc
 from sqlalchemy.pool import QueuePool
@@ -14,6 +14,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 import io
 import calendar
 import time
+import plotly.graph_objs as go
 
 
 app = Flask(__name__)
@@ -33,7 +34,6 @@ engine = create_engine(
 
 # Configure a sessão permanente com tempo limite de 10 minutos
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
-app.config['SESSION_REFRESH_EACH_REQUEST'] = True
 
 db.init_app(app)
 migrate = Migrate(app, db)
@@ -78,6 +78,27 @@ model = genai.GenerativeModel(model_name="gemini-1.0-pro",
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+# Atualizar o tempo limite da sessão sempre que uma solicitação for recebida
+@app.before_request
+def update_session_timeout():
+    session.modified = True
+    session.permanent = True
+
+
+# Verificar se o tempo limite da sessão expirou e fazer logout do usuário, se necessário
+@app.before_request
+def check_session_timeout():
+    if 'last_activity' in session:
+        last_activity = session.get('last_activity')
+        now = datetime.utcnow().replace(tzinfo=last_activity.tzinfo)  # Torna a hora atual sensível ao fuso horário
+        if (now - last_activity).total_seconds() > 600:  # 600 segundos = 10 minutos
+            # Fazer logout do usuário
+            logout_user()
+            # Redirecionar para a página de login ou para onde desejar
+            return redirect(url_for('login'))
+    # Atualizar o registro de última atividade
+    session['last_activity'] = datetime.utcnow()
 
 # Função para verificar e atualizar automaticamente os itens antigos do balanço com a data atual
 def update_old_balance_items():
@@ -364,6 +385,40 @@ def pay(id):
         db.session.commit()
         db.session.remove()
     return redirect(url_for('debitos'))
+
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    current_month = datetime.now().date().replace(day=1)
+    debts_list = debts.query.filter_by(status=0, username=current_user.username).filter(debts.maturity >= current_month).order_by(debts.maturity.desc()).all()
+
+    # Extrair datas e valores dos gastos
+    dates = [balance.maturity for balance in debts_list]
+    values = [balance.value for balance in debts_list]
+
+    # Criar um gráfico de barras com Plotly
+    bar_chart = go.Bar(
+        x=dates,
+        y=values,
+        marker=dict(color='rgb(26, 118, 255)')
+    )
+
+    # Layout do gráfico
+    layout = go.Layout(
+        title='Gastos por dia',
+        xaxis=dict(title='Data'),
+        yaxis=dict(title='Valor'),
+        hovermode='closest'
+    )
+
+    # Criar figura
+    fig = go.Figure(data=[bar_chart], layout=layout)
+
+    # Converter figura para HTML
+    graph_html = fig.to_html(full_html=False)
+
+    return render_template('dashboard.html', username=current_user.username, graph_html=graph_html, current_month=current_month)
 
 @app.route('/export_pdf', methods=['GET'])
 @login_required
