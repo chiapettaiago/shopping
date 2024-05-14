@@ -391,7 +391,7 @@ def pay(id):
 @login_required
 def dashboard():
     current_month = datetime.now().date().replace(day=1)
-    debts_list = debts.query.filter_by(status=0, username=current_user.username).filter(debts.maturity >= current_month).order_by(debts.maturity.desc()).all()
+    debts_list = debts.query.filter_by(status=1, username=current_user.username).filter(debts.maturity >= current_month).order_by(debts.maturity.desc()).all()
 
     # Extrair datas e valores dos gastos
     dates = [balance.maturity for balance in debts_list]
