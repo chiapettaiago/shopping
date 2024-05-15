@@ -126,7 +126,6 @@ def login():
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
-@login_required
 def register():
     if request.method == 'POST':
         username = request.form['username']
