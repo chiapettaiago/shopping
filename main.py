@@ -393,7 +393,7 @@ def dashboard():
     
     # Dívidas
     debts_list = debts.query.filter_by(status=1, username=current_user.username).filter(debts.maturity >= current_month).order_by(debts.maturity.desc()).all()
-    dates_debts = [debt.maturity.strftime('%Y-%m-%d') for debt in debts_list]
+    dates_debts = [debt.maturity.strftime('%d/%m/%Y') for debt in debts_list]
     values_debts = [debt.value for debt in debts_list]
     
     pie_chart_debts = go.Pie(
@@ -406,7 +406,7 @@ def dashboard():
     
     # Compras
     balance_list = ShoppingList.query.filter_by(status=1, username=current_user.username).filter(ShoppingList.date >= current_month).order_by(ShoppingList.date.desc()).all()
-    dates_balance = [purchase.date.strftime('%Y-%m-%d') for purchase in balance_list]
+    dates_balance = [purchase.date.strftime('%d/%m/%Y') for purchase in balance_list]
     values_balance = [purchase.price for purchase in balance_list]
     
     pie_chart_balance = go.Pie(
@@ -437,10 +437,6 @@ def dashboard():
     graph_html_balance = fig_balance.to_html(full_html=False)
 
     return render_template('dashboard.html', username=current_user.username, graph_html1=graph_html_debts, graph_html2=graph_html_balance, current_month=current_month)
-
-
-
-
 
 @app.route('/export_pdf', methods=['GET'])
 @login_required
