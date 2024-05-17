@@ -391,6 +391,28 @@ def pay(id):
 def dashboard():
     current_month = datetime.now().date().replace(day=1)
     
+    # Obter o número total de dias no mês atual
+    ano_atual = time.localtime().tm_year
+    mes_atual = time.localtime().tm_mon
+    dias_no_mes = calendar.monthrange(ano_atual, mes_atual)[1]
+
+    # Calcular quantos dias faltam até o final do mês
+    dias_faltando = dias_no_mes - time.localtime().tm_mday + 1
+    
+    debts_list = debts.query.filter_by(status=0, username=current_user.username).filter(debts.maturity >= current_month).order_by(debts.value.desc()).all()
+    balance_list = Balance.query.filter_by(status=0, username=current_user.username).filter(Balance.date >= current_month).all()
+    debts_1 = debts.query.filter_by(status=1, username=current_user.username).filter(debts.maturity >= current_month).all()
+    balance_total = sum(item.value for item in balance_list)
+    debts_total = sum(item.value for item in debts_1)
+    balance_total_formatado = round(balance_total, 2)
+    debts_1_formatado = round(debts_total, 2)
+    total_price = sum(item.value for item in debts_list)
+    total_price_formatado = round(total_price, 2)
+    saldo_atualizado = balance_total_formatado - debts_1_formatado
+    saldo_atualizado_formatado = round(saldo_atualizado, 2)
+    por_dia = saldo_atualizado_formatado / dias_faltando
+    por_dia_atualizado = round(por_dia, 2)
+    
     # Dívidas
     debts_list = debts.query.filter_by(status=1, username=current_user.username).filter(debts.maturity >= current_month).order_by(debts.maturity.desc()).all()
     dates_debts = [debt.maturity.strftime('%d/%m/%Y') for debt in debts_list]
@@ -436,7 +458,7 @@ def dashboard():
     graph_html_debts = fig_debts.to_html(full_html=False)
     graph_html_balance = fig_balance.to_html(full_html=False)
 
-    return render_template('dashboard.html', username=current_user.username, graph_html1=graph_html_debts, graph_html2=graph_html_balance, current_month=current_month)
+    return render_template('dashboard.html', username=current_user.username, graph_html1=graph_html_debts, graph_html2=graph_html_balance,  total_price=total_price_formatado, saldo_atualizado=saldo_atualizado_formatado, por_dia=por_dia_atualizado, current_month=current_month)
 
 @app.route('/export_pdf', methods=['GET'])
 @login_required

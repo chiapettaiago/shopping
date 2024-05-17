@@ -16,6 +16,17 @@
 <body>
     {% include 'navbar.html' %}
     <h1 class="text-center mt-3">Bem-vindo, {{ username }}!</h1>
+    <div>
+        <h4 class="text-success text-center">Valor Total das Dívidas: R$ {{ '{:.2f}'.format(total_price) }}</h3>
+    </div>
+    <!-- Exibição do Valor Total da Compra -->
+    <div>
+        <h4 class="text-success text-center">Saldo Atualizado: R$ {{ '{:.2f}'.format(saldo_atualizado) }}</h3>
+    </div>
+    
+    <div>
+        <h4 class="text-success text-center">Limite diário recomendado: R$ {{ '{:.2f}'.format(por_dia) }}</h3>
+    </div>
     <div class="container">
         <div class="row">
             <div class="col-md-6">
