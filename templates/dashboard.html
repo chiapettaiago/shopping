@@ -10,27 +10,37 @@
     <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
     <link rel="manifest" href="{{ url_for('static', filename='images/site.webmanifest') }}">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
     <title>Dashboard</title>
 </head>
 <body>
     {% include 'navbar.html' %}
     <h1 class="text-center mt-3">Bem-vindo, {{ username }}!</h1>
-    <!-- Div onde o gráfico será renderizado -->
-    <div id="chart"></div>
-    <!-- Script para renderizar o gráfico -->
-
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <div id="chart1" class="py-3">
+                    {{ graph_html1|safe }}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div id="chart2" class="py-3">
+                    {{ graph_html2|safe }}
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Botão flutuante para alternar modo claro/escuro -->
     <div class="position-fixed fixed-bottom mb-3 mr-3 ml-2">
         <button type="button" class="btn btn-dark border shadow" title="Alternar entre Modo Claro e Escuro" id="btnSwitch">
             <i class="fa-solid fa-circle-half-stroke fa-bounce"></i>
         </button>
     </div>
+    
+    <!-- Script para alternar entre os modos claro e escuro -->
     <script>
-
-        document.getElementById('btnSwitch').addEventListener('click', () => {
+       document.getElementById('btnSwitch').addEventListener('click', () => {
             const currentTheme = document.documentElement.getAttribute('data-bs-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-bs-theme', newTheme);
@@ -51,12 +61,10 @@
                 tableBody.classList.remove('table-dark');
             }
         }
-
-        // Converter HTML do gráfico para um elemento DOM
-        var tempDiv = document.createElement('div');
-        tempDiv.innerHTML = '{{ graph_html|safe }}';
-        document.getElementById('chart').appendChild(tempDiv.firstChild);
     </script>
     <script src="{{url_for('static', filename='fonts/js/all.js')}}" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

@@ -120,7 +120,7 @@ def login():
         user = User.query.filter_by(username=username, password=password).first()
         if user:
             login_user(user)  # Login do usuário
-            return redirect(url_for('index'))
+            return redirect(url_for('dashboard'))
         else:
             return render_template('login.html', error='Usuário ou senha incorretos.')
     return render_template('login.html')
@@ -390,34 +390,57 @@ def pay(id):
 @login_required
 def dashboard():
     current_month = datetime.now().date().replace(day=1)
+    
+    # Dívidas
     debts_list = debts.query.filter_by(status=1, username=current_user.username).filter(debts.maturity >= current_month).order_by(debts.maturity.desc()).all()
-
-    # Extrair datas e valores dos gastos
-    dates = [balance.maturity for balance in debts_list]
-    values = [balance.value for balance in debts_list]
-
-    # Criar um gráfico de barras com Plotly
-    bar_chart = go.Bar(
-        x=dates,
-        y=values,
+    dates_debts = [debt.maturity.strftime('%Y-%m-%d') for debt in debts_list]  # Formatando a data como string
+    values_debts = [debt.value for debt in debts_list]
+    bar_chart_debts = go.Bar(
+        x=dates_debts,
+        y=values_debts,
+        name='Dívidas',
         marker=dict(color='rgb(26, 118, 255)')
     )
-
-    # Layout do gráfico
-    layout = go.Layout(
-        title='Gastos por dia',
+    
+    # Compras
+    balance_list = ShoppingList.query.filter_by(status=1, username=current_user.username).filter(ShoppingList.date >= current_month).order_by(ShoppingList.date.desc()).all()
+    dates_balance = [purchase.date.strftime('%Y-%m-%d') for purchase in balance_list]  # Formatando a data como string
+    values_balance = [purchase.price for purchase in balance_list]
+    line_chart_balance = go.Scatter(
+        x=dates_balance,
+        y=values_balance,
+        mode='lines+markers',
+        name='Compras',
+        line=dict(color='rgb(255, 118, 26)')
+    )
+    
+    # Layout dos gráficos
+    layout_debts = go.Layout(
+        title='Gastos com Dívidas por Dia',
         xaxis=dict(title='Data'),
         yaxis=dict(title='Valor'),
         hovermode='closest'
     )
+    
+    layout_balance = go.Layout(
+        title='Valor Total de Compras por Dia',
+        xaxis=dict(title='Data'),
+        yaxis=dict(title='Valor Total de Compras'),
+        hovermode='closest'
+    )
+    
+    # Criar figuras
+    fig_debts = go.Figure(data=[bar_chart_debts], layout=layout_debts)
+    fig_balance = go.Figure(data=[line_chart_balance], layout=layout_balance)
+    
+    # Converter figuras para HTML
+    graph_html_debts = fig_debts.to_html(full_html=False)
+    graph_html_balance = fig_balance.to_html(full_html=False)
 
-    # Criar figura
-    fig = go.Figure(data=[bar_chart], layout=layout)
+    return render_template('dashboard.html', username=current_user.username, graph_html1=graph_html_debts, graph_html2=graph_html_balance, current_month=current_month)
 
-    # Converter figura para HTML
-    graph_html = fig.to_html(full_html=False)
 
-    return render_template('dashboard.html', username=current_user.username, graph_html=graph_html, current_month=current_month)
+
 
 @app.route('/export_pdf', methods=['GET'])
 @login_required
