@@ -393,51 +393,51 @@ def dashboard():
     
     # Dívidas
     debts_list = debts.query.filter_by(status=1, username=current_user.username).filter(debts.maturity >= current_month).order_by(debts.maturity.desc()).all()
-    dates_debts = [debt.maturity.strftime('%Y-%m-%d') for debt in debts_list]  # Formatando a data como string
+    dates_debts = [debt.maturity.strftime('%Y-%m-%d') for debt in debts_list]
     values_debts = [debt.value for debt in debts_list]
-    bar_chart_debts = go.Bar(
-        x=dates_debts,
-        y=values_debts,
+    
+    pie_chart_debts = go.Pie(
+        labels=dates_debts,
+        values=values_debts,
         name='Dívidas',
-        marker=dict(color='rgb(26, 118, 255)')
+        marker=dict(colors=['rgb(26, 118, 255)', 'rgb(255, 127, 14)', 'rgb(44, 160, 44)', 'rgb(214, 39, 40)', 'rgb(148, 103, 189)']),
+        hoverinfo='label+percent+value'
     )
     
     # Compras
     balance_list = ShoppingList.query.filter_by(status=1, username=current_user.username).filter(ShoppingList.date >= current_month).order_by(ShoppingList.date.desc()).all()
-    dates_balance = [purchase.date.strftime('%Y-%m-%d') for purchase in balance_list]  # Formatando a data como string
+    dates_balance = [purchase.date.strftime('%Y-%m-%d') for purchase in balance_list]
     values_balance = [purchase.price for purchase in balance_list]
-    line_chart_balance = go.Scatter(
-        x=dates_balance,
-        y=values_balance,
-        mode='lines+markers',
+    
+    pie_chart_balance = go.Pie(
+        labels=dates_balance,
+        values=values_balance,
         name='Compras',
-        line=dict(color='rgb(255, 118, 26)')
+        marker=dict(colors=['rgb(255, 118, 26)', 'rgb(31, 119, 180)', 'rgb(255, 127, 14)', 'rgb(44, 160, 44)', 'rgb(214, 39, 40)']),
+        hoverinfo='label+percent+value'
     )
     
     # Layout dos gráficos
     layout_debts = go.Layout(
-        title='Gastos por Dia',
-        xaxis=dict(title='Data'),
-        yaxis=dict(title='Valor'),
+        title='Distribuição de Gastos com Dívidas por Data',
         hovermode='closest'
     )
     
     layout_balance = go.Layout(
-        title='Compras por Dia',
-        xaxis=dict(title='Data'),
-        yaxis=dict(title='Valor Total de Compras'),
+        title='Distribuição de Compras por Data',
         hovermode='closest'
     )
     
     # Criar figuras
-    fig_debts = go.Figure(data=[bar_chart_debts], layout=layout_debts)
-    fig_balance = go.Figure(data=[line_chart_balance], layout=layout_balance)
+    fig_debts = go.Figure(data=[pie_chart_debts], layout=layout_debts)
+    fig_balance = go.Figure(data=[pie_chart_balance], layout=layout_balance)
     
     # Converter figuras para HTML
     graph_html_debts = fig_debts.to_html(full_html=False)
     graph_html_balance = fig_balance.to_html(full_html=False)
 
     return render_template('dashboard.html', username=current_user.username, graph_html1=graph_html_debts, graph_html2=graph_html_balance, current_month=current_month)
+
 
 
 
