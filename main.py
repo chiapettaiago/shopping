@@ -416,14 +416,14 @@ def dashboard():
     
     # Layout dos gráficos
     layout_debts = go.Layout(
-        title='Gastos com Dívidas por Dia',
+        title='Gastos por Dia',
         xaxis=dict(title='Data'),
         yaxis=dict(title='Valor'),
         hovermode='closest'
     )
     
     layout_balance = go.Layout(
-        title='Valor Total de Compras por Dia',
+        title='Compras por Dia',
         xaxis=dict(title='Data'),
         yaxis=dict(title='Valor Total de Compras'),
         hovermode='closest'
