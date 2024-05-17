@@ -441,13 +441,19 @@ def dashboard():
     
     # Layout dos gráficos
     layout_debts = go.Layout(
-        title='Distribuição de Gastos com Dívidas por Data',
-        hovermode='closest'
+        title='Distribuição de Gastos por Data',
+        hovermode='closest',
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='royalblue')  # Letras verdes
     )
     
     layout_balance = go.Layout(
         title='Distribuição de Compras por Data',
-        hovermode='closest'
+        hovermode='closest',
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='royalblue')  # Letras verdes
     )
     
     # Criar figuras
