@@ -411,7 +411,6 @@ def dashboard():
     saldo_atualizado = balance_total_formatado - debts_1_formatado
     saldo_atualizado_formatado = round(saldo_atualizado, 2)
     porcentagem = saldo_atualizado_formatado / balance_total_formatado * 100
-    porcentagem_formatado = round(porcentagem, 2)
     por_dia = saldo_atualizado_formatado / dias_faltando
     por_dia_atualizado = round(por_dia, 2)
     
@@ -466,7 +465,7 @@ def dashboard():
     graph_html_debts = fig_debts.to_html(full_html=False)
     graph_html_balance = fig_balance.to_html(full_html=False)
 
-    return render_template('dashboard.html', username=current_user.username, graph_html1=graph_html_debts, graph_html2=graph_html_balance, porcentagem_formatado=porcentagem_formatado,  total_price=total_price_formatado, saldo_atualizado=saldo_atualizado_formatado, por_dia=por_dia_atualizado, current_month=current_month)
+    return render_template('dashboard.html', username=current_user.username, graph_html1=graph_html_debts, graph_html2=graph_html_balance, porcentagem_formatado=porcentagem,  total_price=total_price_formatado, saldo_atualizado=saldo_atualizado_formatado, por_dia=por_dia_atualizado, current_month=current_month)
 
 @app.route('/export_pdf', methods=['GET'])
 @login_required
