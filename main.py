@@ -3,7 +3,7 @@ from models.models import db, User, ShoppingList, debts, Balance
 from sqlalchemy import exc, text, create_engine,desc
 from sqlalchemy.pool import QueuePool
 from flask_migrate import Migrate
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 import google.generativeai as genai
 import mysql.connector
@@ -40,44 +40,10 @@ migrate = Migrate(app, db)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'  # Define a rota para redirecionamento quando o usuário não estiver logado
 
-        
-# Configurar a API uma única vez
-genai.configure(api_key="AIzaSyACwhkVuzzzK4tXoSarhqaL9Y4CJ-FUc3M")
-
-# Configuração do modelo
-generation_config = {
-    "temperature": 0.9,
-    "top_p": 1,
-    "top_k": 1,
-    "max_output_tokens": 2048,
-}
-
-safety_settings = [
-    {
-        "category": "HARM_CATEGORY_HARASSMENT",
-        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-    },
-    {
-        "category": "HARM_CATEGORY_HATE_SPEECH",
-        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-    },
-    {
-        "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-    },
-    {
-        "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-    },
-]
-
-model = genai.GenerativeModel(model_name="gemini-1.0-pro",
-                              generation_config=generation_config,
-                              safety_settings=safety_settings)
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))
 
 # Atualizar o tempo limite da sessão sempre que uma solicitação for recebida
 @app.before_request
@@ -91,14 +57,14 @@ def update_session_timeout():
 def check_session_timeout():
     if 'last_activity' in session:
         last_activity = session.get('last_activity')
-        now = datetime.utcnow().replace(tzinfo=last_activity.tzinfo)  # Torna a hora atual sensível ao fuso horário
+        now = datetime.now().astimezone(last_activity.tzinfo)
         if (now - last_activity).total_seconds() > 600:  # 600 segundos = 10 minutos
             # Fazer logout do usuário
             logout_user()
             # Redirecionar para a página de login ou para onde desejar
             return redirect(url_for('login'))
     # Atualizar o registro de última atividade
-    session['last_activity'] = datetime.utcnow()
+    session['last_activity'] = datetime.now(timezone.utc)
 
 # Função para verificar e atualizar automaticamente os itens antigos do balanço com a data atual
 def update_old_balance_items():
