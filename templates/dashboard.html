@@ -13,70 +13,71 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <style>
-        .btn-height {
-        height: 38px; /* Ajuste conforme necessário */
+        body {
+            background: url("{{url_for('static', filename='images/foto.jpg')}}") no-repeat center center fixed;
+            background-size: cover;
         }
-
     </style>
-    
     <title>Dashboard</title>
 </head>
 <body>
     {% include 'navbar.html' %}
-    <h1 class="text-center mt-3">Bem-vindo, {{ username }}!</h1>
-    <div>
-        <h4 class="text-success text-center">Valor Total das Dívidas: R$ {{ '{:.2f}'.format(total_price) }}</h3>
-    </div>
-    <!-- Exibição do Valor Total da Compra -->
-    <div>
-        <h4 class="text-success text-center">Saldo Atualizado: R$ {{ '{:.2f}'.format(saldo_atualizado) }}</h3>
-    </div>
-    
-    <div>
-        <h4 class="text-success text-center">Limite diário recomendado: R$ {{ '{:.2f}'.format(por_dia) }}</h3>
-    </div>
-    <div class="container">
-        <div class="row">
-            <div class="col-md-6">
-                <div id="chart1" class="py-3">
-                    {{ graph_html1|safe }}
+    <div class="container mt-3 rounded mb-3">
+        <div class="card bg-light bg-opacity-75 p-4">
+            <h1 class="text-center text-dark mt-3">Bem-vindo, {{ username }}!</h1>
+            <div>
+                <h4 class="text-success text-center">Valor Total das Dívidas: R$ {{ '{:.2f}'.format(total_price) }}</h4>
+            </div>
+            <div>
+                <h4 class="text-success text-center">Saldo Atualizado: R$ {{ '{:.2f}'.format(saldo_atualizado) }}</h4>
+            </div>
+            <div>
+                <h4 class="text-success text-center">Limite diário recomendado: R$ {{ '{:.2f}'.format(por_dia) }}</h4>
+            </div>
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div id="chart1" class="py-3">
+                            {{ graph_html1|safe }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div id="chart2" class="py-3">
+                            {{ graph_html2|safe }}
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div id="chart2" class="py-3">
-                    {{ graph_html2|safe }}
-                </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered text-center">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Informação</th>
+                            <th>Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Porcentagem do saldo na conta até o momento:</td>
+                            <td>{{ porcentagem_formatado }} %</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Botão flutuante para alternar modo claro/escuro -->
+            <div class="position-fixed fixed-bottom mb-3 mr-3 ml-2">
+                <button type="button" class="btn btn-dark border shadow" title="Alternar entre Modo Claro e Escuro" id="btnSwitch">
+                    <i class="fa-solid fa-circle-half-stroke fa-bounce"></i>
+                </button>
             </div>
         </div>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-bordered text-center">
-            <thead class="table-light">
-            <tr>
-                <th>Informação: </th>
-                <th>Valor: </th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Porcentagem do saldo na conta até o momento:</td>
-            <td> {{ porcentagem_formatado }} % </td>
-        </tr>
-    </tbody>
-        </table>
-    </div>
-    
-    <!-- Botão flutuante para alternar modo claro/escuro -->
-    <div class="position-fixed fixed-bottom mb-3 mr-3 ml-2">
-        <button type="button" class="btn btn-dark border shadow" title="Alternar entre Modo Claro e Escuro" id="btnSwitch">
-            <i class="fa-solid fa-circle-half-stroke fa-bounce"></i>
-        </button>
-    </div>
-    
     <!-- Script para alternar entre os modos claro e escuro -->
     <script>
-       document.getElementById('btnSwitch').addEventListener('click', () => {
+        document.getElementById('btnSwitch').addEventListener('click', () => {
             const currentTheme = document.documentElement.getAttribute('data-bs-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-bs-theme', newTheme);
