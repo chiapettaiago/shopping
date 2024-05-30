@@ -1,6 +1,8 @@
-<html>
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
     <title>Casa</title>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="refresh" content="300">
     <link rel="apple-touch-icon" sizes="180x180" href={{ url_for('static', filename='images/apple-touch-icon.png') }}>
@@ -12,187 +14,195 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <style>
-        .btn-height {
-        height: 38px; /* Ajuste conforme necessário */
+        body {
+            background: url("{{url_for('static', filename='images/foto.jpg')}}") no-repeat center center fixed;
+            background-size: cover;
         }
-
+        .btn-height {
+            height: 38px; /* Ajuste conforme necessário */
+        }
     </style>
 </head>
 <body>
     {% include 'navbar.html' %}
-    <h2 class="text-center mt-3">Carrinho de Compras</h2>
+    <div class="container mt-5">
+        <div class="card bg-light bg-opacity-75 mb-3 p-4">
+            <h2 class="text-center text-dark">Carrinho de Compras</h2>
 
-    <!-- Exibição do Valor Total da Compra -->
-    <div>
-        <h4 class="text-success text-center">Valor Total da Compra: R$ {{ '{:.2f}'.format(total_price) }}</h3>
-    </div>
-    
-    <!-- Botão para abrir o modal de adição -->
-    <button title="Adicionar Item" type="button" class="btn btn-primary ml-3 mb-2 mt-2" data-toggle="modal" data-target="#addItemModal">
-        <i class="fa-solid fa-plus"></i>
-    </button>
+            <!-- Exibição do Valor Total da Compra -->
+            <div>
+                <h4 class="text-success text-center">Valor Total da Compra: R$ {{ '{:.2f}'.format(total_price) }}</h4>
+            </div>
+            
+            <!-- Botão para abrir o modal de adição -->
+            <div class="d-flex justify-content-center mb-2 text-center mt-2">
+                <button title="Adicionar Item" type="button" class="btn btn-primary mr-2" data-toggle="modal" data-target="#addItemModal">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+                <button type="button" class="btn btn-danger btn-height" title="Exportar como PDF" onclick="downloadPDF()">
+                    <i class="fa-solid fa-file-pdf"></i>
+                </button>
+            </div>
 
-    <!-- Botão para abrir o modal de adição -->
-    <button type="button" class="btn btn-danger ml-3 mb-2 mt-2 btn-height" title="Exportar como PDF" onclick="downloadPDF()">
-        <i class="fa-solid fa-file-pdf"></i>
-    </button>
+            {% set categories = ['Alimentos', 'Bebidas', 'Limpeza'] %}
 
-    <!-- Botão flutuante para alternar modo claro/escuro -->
-    <div class="position-fixed fixed-bottom mb-3 mr-3 ml-2">
-        <button type="button" class="btn btn-dark border shadow" title="Alternar entre Modo Claro e Escuro" id="btnSwitch">
-            <i class="fa-solid fa-circle-half-stroke fa-bounce"></i>
-        </button>
-    </div>
+            {% for category in categories %}
+                <h2 class="text-center text-dark">{{ category }}</h2>
+                <div class="table-responsive">
+                    <table class="table table-bordered text-center">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Desc.</th>
+                                <th>Quantidade</th>
+                                <th>Preço</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody class="table-body">
+                            {% for item in shopping_list %}
+                                {% if item.category == category %}
+                                    <tr>
+                                        <td>{{ item.name }}</td>
+                                        <td>{{ item.quantity }}</td>
+                                        <td> R$ {{ '{:.2f}'.format(item.price) }}</td>
+                                        <td>
+                                            <!-- Botões de Ação -->
+                                            <button type="button" class="btn btn-danger" data-toggle="modal" title="Excluir" data-target="#deleteItemModal{{ item.id }}">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-primary" data-toggle="modal" title="Editar" data-target="#editItemModal{{ item.id }}">
+                                                <i class="fa-solid fa-pencil"></i>
+                                            </button>
+                                            <a href="{{ url_for('buy', id=item.id) }}" title="Comprar" class="btn btn-success"><i class="fa-solid fa-cart-plus"></i></a>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
 
-    {% set categories = ['Alimentos', 'Bebidas', 'Limpeza'] %}
-
-    {% for category in categories %}
-        <h2 class="text-center">{{ category }}</h2>
-        <div class="table-responsive">
-        <table class="table table-bordered text-center">
-            <thead class="table-light" >
-                <tr>
-                    <th>Desc.</th>
-                    <th>Quantidade</th>
-                    <th>Preço</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody class="table-body">
+                <!-- Modal de Exclusão -->
                 {% for item in shopping_list %}
                     {% if item.category == category %}
-                        <tr>
-                            <td>{{ item.name }}</td>
-                            <td>{{ item.quantity }}</td>
-                            <td> R$ {{ '{:.2f}'.format(item.price) }}</td>
-                            <td>
-                                <!-- Botões de Ação -->
-                                <button type="button" class="btn btn-danger" data-toggle="modal" title="Excluir" data-target="#deleteItemModal{{ item.id }}">
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
-                                <button type="button" class="btn btn-primary" data-toggle="modal" title="Editar" data-target="#editItemModal{{ item.id }}">
-                                    <i class="fa-solid fa-pencil"></i>
-                                </button>
-                                <a href="{{ url_for('buy', id=item.id) }}" title="Comprar" class="btn btn-success"><i class="fa-solid fa-cart-plus"></i></a>
-                            </td>
-                        </tr>
+                        <div class="modal fade" id="deleteItemModal{{ item.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteItemModalLabel{{ item.id }}" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="deleteItemModalLabel{{ item.id }}">Confirmar Exclusão</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Tem certeza de que deseja excluir o item "{{ item.name }}"?
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fa-solid fa-x"></i></button>
+                                        <a href="{{ url_for('delete', id=item.id) }}" class="btn btn-success"><i class="fa-solid fa-check"></i></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     {% endif %}
                 {% endfor %}
-            </tbody>
-        </table>
-    </div>
 
-        <!-- Modal de Exclusão -->
-        {% for item in shopping_list %}
-            {% if item.category == category %}
-                <div class="modal fade" id="deleteItemModal{{ item.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteItemModalLabel{{ item.id }}" aria-hidden="true">
-                    <div class="modal-dialog" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="deleteItemModalLabel{{ item.id }}">Confirmar Exclusão</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
+                <!-- Modal de Edição -->
+                {% for item in shopping_list %}
+                    {% if item.category == category %}
+                        <div class="modal fade" id="editItemModal{{ item.id }}" tabindex="-1" role="dialog" aria-labelledby="editItemModalLabel{{ item.id }}" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="editItemModalLabel{{ item.id }}">Editar Item</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <!-- Formulário de Edição de Item -->
+                                        <form action="{{ url_for('edit', id=item.id) }}" method="POST">
+                                            <div class="form-group">
+                                                <label for="editName{{ item.id }}">Nome:</label>
+                                                <input type="text" class="form-control" id="editName{{ item.id }}" name="name" value="{{ item.name }}" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="editQuantity{{ item.quantity }}">Quantidade:</label>
+                                                <input type="number" class="form-control" id="editQuantity{{ item.id }}" name="quantity" value="{{ item.quantity }}" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="editCategory{{ item.id }}">Categoria:</label>
+                                                <select class="form-control" id="editCategory{{ item.id }}" name="category" required>
+                                                    <option value="Alimentos" {% if item.category == 'Alimentos' %} selected {% endif %}>Alimentos</option>
+                                                    <option value="Bebidas" {% if item.category == 'Bebidas' %} selected {% endif %}>Bebidas</option>
+                                                    <option value="Limpeza" {% if item.category == 'Limpeza' %} selected {% endif %}>Limpeza</option>
+                                                    <!-- Adicione outras categorias conforme necessário -->
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="editPrice{{ item.id }}">Preço:</label>
+                                                <input type="number" step="0.01" class="form-control" id="editPrice{{ item.id }}" name="price" value="{{ item.price }}" required>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i></button>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="modal-body">
-                                Tem certeza de que deseja excluir o item "{{ item.name }}"?
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fa-solid fa-x"></i></button>
-                                <a href="{{ url_for('delete', id=item.id) }}" class="btn btn-success"><i class="fa-solid fa-check"></i></i></a>
-                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+
+            <!-- Modal de Adição de Item -->
+            <div class="modal fade" id="addItemModal" tabindex="-1" role="dialog" aria-labelledby="addItemModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="addItemModalLabel">Adicionar Item</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Formulário de Adição de Item -->
+                            <form action="{{ url_for('add') }}" method="POST">
+                                <div class="form-group">
+                                    <label for="name">Nome:</label>
+                                    <input type="text" class="form-control" id="name" name="name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="quantity">Quantidade:</label>
+                                    <input type="number" class="form-control" id="quantity" name="quantity" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="price">Preço:</label>
+                                    <input type="number" step="0.01" class="form-control" id="price" name="price" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="category">Categoria:</label>
+                                    <select class="form-control" id="category" name="category" required>
+                                        <option value="Alimentos">Alimentos</option>
+                                        <option value="Bebidas">Bebidas</option>
+                                        <option value="Limpeza">Limpeza</option>
+                                        <!-- Adicione outras categorias conforme necessário -->
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-cart-plus"></i></button>
+                            </form>
                         </div>
                     </div>
                 </div>
-            {% endif %}
-        {% endfor %}
+            </div>
 
-        <!-- Modal de Edição -->
-        {% for item in shopping_list %}
-            {% if item.category == category %}
-                <div class="modal fade" id="editItemModal{{ item.id }}" tabindex="-1" role="dialog" aria-labelledby="editItemModalLabel{{ item.id }}" aria-hidden="true">
-                    <div class="modal-dialog" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="editItemModalLabel{{ item.id }}">Editar Item</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                            </div>
-                            <div class="modal-body">
-                                <!-- Formulário de Edição de Item -->
-                                <form action="{{ url_for('edit', id=item.id) }}" method="POST">
-                                    <div class="form-group">
-                                        <label for="editName{{ item.id }}">Nome:</label>
-                                        <input type="text" class="form-control" id="editName{{ item.id }}" name="name" value="{{ item.name }}" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="editQuantity{{ item.quantity }}">Quantidade:</label>
-                                        <input type="number" class="form-control" id="editQuantity{{ item.id }}" name="quantity" value="{{ item.quantity }}" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="editCategory{{ item.id }}">Categoria:</label>
-                                        <select class="form-control" id="editCategory{{ item.id }}" name="category" required>
-                                            <option value="Alimentos" {% if item.category == 'Alimentos' %} selected {% endif %}>Alimentos</option>
-                                            <option value="Bebidas" {% if item.category == 'Bebidas' %} selected {% endif %}>Bebidas</option>
-                                            <option value="Limpeza" {% if item.category == 'Limpeza' %} selected {% endif %}>Limpeza</option>
-                                            <!-- Adicione outras categorias conforme necessário -->
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="editPrice{{ '{:.2f}'.format(item.price) }}">Preço:</label>
-                                        <input type="number" step="0.01" class="form-control" id="editPrice{{ item.id }}" name="price" value="{{ item.price }}" required>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i></button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            {% endif %}
-        {% endfor %}
-    {% endfor %}
-
-    <!-- Modal de Adição de Item -->
-    <div class="modal fade" id="addItemModal" tabindex="-1" role="dialog" aria-labelledby="addItemModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addItemModalLabel">Adicionar Item</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <!-- Formulário de Adição de Item -->
-                    <form action="{{ url_for('add') }}" method="POST">
-                        <div class="form-group">
-                            <label for="name">Nome:</label>
-                            <input type="text" class="form-control" id="name" name="name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="quantity">Quantidade:</label>
-                            <input type="number" class="form-control" id="quantity" name="quantity" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="price">Preço:</label>
-                            <input type="number" step="0.01" class="form-control" id="price" name="price" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="category">Categoria:</label>
-                            <select class="form-control" id="category" name="category" required>
-                                <option value="Alimentos">Alimentos</option>
-                                <option value="Bebidas">Bebidas</option>
-                                <option value="Limpeza">Limpeza</option>
-                                <!-- Adicione outras categorias conforme necessário -->
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-cart-plus"></i></button>
-                    </form>
-                </div>
+            <!-- Botão flutuante para alternar modo claro/escuro -->
+            <div class="position-fixed fixed-bottom mb-3 mr-3 ml-2">
+                <button type="button" class="btn btn-dark border shadow" title="Alternar entre Modo Claro e Escuro" id="btnSwitch">
+                    <i class="fa-solid fa-circle-half-stroke fa-bounce"></i>
+                </button>
             </div>
         </div>
     </div>
+
     <script>
         function downloadPDF() {
             // Redireciona o usuário para a rota que gera o PDF
@@ -221,6 +231,6 @@
             }
         }
     </script>
-        <script src="{{url_for('static', filename='fonts/js/all.js')}}" crossorigin="anonymous"></script>
+    <script src="{{url_for('static', filename='fonts/js/all.js')}}" crossorigin="anonymous"></script>
 </body>
 </html>
