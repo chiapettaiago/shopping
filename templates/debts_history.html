@@ -1,6 +1,7 @@
-<html>
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
-    <title>Histórico</title>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="apple-touch-icon" sizes="180x180" href={{ url_for('static', filename='images/apple-touch-icon.png') }}>
     <link rel="icon" type="image/png" sizes="32x32" href={{ url_for('static', filename='images/favicon-32x32.png') }}>
@@ -12,14 +13,48 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <style>
+        body {
+            background: url("{{url_for('static', filename='images/foto.jpg')}}") no-repeat center center fixed;
+            background-size: cover;
+        }
+    </style>
+    <title>Histórico</title>
 </head>
 <body>
     {% include 'navbar.html' %}
-    <h2 class="text-center mt-3">Dívidas quitadas</h2>
+    
+    <div class="container mt-5 mb-3">
+        <div class="card bg-light bg-opacity-75 p-4">
+            <h2 class="text-center text-dark mt-3">Dívidas quitadas</h2>
 
-    <!-- Exibição do Valor Total da Compra -->
-    <div>
-        <h4 class="text-success text-center">Dívidas quitadas: R$ {{ '{:.2f}'.format(total_value) }}</h3>
+            <!-- Exibição do Valor Total das Dívidas Quitadas -->
+            <div>
+                <h4 class="text-success text-center">Dívidas quitadas: R$ {{ '{:.2f}'.format(total_value) }}</h4>
+            </div>
+
+            <!-- Tabela de Dívidas Quitadas -->
+            <div class="table-responsive">
+                <table class="table table-bordered text-center">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Desc.</th>
+                            <th>Vencimento</th>
+                            <th>Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-body">
+                        {% for item in debts_history %}
+                            <tr>
+                                <td>{{ item.name }}</td>
+                                <td>{{ item.maturity.strftime("%d/%m/%Y") }}</td>
+                                <td> R$ {{ '{:.2f}'.format(item.value) }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- Botão flutuante para alternar modo claro/escuro -->
@@ -29,26 +64,6 @@
         </button>
     </div>
 
-        <div class="table-responsive">
-        <table class="table table-bordered text-center">
-            <thead class="table-light">
-                <tr>
-                    <th>Desc.</th>
-                    <th>Vencimento</th>
-                    <th>Valor</th>
-                </tr>
-            </thead>
-            <tbody class="table-body">
-                {% for item in debts_history %}
-                        <tr>
-                            <td>{{ item.name }}</td>
-                            <td>{{ item.maturity.strftime("%d/%m/%Y") }}</td>
-                            <td> R$ {{ '{:.2f}'.format(item.value) }}</td>
-                        </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
     <script>
         document.getElementById('btnSwitch').addEventListener('click', () => {
             const currentTheme = document.documentElement.getAttribute('data-bs-theme');
@@ -71,8 +86,7 @@
                 tableBody.classList.remove('table-dark');
             }
         }
-
     </script>
-        <script src="{{url_for('static', filename='fonts/js/all.js')}}" crossorigin="anonymous"></script>
+    <script src="{{url_for('static', filename='fonts/js/all.js')}}" crossorigin="anonymous"></script>
 </body>
 </html>
