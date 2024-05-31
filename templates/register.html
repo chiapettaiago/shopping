@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -9,21 +9,35 @@
     <link rel="icon" type="image/png" sizes="16x16" href={{ url_for('static', filename='images/favicon-16x16.png') }}>
     <link rel="manifest" href={{ url_for('static', filename='images/site.webmanifest') }}>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <style>
+        body {
+            background-image: url("{{ url_for('static', filename='images/foto.jpg') }}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.9); /* Leve transparência para destacar o conteúdo */
+        }
+    </style>
     <title>Registro</title>
 </head>
 <body>
-    <div class="container d-flex justify-content-center align-items-center vh-100">
-        <div>
+    <div class="container d-flex justify-content-center rounded align-items-center vh-100">
+        <div class="card bg-opacity-75 shadow p-4">
             <h2 class="text-center">Registro</h2>
             <form method="POST" action="{{ url_for('register') }}">
-                <input class="form-control mb-2" type="text" name="username" placeholder="Usuário" required><br>
-                <input class="form-control mb-2" type="password" name="password" placeholder="Senha" required><br>
+                <input class="form-control mb-2" type="text" name="username" placeholder="Usuário" required>
+                <input class="form-control mb-2" type="password" name="password" placeholder="Senha" required>
                 <div class="text-center">
                     <button class="btn btn-primary" type="submit">Registrar</button>
                 </div>
             </form>
             {% if error %}
-                <p>{{ error }}</p>
+                <p class="text-danger text-center mt-2">{{ error }}</p>
             {% endif %}
         </div>
     </div>
