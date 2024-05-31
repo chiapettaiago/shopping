@@ -253,7 +253,7 @@ def balance():
 def add_balance():
     name = request.form['name']
     value = request.form['value']
-    data = datetime.now()
+    data = request.form['data']
 
     # Adicione validações e formatação necessárias aqui
 
