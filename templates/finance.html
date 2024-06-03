@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contas</title>
-    <link rel="apple-touch-icon" sizes="180x180" href={{ url_for('static', filename='images/apple-touch-icon.png') }}>
-    <link rel="icon" type="image/png" sizes="32x32" href={{ url_for('static', filename='images/favicon-32x32.png') }}>
-    <link rel="icon" type="image/png" sizes="16x16" href={{ url_for('static', filename='images/favicon-16x16.png') }}>
-    <link rel="manifest" href={{ url_for('static', filename='images/site.webmanifest') }}>
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='images/site.webmanifest') }}">
     <meta http-equiv="refresh" content="300">
     <!-- Inclua os links para o Bootstrap CSS e JavaScript -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
@@ -86,7 +86,7 @@
     </div>
 
     <!-- Botão flutuante para alternar modo claro/escuro -->
-    <div class="position-fixed fixed-bottom mb-3 mr-3 ml-2">
+    <div class="position-fixed fixed-bottom mb-3 mr-3 ml-2 d-none d-lg-inline">
         <button type="button" class="btn btn-dark border shadow" title="Alternar entre Modo Claro e Escuro" id="btnSwitch">
             <i class="fa-solid fa-circle-half-stroke fa-bounce"></i>
         </button>
@@ -198,15 +198,21 @@
             tableBody.classList.toggle('table-dark');
         });
 
-        // Verifica se há um tema armazenado no armazenamento local
-        const storedTheme = localStorage.getItem('theme');
-        if (storedTheme) {
-            document.documentElement.setAttribute('data-bs-theme', storedTheme);
-            const tableBody = document.querySelector('.table-body');
-            if (storedTheme === 'dark') {
-                tableBody.classList.add('table-dark');
+        // Define o tema claro como padrão em dispositivos móveis
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        if (isMobile) {
+            document.documentElement.setAttribute('data-bs-theme', 'light');
+        } else {
+            // Verifica se há um tema armazenado no armazenamento local
+            const storedTheme = localStorage.getItem('theme');
+            if (storedTheme) {
+                document.documentElement.setAttribute('data-bs-theme', storedTheme);
             } else {
-                tableBody.classList.remove('table-dark');
+                if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.setAttribute('data-bs-theme', 'dark');
+                } else {
+                    document.documentElement.setAttribute('data-bs-theme', 'light');
+                }
             }
         }
     </script>

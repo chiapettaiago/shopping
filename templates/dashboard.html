@@ -22,7 +22,7 @@
 </head>
 <body>
     {% include 'navbar.html' %}
-    <div class="container mt-3 rounded  mb-3">
+    <div class="container mt-3 rounded mb-3">
         <div class="card bg-light bg-opacity-75 shadow p-4">
             <h1 class="text-center text-dark mt-3">Bem-vindo, {{ username }}!</h1>
             <div>
@@ -48,8 +48,8 @@
                     </div>
                 </div>
             </div>
-
             <div class="table-responsive">
+                {% if porcentagem_formatado %}
                 <table class="table table-bordered text-center">
                     <thead class="table-light">
                         <tr>
@@ -64,10 +64,11 @@
                         </tr>
                     </tbody>
                 </table>
+                {% endif %}
             </div>
 
             <!-- Botão flutuante para alternar modo claro/escuro -->
-            <div class="position-fixed fixed-bottom mb-3 mr-3 ml-2">
+            <div class="position-fixed fixed-bottom mb-3 mr-3 ml-2 d-none d-lg-inline">
                 <button type="button" class="btn btn-dark border shadow" title="Alternar entre Modo Claro e Escuro" id="btnSwitch">
                     <i class="fa-solid fa-circle-half-stroke fa-bounce"></i>
                 </button>
@@ -87,17 +88,25 @@
             tableBody.classList.toggle('table-dark');
         });
 
-        // Verifica se há um tema armazenado no armazenamento local
-        const storedTheme = localStorage.getItem('theme');
-        if (storedTheme) {
-            document.documentElement.setAttribute('data-bs-theme', storedTheme);
-            const tableBody = document.querySelector('.table-body');
-            if (storedTheme === 'dark') {
-                tableBody.classList.add('table-dark');
+        // Função para definir o tema inicial
+        function setInitialTheme() {
+            const storedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isMobile = window.matchMedia('(max-width: 767.98px)').matches;
+
+            if (isMobile) {
+                document.documentElement.setAttribute('data-bs-theme', 'light');
             } else {
-                tableBody.classList.remove('table-dark');
+                if (storedTheme) {
+                    document.documentElement.setAttribute('data-bs-theme', storedTheme);
+                } else {
+                    document.documentElement.setAttribute('data-bs-theme', prefersDarkScheme ? 'dark' : 'light');
+                }
             }
         }
+
+        // Configurar tema inicial
+        setInitialTheme();
     </script>
     <script src="{{url_for('static', filename='fonts/js/all.js')}}" crossorigin="anonymous"></script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

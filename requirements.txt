@@ -5,3 +5,4 @@ flask_login
 mysql_connector_python
 google-generativeai
 reportlab
+plotly
