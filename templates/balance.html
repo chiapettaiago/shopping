@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="apple-touch-icon" sizes="180x180" href={{ url_for('static', filename='images/apple-touch-icon.png') }}>
-    <link rel="icon" type="image/png" sizes="32x32" href={{ url_for('static', filename='images/favicon-32x32.png') }}>
-    <link rel="icon" type="image/png" sizes="16x16" href={{ url_for('static', filename='images/favicon-16x16.png') }}>
-    <link rel="manifest" href={{ url_for('static', filename='images/site.webmanifest') }}>
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='images/site.webmanifest') }}">
     <meta http-equiv="refresh" content="300">
     <!-- Inclua os links para o Bootstrap CSS e JavaScript -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
@@ -15,7 +15,7 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <style>
         body {
-            background: url("{{url_for('static', filename='images/foto.jpg')}}") no-repeat center center fixed;
+            background: url("{{ url_for('static', filename='images/foto.jpg') }}") no-repeat center center fixed;
             background-size: cover;
         }
     </style>
@@ -25,27 +25,27 @@
     {% include 'navbar.html' %}
     
     <div class="container mt-5">
-    <div class="card bg-light rounded shadow bg-opacity-75 p-4">
-    <h2 class="text-center text-dark">Recebimentos</h2>
+        <div class="card bg-light rounded shadow bg-opacity-75 p-4">
+            <h2 class="text-center text-dark">Recebimentos</h2>
 
-    <!-- Exibição do Valor Total da Compra -->
-    <div>
-        <h4 class="text-success text-center">Valor Total dos Recebimentos: R$ {{ '{:.2f}'.format(total_price) }}</h4>
-    </div>
-    
-    <!-- Botão para abrir o modal de adição -->
-    <div class="text-center">
-        <button type="button" class="btn btn-primary mb-2 mt-2" data-toggle="modal" data-target="#addItemModal">
-            <i class="fa-solid fa-plus"></i>
-        </button>
-    </div>
+            <!-- Exibição do Valor Total da Compra -->
+            <div>
+                <h4 class="text-success text-center">Valor Total dos Recebimentos: R$ {{ '{:.2f}'.format(total_price) }}</h4>
+            </div>
+            
+            <!-- Botão para abrir o modal de adição -->
+            <div class="text-center">
+                <button type="button" class="btn btn-primary mb-2 mt-2" data-toggle="modal" data-target="#addItemModal">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
 
-    <!-- Botão flutuante para alternar modo claro/escuro -->
-    <div class="position-fixed fixed-bottom mb-3 mr-3 ml-2">
-        <button type="button" class="btn btn-dark border shadow" title="Alternar entre Modo Claro e Escuro" id="btnSwitch">
-            <i class="fa-solid fa-circle-half-stroke fa-bounce"></i>
-        </button>
-    </div>
+            <!-- Botão flutuante para alternar modo claro/escuro -->
+            <div class="position-fixed fixed-bottom mb-3 mr-3 ml-2 d-none d-md-block">
+                <button type="button" class="btn btn-dark border shadow" title="Alternar entre Modo Claro e Escuro" id="btnSwitch">
+                    <i class="fa-solid fa-circle-half-stroke fa-bounce"></i>
+                </button>
+            </div>
 
             <div class="table-responsive">
                 <table class="table table-bordered text-center">
@@ -101,7 +101,30 @@
             </div>
         </div>
     </div>
+    
     <script>
+        // Define o tema claro por padrão em dispositivos móveis
+        const isMobile = window.innerWidth <= 767;
+        if (isMobile) {
+            document.documentElement.setAttribute('data-bs-theme', 'light');
+            const tableBody = document.querySelector('.table-body');
+            tableBody.classList.toggle('table-dark');
+        } else {
+            // Verifica se há um tema armazenado no armazenamento local para desktops
+            const storedTheme = localStorage.getItem('theme');
+            if (storedTheme) {
+                document.documentElement.setAttribute('data-bs-theme', storedTheme);
+                const tableBody = document.querySelector('.table-body');
+                if (storedTheme === 'dark') {
+                    tableBody.classList.add('table-dark');
+                } else {
+                    tableBody.classList.remove('table-dark');
+                }
+            } else {
+                document.documentElement.setAttribute('data-bs-theme', 'light');
+            }
+        }
+
         document.getElementById('btnSwitch').addEventListener('click', () => {
             const currentTheme = document.documentElement.getAttribute('data-bs-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -111,19 +134,7 @@
             const tableBody = document.querySelector('.table-body');
             tableBody.classList.toggle('table-dark');
         });
-
-        // Verifica se há um tema armazenado no armazenamento local
-        const storedTheme = localStorage.getItem('theme');
-        if (storedTheme) {
-            document.documentElement.setAttribute('data-bs-theme', storedTheme);
-            const tableBody = document.querySelector('.table-body');
-            if (storedTheme === 'dark') {
-                tableBody.classList.add('table-dark');
-            } else {
-                tableBody.classList.remove('table-dark');
-            }
-        }
     </script>
-    <script src="{{url_for('static', filename='fonts/js/all.js')}}" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', filename='fonts/js/all.js') }}" crossorigin="anonymous"></script>
 </body>
 </html>

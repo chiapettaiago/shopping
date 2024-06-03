@@ -59,13 +59,35 @@
     </div>
 
     <!-- Botão flutuante para alternar modo claro/escuro -->
-    <div class="position-fixed fixed-bottom mb-3 mr-3 ml-2">
+    <div class="position-fixed fixed-bottom mb-3 mr-3 ml-2 d-none d-md-block">
         <button type="button" class="btn btn-dark border shadow" title="Alternar entre Modo Claro e Escuro" id="btnSwitch">
             <i class="fa-solid fa-circle-half-stroke fa-bounce"></i>
         </button>
     </div>
 
     <script>
+        // Define o tema claro por padrão em dispositivos móveis
+        const isMobile = window.innerWidth <= 767;
+        if (isMobile) {
+            document.documentElement.setAttribute('data-bs-theme', 'light');
+            const tableBody = document.querySelector('.table-body');
+            tableBody.classList.toggle('table-dark');
+        } else {
+            // Verifica se há um tema armazenado no armazenamento local para desktops
+            const storedTheme = localStorage.getItem('theme');
+            if (storedTheme) {
+                document.documentElement.setAttribute('data-bs-theme', storedTheme);
+                const tableBody = document.querySelector('.table-body');
+                if (storedTheme === 'dark') {
+                    tableBody.classList.add('table-dark');
+                } else {
+                    tableBody.classList.remove('table-dark');
+                }
+            } else {
+                document.documentElement.setAttribute('data-bs-theme', 'light');
+            }
+        }
+
         document.getElementById('btnSwitch').addEventListener('click', () => {
             const currentTheme = document.documentElement.getAttribute('data-bs-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -75,18 +97,6 @@
             const tableBody = document.querySelector('.table-body');
             tableBody.classList.toggle('table-dark');
         });
-
-        // Verifica se há um tema armazenado no armazenamento local
-        const storedTheme = localStorage.getItem('theme');
-        if (storedTheme) {
-            document.documentElement.setAttribute('data-bs-theme', storedTheme);
-            const tableBody = document.querySelector('.table-body');
-            if (storedTheme === 'dark') {
-                tableBody.classList.add('table-dark');
-            } else {
-                tableBody.classList.remove('table-dark');
-            }
-        }
     </script>
     <script src="{{url_for('static', filename='fonts/js/all.js')}}" crossorigin="anonymous"></script>
 </body>
