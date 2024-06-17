@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, make_response, send_file, session
-from models.models import db, User, ShoppingList, debts, Balance
+from models.models import db, User, ShoppingList, debts, Balance, Diario
 from sqlalchemy import exc, text, create_engine,desc
 from sqlalchemy.pool import QueuePool
 from flask_migrate import Migrate
@@ -182,18 +182,53 @@ def debitos():
     debts_list = debts.query.filter_by(status=0, username=current_user.username).filter(debts.maturity >= current_month).order_by(debts.value.desc()).all()
     balance_list = Balance.query.filter_by(status=0, username=current_user.username).filter(Balance.date >= current_month).all()
     debts_1 = debts.query.filter_by(status=1, username=current_user.username).filter(debts.maturity >= current_month).all()
+    gastos = Diario.query.filter_by(status=1, username=current_user.username).filter(Diario.date >= current_month).order_by(Diario.value.desc()).all()
+    gastos_total = sum(item.value for item in gastos)
+    gastos_formatado = round(gastos_total, 2)
     balance_total = sum(item.value for item in balance_list)
     debts_total = sum(item.value for item in debts_1)
     balance_total_formatado = round(balance_total, 2)
     debts_1_formatado = round(debts_total, 2)
     total_price = sum(item.value for item in debts_list)
     total_price_formatado = round(total_price, 2)
-    saldo_atualizado = balance_total_formatado - debts_1_formatado
+    saldo_atualizado = balance_total_formatado - debts_1_formatado - gastos_formatado
     saldo_atualizado_formatado = round(saldo_atualizado, 2)
     por_dia = saldo_atualizado_formatado / dias_faltando
     por_dia_atualizado = round(por_dia, 2)
     db.session.remove()
     return render_template('finance.html', debts_list=debts_list, total_price=total_price_formatado, saldo_atualizado=saldo_atualizado_formatado, por_dia=por_dia_atualizado, username=current_user.username)
+
+# Rota para listar todos os gastos
+@app.route('/diario')
+@login_required
+def listar_gastos():
+    current_month = datetime.now().date().replace(day=1)
+    # Obter o número total de dias no mês atual
+    ano_atual = time.localtime().tm_year
+    mes_atual = time.localtime().tm_mon
+    dias_no_mes = calendar.monthrange(ano_atual, mes_atual)[1]
+
+    # Calcular quantos dias faltam até o final do mês
+    dias_faltando = dias_no_mes - time.localtime().tm_mday + 1
+    gastos = Diario.query.filter_by(status=0, username=current_user.username).filter(Diario.date >= current_month).order_by(Diario.value.desc()).all()
+    debts_list = debts.query.filter_by(status=0, username=current_user.username).filter(debts.maturity >= current_month).order_by(debts.value.desc()).all()
+    balance_list = Balance.query.filter_by(status=0, username=current_user.username).filter(Balance.date >= current_month).all()
+    debts_1 = debts.query.filter_by(status=1, username=current_user.username).filter(debts.maturity >= current_month).all()
+    gastos_processado = Diario.query.filter_by(status=1, username=current_user.username).filter(Diario.date >= current_month).order_by(Diario.value.desc()).all()
+    gastos_total = sum(item.value for item in gastos_processado)
+    gastos_nao_processados = sum(item.value for item in gastos)
+    gastos_formatado = round(gastos_total, 2)
+    balance_total = sum(item.value for item in balance_list)
+    debts_total = sum(item.value for item in debts_1)
+    balance_total_formatado = round(balance_total, 2)
+    debts_1_formatado = round(debts_total, 2)
+    total_price = sum(item.value for item in debts_list)
+    total_price_formatado = round(total_price, 2)
+    saldo_atualizado = balance_total_formatado - debts_1_formatado - gastos_formatado
+    saldo_atualizado_formatado = round(saldo_atualizado, 2)
+    por_dia = saldo_atualizado_formatado / dias_faltando
+    por_dia_atualizado = round(por_dia, 2)
+    return render_template('diario.html', gastos=gastos, gastos_nao_processados=gastos_nao_processados, username=current_user.username, saldo_atualizado=saldo_atualizado_formatado, por_dia=por_dia_atualizado,)
 
 @app.route('/balance', methods=['GET','POST'])
 @login_required
@@ -220,6 +255,55 @@ def add_balance():
     db.session.remove()
     return redirect(url_for('balance'))
 
+# Rota para adicionar um gasto
+@app.route('/add_diario', methods=['POST'])
+def add_daily():
+    descricao = request.form['descricao']
+    valor = request.form['valor']
+    data_gasto = request.form['data_gasto']
+    
+    gasto = Diario(
+        name=descricao,
+        value=valor,
+        date=data_gasto,
+        status=0, 
+        username=current_user.username
+    )
+    
+    db.session.add(gasto)
+    db.session.commit()
+
+    return redirect(url_for('listar_gastos'))
+
+# Rota para editar um gasto
+@app.route('/editar/<int:id>', methods=['POST'])
+def editar_gasto(id):
+    gasto = Diario.query.get(id)
+    if gasto:
+        gasto.name = request.form['descricao']
+        gasto.valor = request.form['valor']
+        gasto.data_gasto = datetime.strptime(request.form['data_gasto'], '%Y-%m-%d').date()
+        db.session.commit()
+    return redirect(url_for('listar_gastos'))
+
+# Rota para excluir um gasto
+@app.route('/excluir/<int:id>', methods=['POST'])
+def excluir_gasto(id):
+    gasto = Diario.query.get(id)
+    if gasto:
+        db.session.delete(gasto)
+        db.session.commit()
+    return redirect(url_for('listar_gastos'))
+
+# Rota para computar um gasto
+@app.route('/computar/<int:id>', methods=['POST'])
+def computar_gasto(id):
+    gasto = Diario.query.get(id)
+    if gasto:
+        gasto.status = True
+        db.session.commit()
+    return redirect(url_for('listar_gastos'))
+
 
 @app.route('/add_debts', methods=['POST'])
 @login_required
@@ -235,6 +319,7 @@ def add_debts():
     db.session.commit()
     db.session.remove()
     return redirect(url_for('debitos'))
+
 # Rota para excluir um item
 @app.route('/delete/<int:id>', methods=['GET'])
 @login_required
@@ -325,13 +410,16 @@ def dashboard():
     debts_list = debts.query.filter_by(status=0, username=current_user.username).filter(debts.maturity >= current_month).order_by(debts.value.desc()).all()
     balance_list = Balance.query.filter_by(status=0, username=current_user.username).filter(Balance.date >= current_month).all()
     debts_1 = debts.query.filter_by(status=1, username=current_user.username).filter(debts.maturity >= current_month).all()
+    gastos = Diario.query.filter_by(status=1, username=current_user.username).filter(Diario.date >= current_month).order_by(Diario.value.desc()).all()
+    gastos_total = sum(item.value for item in gastos)
+    gastos_formatado = round(gastos_total, 2)
     balance_total = sum(item.value for item in balance_list)
     debts_total = sum(item.value for item in debts_1)
     balance_total_formatado = round(balance_total, 2)
     debts_1_formatado = round(debts_total, 2)
     total_price = sum(item.value for item in debts_list)
     total_price_formatado = round(total_price, 2)
-    saldo_atualizado = balance_total_formatado - debts_1_formatado
+    saldo_atualizado = balance_total_formatado - debts_1_formatado - gastos_formatado
     saldo_atualizado_formatado = round(saldo_atualizado, 2)
     porcentagem = saldo_atualizado_formatado / balance_total_formatado * 100
     if porcentagem:

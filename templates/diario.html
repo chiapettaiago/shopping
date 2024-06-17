@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diário de Gastos</title>
+    <!-- Incluindo Bootstrap CSS -->
+    <link rel="apple-touch-icon" sizes="180x180" href={{ url_for('static', filename='images/apple-touch-icon.png') }}>
+    <link rel="icon" type="image/png" sizes="32x32" href={{ url_for('static', filename='images/favicon-32x32.png') }}>
+    <link rel="icon" type="image/png" sizes="16x16" href={{ url_for('static', filename='images/favicon-16x16.png') }}>
+    <link rel="manifest" href={{ url_for('static', filename='images/site.webmanifest') }}>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <style>
+        body {
+            background: url("{{url_for('static', filename='images/foto.jpg')}}") no-repeat center center fixed;
+            background-size: cover;
+        }
+        .btn-height {
+            height: 38px; /* Ajuste conforme necessário */
+        }
+    </style>
+</head>
+<body>
+    {% include 'navbar.html' %}
+    <!-- Botão flutuante para alternar modo claro/escuro -->
+    <div class="position-fixed fixed-bottom mb-3 mr-3 ml-2 d-none d-md-block">
+        <button type="button" class="btn btn-dark border shadow" title="Alternar entre Modo Claro e Escuro" id="btnSwitch">
+            <i class="fa-solid fa-circle-half-stroke fa-bounce"></i>
+        </button>
+    </div>
+    <div class="container mt-5">
+        <div class="card bg-light bg-opacity-75 mb-3 p-4">
+        <h2 class="mt-2 text-dark text-center">Diário de gastos</h2>
+        <div>
+            <h4 class="text-success text-center">Gastos ainda não baixados: R$ {{ '{:.2f}'.format(gastos_nao_processados) }}</h4>
+        </div>
+        <div>
+            <h4 class="text-success text-center">Saldo Atualizado: R$ {{ '{:.2f}'.format(saldo_atualizado) }}</h4>
+        </div>
+        <div>
+            <h4 class="text-success text-center">Limite diário recomendado: R$ {{ '{:.2f}'.format(por_dia) }}</h4>
+        </div>
+        <div class="d-flex justify-content-center mb-2 text-center mt-2">
+            <button title="Adicionar Item" type="button" class="btn btn-primary mr-2" data-toggle="modal" data-target="#addGastoModal">
+                <i class="fa-solid fa-plus"></i>
+            </button>
+        </div>
+        <div class="table-responsive">
+        <table class="table table-bordered text-center">
+            <thead class="table-light">
+                <tr>
+                    <th>Descrição</th>
+                    <th>Valor</th>
+                    <th>Data</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for gasto in gastos %}
+                <tr>
+                    <td>{{ gasto.name }}</td>
+                    <td>{{ '{:.2f}'.format(gasto.value) }}</td>
+                    <td>{{ gasto.date.strftime('%d/%m/%Y') }}</td>
+                    <td>
+                        <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editGastoModal{{ gasto.id }}">
+                            <i class="fa-solid fa-pencil"></i>
+                        </button>
+                        <form action="{{ url_for('excluir_gasto', id=gasto.id) }}" method="post" style="display:inline;">
+                            <button type="submit" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
+                        </form>
+                        <form action="{{ url_for('computar_gasto', id=gasto.id) }}" method="post" style="display:inline;">
+                            <button type="submit" class="btn btn-success btn-sm"><i class="fa-solid fa-money-check-dollar"></i></button>
+                        </form>
+                    </td>
+                </tr>
+
+                <!-- Modal para editar gasto -->
+                <div class="modal fade" id="editGastoModal{{ gasto.id }}" tabindex="-1" role="dialog" aria-labelledby="editGastoModalLabel{{ gasto.id }}" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="editGastoModalLabel{{ gasto.id }}">Editar Gasto</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <form action="{{ url_for('editar_gasto', id=gasto.id) }}" method="post">
+                                    <div class="form-group">
+                                        <label for="descricao">Descrição</label>
+                                        <input type="text" class="form-control" id="descricao" name="descricao" value="{{ gasto.name }}" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="valor">Valor</label>
+                                        <input type="number" step="0.01" class="form-control" id="valor" name="valor" value="{{ gasto.value }}" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="data_gasto">Data</label>
+                                        <input type="date" class="form-control" id="data_gasto" name="data_gasto" value="{{ gasto.date.strftime('%Y-%m-%d') }}" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Salvar</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    </div>
+</div>
+
+    <!-- Modal para adicionar gasto -->
+    <div class="modal fade" id="addGastoModal" tabindex="-1" role="dialog" aria-labelledby="addGastoModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addGastoModalLabel">Adicionar ao diário</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form action="{{ url_for('add_daily') }}" method="post">
+                        <div class="form-group">
+                            <label for="descricao">Descrição</label>
+                            <input type="text" class="form-control" id="descricao" name="descricao" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="valor">Valor</label>
+                            <input type="number" step="0.01" class="form-control" id="valor" name="valor" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="data_gasto">Data</label>
+                            <input type="date" class="form-control" id="data_gasto" name="data_gasto" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Adicionar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('btnSwitch').addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            const tableBody = document.querySelector('.table-body');
+            tableBody.classList.toggle('table-dark');
+        });
+
+        // Verifica se há um tema armazenado no armazenamento local
+        const storedTheme = localStorage.getItem('theme');
+        if (storedTheme) {
+            document.documentElement.setAttribute('data-bs-theme', storedTheme);
+            const tableBody = document.querySelector('.table-body');
+            if (storedTheme === 'dark') {
+                tableBody.classList.add('table-dark');
+            } else {
+                tableBody.classList.remove('table-dark');
+            }
+        }
+    </script>
+
+    <!-- Incluindo Bootstrap JS e jQuery -->
+    <script src="{{url_for('static', filename='fonts/js/all.js')}}" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+</body>
+</html>

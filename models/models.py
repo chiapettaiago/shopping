@@ -36,3 +36,11 @@ class Balance(db.Model):
     date = db.Column(db.DateTime)
     username = db.Column(db.String(50), db.ForeignKey('user.username'))
 
+class Diario(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), nullable=False)
+    date = db.Column(db.DateTime(50), nullable=False)
+    value = db.Column(db.Float, nullable=False)
+    status = db.Column(db.Integer)
+    username = db.Column(db.String(50), db.ForeignKey('user.username'))
+
