@@ -40,13 +40,6 @@
                 </button>
             </div>
 
-            <!-- Botão flutuante para alternar modo claro/escuro -->
-            <div class="position-fixed fixed-bottom mb-3 mr-3 ml-2 d-none d-md-block">
-                <button type="button" class="btn btn-dark border shadow" title="Alternar entre Modo Claro e Escuro" id="btnSwitch">
-                    <i class="fa-solid fa-circle-half-stroke fa-bounce"></i>
-                </button>
-            </div>
-
             <div class="table-responsive">
                 <table class="table table-bordered text-center">
                     <thead class="table-light">
@@ -69,6 +62,10 @@
             </div>
         </div>
     </div>
+
+
+    {% include 'buttons.html' %}
+            
 
     <!-- Modal de Adição de Item -->
     <div class="modal fade" id="addItemModal" tabindex="-1" role="dialog" aria-labelledby="addItemModalLabel" aria-hidden="true">

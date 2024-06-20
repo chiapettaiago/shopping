@@ -57,13 +57,9 @@
         </div>
     </div>
 
-    <!-- Botão flutuante para alternar modo claro/escuro -->
-    <div class="position-fixed fixed-bottom mb-3 mr-3 ml-2 d-none d-md-block">
-        <button type="button" class="btn btn-dark border shadow" title="Alternar entre Modo Claro e Escuro" id="btnSwitch">
-            <i class="fa-solid fa-circle-half-stroke fa-bounce"></i>
-        </button>
-    </div>
-
+    
+    {% include 'buttons.html' %}
+            
     <script>
         // Define o tema claro por padrão em dispositivos móveis
         const isMobile = window.innerWidth <= 767;

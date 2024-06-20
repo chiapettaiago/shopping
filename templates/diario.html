@@ -25,12 +25,9 @@
 </head>
 <body>
     {% include 'navbar.html' %}
-    <!-- Botão flutuante para alternar modo claro/escuro -->
-    <div class="position-fixed fixed-bottom mb-3 mr-3 ml-2 d-none d-md-block">
-        <button type="button" class="btn btn-dark border shadow" title="Alternar entre Modo Claro e Escuro" id="btnSwitch">
-            <i class="fa-solid fa-circle-half-stroke fa-bounce"></i>
-        </button>
-    </div>
+
+    {% include 'buttons.html' %}
+    
     <div class="container mt-5">
         <div class="card bg-light bg-opacity-75 mb-3 p-4">
         <h2 class="mt-2 text-dark text-center">Diário de gastos</h2>

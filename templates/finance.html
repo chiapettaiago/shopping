@@ -85,12 +85,7 @@
         </div>
     </div>
 
-    <!-- Botão flutuante para alternar modo claro/escuro -->
-    <div class="position-fixed fixed-bottom mb-3 mr-3 ml-2 d-none d-lg-inline">
-        <button type="button" class="btn btn-dark border shadow" title="Alternar entre Modo Claro e Escuro" id="btnSwitch">
-            <i class="fa-solid fa-circle-half-stroke fa-bounce"></i>
-        </button>
-    </div>
+    {% include 'buttons.html' %}
 
     <!-- Modal de Exclusão -->
     {% for item in debts_list %}
