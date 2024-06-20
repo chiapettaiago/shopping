@@ -111,7 +111,22 @@ def logout():
     logout_user()  # Logout do usuário
     return redirect(url_for('index'))
 
+
+@app.route('/daily_history')
+@login_required
+def daily_history():
+    # Obter a data atual
+    current_month = datetime.now().date().replace(day=1)
+    # Consultar o banco de dados para obter os registros do histórico diário
+    daily_history = Diario.query.filter_by(status=1, username=current_user.username).filter(Diario.date >= current_month).order_by(Diario.date.desc()).all()
     
+    # Calcular o valor total dos registros
+    total_value = sum(item.value for item in daily_history)
+    total_value_formatado = round(total_value, 2)
+    
+    # Renderizar o template com os dados
+    return render_template('historico_diario.html', daily_history=daily_history, total_value=total_value_formatado, username=current_user.username)
+
 @app.route('/')
 @login_required
 def index():
@@ -122,6 +137,7 @@ def index():
     total_price_formatado = round(total_price, 2)
     db.session.remove()
     return render_template('index.html', shopping_list=shopping_list, total_price=total_price_formatado, username=current_user.username)
+
 
 @app.route('/history')
 @login_required
@@ -168,7 +184,6 @@ def add():
 @app.route('/debts', methods=['GET','POST'])
 @login_required
 def debitos():
-    
     # Obter o número total de dias no mês atual
     ano_atual = time.localtime().tm_year
     mes_atual = time.localtime().tm_mon
