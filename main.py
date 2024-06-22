@@ -17,7 +17,7 @@ import plotly.graph_objs as go
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://casaos:casaos@shoppinglist.ddns.net/casaos'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://casaos:casaos@meutesouro.site/casaos'
 app.config['SQLALCHEMY_POOL_TIMEOUT'] = 20
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Desativar o rastreamento de modificações para evitar avisos
 app.config['SECRET_KEY'] = 'homium-001'  # Defina uma chave secreta única e segura
@@ -37,7 +37,7 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
 db.init_app(app)
 migrate = Migrate(app, db)
 login_manager = LoginManager(app)
-login_manager.login_view = 'login'  # Define a rota para redirecionamento quando o usuário não estiver logado
+login_manager.login_view = 'auth'  # Define a rota para redirecionamento quando o usuário não estiver logado
 
 
 @login_manager.user_loader
@@ -61,7 +61,7 @@ def check_session_timeout():
             # Fazer logout do usuário
             logout_user()
             # Redirecionar para a página de login ou para onde desejar
-            return redirect(url_for('login'))
+            return redirect(url_for('auth'))
     # Atualizar o registro de última atividade
     session['last_activity'] = datetime.now(timezone.utc)
 
@@ -77,33 +77,31 @@ def update_old_balance_items():
 def before_request():
     db.session()
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
+@app.route('/auth', methods=['GET', 'POST'])
+def auth():
     if request.method == 'POST':
+        action = request.form.get('action')
         username = request.form['username']
         password = request.form['password']
-        user = User.query.filter_by(username=username, password=password).first()
-        if user:
-            login_user(user)  # Login do usuário
-            return redirect(url_for('dashboard'))
-        else:
-            return render_template('login.html', error='Usuário ou senha incorretos.')
-    return render_template('login.html')
+        
+        if action == 'login':
+            user = User.query.filter_by(username=username, password=password).first()
+            if user:
+                login_user(user)
+                return redirect(url_for('dashboard'))
+            else:
+                return render_template('auth.html', login_error='Usuário ou senha incorretos.')
 
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        existing_user = User.query.filter_by(username=username).first()
-        if existing_user:
-            return render_template('register.html', error='Nome de usuário já existe.')
-        new_user = User(username=username, password=password)
-        db.session.add(new_user)
-        db.session.commit()
-        return redirect(url_for('login'))
-    return render_template('register.html')
+        elif action == 'register':
+            existing_user = User.query.filter_by(username=username).first()
+            if existing_user:
+                return render_template('auth.html', register_error='Nome de usuário já existe.')
+            new_user = User(username=username, password=password)
+            db.session.add(new_user)
+            db.session.commit()
+            return redirect(url_for('auth', login_error='Usuário registrado com sucesso. Faça login.'))
 
+    return render_template('auth.html')
 
 @app.route('/logout')
 @login_required
@@ -436,9 +434,11 @@ def dashboard():
     total_price_formatado = round(total_price, 2)
     saldo_atualizado = balance_total_formatado - debts_1_formatado - gastos_formatado
     saldo_atualizado_formatado = round(saldo_atualizado, 2)
-    porcentagem = saldo_atualizado_formatado / balance_total_formatado * 100
-    if porcentagem:
-        percent = round(porcentagem, 2)
+    if balance_total_formatado != 0:
+        porcentagem = (saldo_atualizado_formatado / balance_total_formatado) * 100
+    else:
+        porcentagem = 0 
+    percent = round(porcentagem, 2)
     por_dia = saldo_atualizado_formatado / dias_faltando
     por_dia_atualizado = round(por_dia, 2)
     
