@@ -5,6 +5,7 @@ from sqlalchemy.pool import QueuePool
 from flask_migrate import Migrate
 from datetime import datetime, timedelta, timezone
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 import mysql.connector
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
@@ -76,27 +77,33 @@ def update_old_balance_items():
 @app.before_request
 def before_request():
     db.session()
+    
+def calcular_saldo(balance_total, debts_total, gastos_total):
+    saldo_atualizado = balance_total - debts_total - gastos_total
+    return round(saldo_atualizado, 2)
 
 @app.route('/auth', methods=['GET', 'POST'])
 def auth():
     if request.method == 'POST':
         action = request.form.get('action')
+        full_name = request.form.get('full_name')
+        email = request.form.get('email')
         username = request.form['username']
         password = request.form['password']
-        
+
         if action == 'login':
-            user = User.query.filter_by(username=username, password=password).first()
-            if user:
+            user = User.query.filter_by(username=username).first()
+            if user and check_password_hash(user.password, password):
                 login_user(user)
                 return redirect(url_for('dashboard'))
             else:
                 return render_template('auth.html', login_error='Usuário ou senha incorretos.')
 
         elif action == 'register':
-            existing_user = User.query.filter_by(username=username).first()
+            existing_user = User.query.filter((User.username == username) | (User.email == email)).first()
             if existing_user:
-                return render_template('auth.html', register_error='Nome de usuário já existe.')
-            new_user = User(username=username, password=password)
+                return render_template('auth.html', register_error='Nome de usuário ou e-mail já cadastrados.')
+            new_user = User(full_name=full_name, email=email, username=username, password=generate_password_hash(password, method='pbkdf2:sha256'))
             db.session.add(new_user)
             db.session.commit()
             return redirect(url_for('auth', login_error='Usuário registrado com sucesso. Faça login.'))
@@ -123,7 +130,7 @@ def daily_history():
     total_value_formatado = round(total_value, 2)
     
     # Renderizar o template com os dados
-    return render_template('historico_diario.html', daily_history=daily_history, total_value=total_value_formatado, username=current_user.username)
+    return render_template('historico_diario.html', daily_history=daily_history, total_value=total_value_formatado, username=current_user.full_name)
 
 @app.route('/')
 @login_required
@@ -134,7 +141,7 @@ def index():
     total_price = sum(item.quantity * item.price for item in shopping_list)
     total_price_formatado = round(total_price, 2)
     db.session.remove()
-    return render_template('index.html', shopping_list=shopping_list, total_price=total_price_formatado, username=current_user.username)
+    return render_template('index.html', shopping_list=shopping_list, total_price=total_price_formatado, username=current_user.full_name)
 
 
 @app.route('/history')
@@ -145,7 +152,7 @@ def history():
     total_price = sum(item.quantity * item.price for item in shopping_list)
     total_price_formatado = round(total_price, 2)
     db.session.remove()
-    return render_template('history.html', shopping_list=shopping_list, total_price=total_price_formatado, username=current_user.username)
+    return render_template('history.html', shopping_list=shopping_list, total_price=total_price_formatado, username=current_user.full_name)
 
 
 @app.route('/debts_history')
@@ -156,12 +163,12 @@ def debts_history():
     total_value = sum(item.value for item in debts_history)
     total_value_formatado = round(total_value, 2)
     db.session.remove()
-    return render_template('debts_history.html', debts_history=debts_history, total_value=total_value_formatado, username=current_user.username)
+    return render_template('debts_history.html', debts_history=debts_history, total_value=total_value_formatado, username=current_user.full_name)
 
 @app.route('/about')
 @login_required
 def about():
-    return render_template('about.html', username=current_user.username)
+    return render_template('about.html', username=current_user.full_name)
 
 @app.route('/add', methods=['POST'])
 @login_required
@@ -204,12 +211,11 @@ def debitos():
     debts_1_formatado = round(debts_total, 2)
     total_price = sum(item.value for item in debts_list)
     total_price_formatado = round(total_price, 2)
-    saldo_atualizado = balance_total_formatado - debts_1_formatado - gastos_formatado
-    saldo_atualizado_formatado = round(saldo_atualizado, 2)
+    saldo_atualizado_formatado = calcular_saldo(balance_total_formatado, debts_1_formatado, gastos_formatado)
     por_dia = saldo_atualizado_formatado / dias_faltando
     por_dia_atualizado = round(por_dia, 2)
     db.session.remove()
-    return render_template('finance.html', debts_list=debts_list, total_price=total_price_formatado, saldo_atualizado=saldo_atualizado_formatado, por_dia=por_dia_atualizado, username=current_user.username)
+    return render_template('finance.html', debts_list=debts_list, total_price=total_price_formatado, saldo_atualizado=saldo_atualizado_formatado, por_dia=por_dia_atualizado, username=current_user.full_name)
 
 # Rota para listar todos os gastos
 @app.route('/diario')
@@ -237,11 +243,10 @@ def listar_gastos():
     debts_1_formatado = round(debts_total, 2)
     total_price = sum(item.value for item in debts_list)
     total_price_formatado = round(total_price, 2)
-    saldo_atualizado = balance_total_formatado - debts_1_formatado - gastos_formatado
-    saldo_atualizado_formatado = round(saldo_atualizado, 2)
+    saldo_atualizado_formatado = calcular_saldo(balance_total_formatado, debts_1_formatado, gastos_formatado)
     por_dia = saldo_atualizado_formatado / dias_faltando
     por_dia_atualizado = round(por_dia, 2)
-    return render_template('diario.html', gastos=gastos, gastos_nao_processados=gastos_nao_processados, username=current_user.username, saldo_atualizado=saldo_atualizado_formatado, por_dia=por_dia_atualizado,)
+    return render_template('diario.html', gastos=gastos, gastos_nao_processados=gastos_nao_processados, username=current_user.full_name, saldo_atualizado=saldo_atualizado_formatado, por_dia=por_dia_atualizado,)
 
 @app.route('/balance', methods=['GET','POST'])
 @login_required
@@ -251,7 +256,7 @@ def balance():
     total_price = sum(item.value for item in balance_list)
     total_price_formatado = round(total_price, 2)
     db.session.remove()
-    return render_template('balance.html', balance_list=balance_list, total_price=total_price_formatado, username=current_user.username)
+    return render_template('balance.html', balance_list=balance_list, total_price=total_price_formatado, username=current_user.full_name)
 
 @app.route('/add_balance', methods=['POST'])
 @login_required
@@ -406,7 +411,6 @@ def pay(id):
         db.session.remove()
     return redirect(url_for('debitos'))
 
-
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -432,8 +436,7 @@ def dashboard():
     debts_1_formatado = round(debts_total, 2)
     total_price = sum(item.value for item in debts_list)
     total_price_formatado = round(total_price, 2)
-    saldo_atualizado = balance_total_formatado - debts_1_formatado - gastos_formatado
-    saldo_atualizado_formatado = round(saldo_atualizado, 2)
+    saldo_atualizado_formatado = calcular_saldo(balance_total_formatado, debts_1_formatado, gastos_formatado)
     if balance_total_formatado != 0:
         porcentagem = (saldo_atualizado_formatado / balance_total_formatado) * 100
     else:
@@ -493,7 +496,7 @@ def dashboard():
     graph_html_debts = fig_debts.to_html(full_html=False)
     graph_html_balance = fig_balance.to_html(full_html=False)
 
-    return render_template('dashboard.html', username=current_user.username, graph_html1=graph_html_debts, graph_html2=graph_html_balance, porcentagem_formatado=percent,  total_price=total_price_formatado, saldo_atualizado=saldo_atualizado_formatado, por_dia=por_dia_atualizado, current_month=current_month)
+    return render_template('dashboard.html', username=current_user.full_name, graph_html1=graph_html_debts, graph_html2=graph_html_balance, porcentagem_formatado=percent,  total_price=total_price_formatado, saldo_atualizado=saldo_atualizado_formatado, por_dia=por_dia_atualizado, current_month=current_month)
 
 @app.route('/export_pdf', methods=['GET'])
 @login_required
@@ -613,4 +616,16 @@ def export_pdf_list():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        
+        users = User.query.all()  # Recuperar todos os usuários
+    
+        for user in users:
+            # Verifica se a senha já está criptografada (opcional, depende de como foram armazenadas inicialmente)
+            if not user.password.startswith('pbkdf2:sha256'):
+                # Criptografa a senha
+                hashed_password = generate_password_hash(user.password, method='pbkdf2:sha256')
+                user.password = hashed_password
+        
+        # Confirmar as alterações no banco de dados
+        db.session.commit()
     app.run(debug=True, host='0.0.0.0', port=3000)
