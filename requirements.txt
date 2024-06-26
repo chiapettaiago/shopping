@@ -6,3 +6,4 @@ mysql_connector_python
 google-generativeai
 reportlab
 plotly
+stripe

@@ -15,7 +15,9 @@ import io
 import calendar
 import time
 import plotly.graph_objs as go
+import stripe
 
+stripe.api_key = 'pk_live_51POhnR2MGdLJSgZSFwUY2fOJebsy6D2junn2SmOSqymmgQTBejqovfc7Ndgsdw3f1KvIyQIBz4IgisnK5ioYqzdd00llK0gmwO'
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://casaos:casaos@meutesouro.site/casaos'

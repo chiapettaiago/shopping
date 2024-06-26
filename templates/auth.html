@@ -25,6 +25,9 @@
         <div class="row justify-content-center bg-opacity-75 align-items-center" style="height: 100vh;">
             <div class="col-md-5">
                 <div class="card bg-light rounded shadow-lg p-4">
+                    <div class="text-center mb-4">
+                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" style="width: 150px;">
+                    </div>
                     <h2 class="card-title text-center mb-4">Entre na sua conta</h2>
                     <form method="POST" action="{{ url_for('auth') }}">
                         <input type="hidden" name="action" value="login">
