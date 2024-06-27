@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, make_response, send_file, session
+from flask import Flask, render_template, request, redirect, url_for, make_response, send_file, session, flash
 from models.models import db, User, ShoppingList, debts, Balance, Diario
 from sqlalchemy import exc, text, create_engine,desc
 from sqlalchemy.pool import QueuePool
@@ -12,12 +12,26 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 import io
+import os
 import calendar
 import time
 import plotly.graph_objs as go
 import stripe
+from functools import wraps
 
-stripe.api_key = 'pk_live_51POhnR2MGdLJSgZSFwUY2fOJebsy6D2junn2SmOSqymmgQTBejqovfc7Ndgsdw3f1KvIyQIBz4IgisnK5ioYqzdd00llK0gmwO'
+def load_env():
+    """Carregar variáveis de ambiente do arquivo .env."""
+    env_path = '.env'
+    with open(env_path) as f:
+        for line in f:
+            if line.strip() and not line.startswith('#'):
+                key, value = line.strip().split('=', 1)
+                os.environ[key] = value
+
+# Carregar variáveis de ambiente
+load_env()
+
+stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://casaos:casaos@meutesouro.site/casaos'
@@ -67,6 +81,15 @@ def check_session_timeout():
             return redirect(url_for('auth'))
     # Atualizar o registro de última atividade
     session['last_activity'] = datetime.now(timezone.utc)
+    
+def subscription_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if current_user.subscription_status != 'active':
+            flash('You need an active subscription to access this page.', 'warning')
+            return redirect(url_for('checkout'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 # Função para verificar e atualizar automaticamente os itens antigos do balanço com a data atual
 def update_old_balance_items():
@@ -83,6 +106,67 @@ def before_request():
 def calcular_saldo(balance_total, debts_total, gastos_total):
     saldo_atualizado = balance_total - debts_total - gastos_total
     return round(saldo_atualizado, 2)
+
+@app.route('/checkout')
+@login_required
+def checkout():
+    session = stripe.checkout.Session.create(
+        payment_method_types=['card'],
+        line_items=[{
+            'price': 'price_1POhzU2MGdLJSgZSMeaSsWH8',  # Use the price ID from your Stripe Dashboard
+            'quantity': 1,
+        }],
+        mode='subscription',
+        success_url=url_for('subscription_success', _external=True),
+        cancel_url=url_for('subscription_cancel', _external=True),
+    )
+    return render_template('checkout.html', session_id=session.id, stripe_public_key=os.getenv('STRIPE_PUBLIC_KEY'))
+
+@app.route('/subscription_success')
+@login_required
+def subscription_success():
+    user = current_user
+    user.subscription_status = 'active'
+    db.session.commit()
+    flash('Subscription successful!', 'success')
+    return redirect(url_for('dashboard'))
+
+@app.route('/subscription_cancel')
+@login_required
+def subscription_cancel():
+    flash('Subscription cancelled or failed.', 'danger')
+    return redirect(url_for('dashboard'))
+
+@app.route('/webhook', methods=['POST'])
+def stripe_webhook():
+    payload = request.get_data(as_text=True)
+    sig_header = request.headers.get('Stripe-Signature')
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, 'your_webhook_secret'
+        )
+    except ValueError as e:
+        # Invalid payload
+        return 'Invalid payload', 400
+    except stripe.error.SignatureVerificationError as e:
+        # Invalid signature
+        return 'Invalid signature', 400
+
+    # Handle the event
+    if event['type'] == 'checkout.session.completed':
+        session = event['data']['object']
+        handle_checkout_session(session)
+
+    return 'Success', 200
+
+def handle_checkout_session(session):
+    customer_email = session['customer_email']
+    user = User.query.filter_by(email=customer_email).first()
+    if user:
+        user.subscription_status = 'active'
+        db.session.commit()
+
 
 @app.route('/auth', methods=['GET', 'POST'])
 def auth():
@@ -121,6 +205,7 @@ def logout():
 
 @app.route('/daily_history')
 @login_required
+@subscription_required
 def daily_history():
     # Obter a data atual
     current_month = datetime.now().date().replace(day=1)
@@ -222,6 +307,7 @@ def debitos():
 # Rota para listar todos os gastos
 @app.route('/diario')
 @login_required
+@subscription_required
 def listar_gastos():
     current_month = datetime.now().date().replace(day=1)
     # Obter o número total de dias no mês atual
@@ -498,7 +584,7 @@ def dashboard():
     graph_html_debts = fig_debts.to_html(full_html=False)
     graph_html_balance = fig_balance.to_html(full_html=False)
 
-    return render_template('dashboard.html', username=current_user.full_name, graph_html1=graph_html_debts, graph_html2=graph_html_balance, porcentagem_formatado=percent,  total_price=total_price_formatado, saldo_atualizado=saldo_atualizado_formatado, por_dia=por_dia_atualizado, current_month=current_month)
+    return render_template('dashboard.html', username=current_user.full_name, graph_html1=graph_html_debts, graph_html2=graph_html_balance, porcentagem_formatado=percent,  total_price=total_price_formatado, saldo_atualizado=saldo_atualizado_formatado, por_dia=por_dia_atualizado, current_month=current_month, status=current_user.subscription_status)
 
 @app.route('/export_pdf', methods=['GET'])
 @login_required

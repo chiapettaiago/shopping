@@ -35,6 +35,17 @@
             <div>
                 <h4 class="text-success text-center">Limite diário recomendado: R$ {{ '{:.2f}'.format(por_dia) }}</h4>
             </div>
+            <!-- Adicionando verificação de status Pro -->
+            {% if status == 'active' %}
+                <div class="alert alert-success text-center mt-3" role="alert">
+                    Você é um usuário Pro!
+                </div>
+            {% else %}
+                <div class="alert alert-info text-center mt-3" role="alert">
+                    Você está usando uma conta gratuita. <a href="/checkout">Tenha uma conta Pro</a>
+                </div>
+            {% endif %}
+
             <div class="container">
                 <div class="row">
                     <div class="col-md-6">
@@ -69,6 +80,8 @@
             </div>
 
             {% include 'buttons.html' %}
+        </div>
+    </div>
 
     <!-- Script para alternar entre os modos claro e escuro -->
     <script>
