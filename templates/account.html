@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informações do Usuário</title>
     <link rel="apple-touch-icon" sizes="180x180" href={{ url_for('static', filename='images/apple-touch-icon.png') }}>
     <link rel="icon" type="image/png" sizes="32x32" href={{ url_for('static', filename='images/favicon-32x32.png') }}>
     <link rel="icon" type="image/png" sizes="16x16" href={{ url_for('static', filename='images/favicon-16x16.png') }}>
@@ -18,61 +20,51 @@
             background-size: cover;
         }
     </style>
-    <title>Dashboard</title>
 </head>
 <body>
     {% include 'navbar.html' %}
-    <div class="container mt-3 rounded mb-3">
-        <div class="card bg-light bg-opacity-75 shadow p-4">
-            <h1 class="text-center text-dark mt-3">Bem-vindo ao site Meu Tesouro, {{ username }}!</h1>
-            <h2 class="text-center text-dark mt-3">Aqui estão suas Informações financeiras desse mês</h2>
-            <div>
-                <h4 class="text-success text-center">Valor Total das Dívidas: R$ {{ '{:.2f}'.format(total_price) }}</h4>
-            </div>
-            <div>
-                <h4 class="text-success text-center">Saldo Atualizado: R$ {{ '{:.2f}'.format(saldo_atualizado) }}</h4>
-            </div>
-            <div>
-                <h4 class="text-success text-center">Limite diário recomendado: R$ {{ '{:.2f}'.format(por_dia) }}</h4>
-            </div>
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div id="chart1" class="py-3">
-                            {{ graph_html1|safe }}
-                        </div>
+    <div class="container mt-5 mb-5">
+        <div class="card mt-3 bg-light text-dark shadow bg-opacity-75">
+            <div class="card-body">
+                <h1 class="text-center">Suas Informações</h1>
+                <h5 class="card-title">Nome Completo: {{ full_name }}</h5>
+                <h5 class="card-title">Nome de Usuário: {{ username }}</h5>
+                <h5 class="card-title">Email: {{ email }}</h5>
+                {% if status == 'active' %}
+                    <div class="alert alert-success text-center mt-3" role="alert">
+                        Você é um usuário Pro!
                     </div>
-                    <div class="col-md-6">
-                        <div id="chart2" class="py-3">
-                            {{ graph_html2|safe }}
-                        </div>
+                {% else %}
+                    <div class="alert alert-info text-center mt-3" role="alert">
+                        Você está usando uma conta gratuita. <a href="/checkout">Tenha uma conta Pro</a>
                     </div>
-                </div>
-            </div>
-            <div class="table-responsive">
-                {% if porcentagem_formatado %}
-                <table class="table table-bordered text-center">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Informação</th>
-                            <th>Valor</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Porcentagem do saldo na conta até o momento:</td>
-                            <td>{{ porcentagem_formatado }} %</td>
-                        </tr>
-                    </tbody>
-                </table>
                 {% endif %}
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div class="mt-4">
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endwith %}
+                <hr>
+                <h5 class="mt-4">Alterar Senha</h5>
+                <form method="POST" action="{{ url_for('account') }}">
+                    <div class="form-group">
+                        <label for="newPassword">Nova Senha</label>
+                        <input type="password" class="form-control" id="newPassword" name="newPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirmar Nova Senha</label>
+                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-3">Alterar Senha</button>
+                </form>
             </div>
-
-            {% include 'buttons.html' %}
         </div>
     </div>
-
-    <!-- Script para alternar entre os modos claro e escuro -->
+    {% include 'buttons.html' %}
     <script>
         document.getElementById('btnSwitch').addEventListener('click', () => {
             const currentTheme = document.documentElement.getAttribute('data-bs-theme');
@@ -103,6 +95,7 @@
 
         // Configurar tema inicial
         setInitialTheme();
+
     </script>
     <script src="{{url_for('static', filename='fonts/js/all.js')}}" crossorigin="anonymous"></script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

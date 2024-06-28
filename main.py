@@ -202,6 +202,31 @@ def logout():
     logout_user()  # Logout do usuário
     return redirect(url_for('index'))
 
+@app.route('/account', methods=['GET', 'POST'])
+@login_required
+def account():
+    if request.method == 'POST':
+        new_password = request.form.get('newPassword')
+        confirm_password = request.form.get('confirmPassword')
+
+        if new_password != confirm_password:
+            flash('As senhas não coincidem. Por favor, tente novamente.', 'danger')
+        elif not new_password:
+            flash('A nova senha não pode estar vazia.', 'danger')
+        else:
+            # Atualize a senha do usuário
+            user = User.query.get(current_user.id)
+            user.password = generate_password_hash(new_password)
+            db.session.commit()
+            flash('Sua senha foi alterada com sucesso.', 'success')
+        return redirect(url_for('account'))
+
+    return render_template('account.html', 
+                           username=current_user.username, 
+                           email=current_user.email, 
+                           status=current_user.subscription_status,
+                           full_name=current_user.full_name)
+
 
 @app.route('/daily_history')
 @login_required
@@ -233,6 +258,7 @@ def index():
 
 @app.route('/history')
 @login_required
+@subscription_required
 def history():
     current_month = datetime.now().date().replace(day=1)
     shopping_list = ShoppingList.query.filter_by(status=1, username=current_user.username).filter(ShoppingList.date >= current_month).order_by(ShoppingList.date.desc()).all()
@@ -244,6 +270,7 @@ def history():
 
 @app.route('/debts_history')
 @login_required
+@subscription_required
 def debts_history():
     current_month = datetime.now().date().replace(day=1)
     debts_history = debts.query.filter_by(status=1, username=current_user.username).filter(debts.maturity >= current_month).order_by(debts.maturity.desc()).all()
