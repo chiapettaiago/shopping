@@ -9,6 +9,7 @@
     <title>Document</title>
 </head>
 <body>
+    {% if current_user.is_authenticated %}
     <!-- Botão flutuante para alternar modo claro/escuro -->
     <div class="position-fixed bottom-0 start-0 mb-3 ms-3 d-none d-lg-inline">
         <button type="button" class="btn btn-dark border shadow" title="Alternar entre Modo Claro e Escuro" id="btnSwitch">
@@ -34,9 +35,9 @@
         <div class="modal-body">
             <!-- Insira as informações do sistema aqui -->
             <h4 class="text-center">Sistema de Gerenciamento Financeiro Meu Tesouro</h4>
-            <p class="mt-3 text-center">Versão do sistema: 2.0 Release 3</p>
+            <p class="mt-3 text-center">Versão do sistema: 2.1 Release 4</p>
             <p class="text-center">Desenvolvedor: Iago Filgueiras Chiapetta</p>
-            <p class="text-center">Atualização mais recente: 28 de junho de 2024.</p>
+            <p class="text-center">Atualização mais recente: 30 de junho de 2024.</p>
             <p class="text-center">Problemas na ativação da sua conta PRO? Envie um e-mail para <a href="mailto://iagochiapetta@gmail.com">iagochiapetta@gmail.com.</a></p>
             <p class="text-center"><a class="link-opacity-100" href="/about">Notas de Versão</a></p>            
 
@@ -45,5 +46,6 @@
     </div>
 </div>
 </div>
+{% endif %}
 </body>
 </html>

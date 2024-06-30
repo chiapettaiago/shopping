@@ -22,6 +22,7 @@ class ShoppingList(db.Model):
     status = db.Column(db.Integer)
     date = db.Column(db.DateTime)
     username = db.Column(db.String(50), db.ForeignKey('user.username'))
+    list_id = db.Column(db.String(36), nullable=True)
     
 class debts(db.Model):
     id = db.Column(db.Integer, primary_key=True)

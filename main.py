@@ -18,6 +18,7 @@ import time
 import plotly.graph_objs as go
 import stripe
 from functools import wraps
+import uuid
 
 def load_env():
     """Carregar variáveis de ambiente do arquivo .env."""
@@ -106,6 +107,46 @@ def before_request():
 def calcular_saldo(balance_total, debts_total, gastos_total):
     saldo_atualizado = balance_total - debts_total - gastos_total
     return round(saldo_atualizado, 2)
+
+@app.route('/share', methods=['POST'])
+def share():
+    # Consulta para obter os IDs dos itens da lista de compras
+    shopping_list = ShoppingList.query.filter_by(status=0).all()
+    shopping_list_ids = [item.id for item in shopping_list]
+
+
+    if not shopping_list_ids:
+        return "Sua lista de compras está vazia."
+
+    shopping_list = ShoppingList.query.filter(ShoppingList.id.in_(shopping_list_ids)).all()
+    list_id = str(uuid.uuid4())
+
+    try:
+        # Atualiza os itens da lista de compras com o novo list_id
+        for item in shopping_list:
+            item.list_id = list_id
+            db.session.add(item)  # Adiciona o item à sessão
+
+        # Realiza o commit após o loop de atualização
+        db.session.commit()
+
+        # Verifica se os itens foram atualizados corretamente
+        updated_items = ShoppingList.query.filter_by(list_id=list_id).all()
+        for item in updated_items:
+            print(f"ID: {item.id}, List ID: {item.list_id}, Status: {item.status}")
+
+        shareable_link = url_for('view_list', list_id=list_id, _external=True)
+        return render_template('shared.html', link=shareable_link)
+
+    except Exception as e:
+        db.session.rollback()
+        return f"Ocorreu um erro ao compartilhar a lista de compras: {str(e)}"
+
+@app.route('/list/<list_id>')
+def view_list(list_id):
+    shopping_list = ShoppingList.query.filter_by(status=0, list_id=list_id).all()
+    total_price = sum(item.price * item.quantity for item in shopping_list)
+    return render_template('index.html', shopping_list=shopping_list, total_price=total_price)
 
 @app.route('/checkout')
 @login_required

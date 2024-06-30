@@ -42,6 +42,11 @@
                 <button type="button" class="btn btn-danger btn-height" title="Exportar como PDF" onclick="downloadPDF()">
                     <i class="fa-solid fa-file-pdf"></i>
                 </button>
+                <form action="/share" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-success btn-height ml-2" title="Compartilhar Lista">
+                        <i class="fa-solid fa-share"></i>
+                    </button>
+                </form>
             </div>
 
             {% set categories = ['Alimentos', 'Bebidas', 'Limpeza'] %}

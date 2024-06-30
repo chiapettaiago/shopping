@@ -3,50 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Link Compartilhável</title>
+    <meta http-equiv="refresh" content="300">
     <link rel="apple-touch-icon" sizes="180x180" href={{ url_for('static', filename='images/apple-touch-icon.png') }}>
     <link rel="icon" type="image/png" sizes="32x32" href={{ url_for('static', filename='images/favicon-32x32.png') }}>
     <link rel="icon" type="image/png" sizes="16x16" href={{ url_for('static', filename='images/favicon-16x16.png') }}>
     <link rel="manifest" href={{ url_for('static', filename='images/site.webmanifest') }}>
-    <meta http-equiv="refresh" content="300">
-    <!-- Inclua os links para o Bootstrap CSS e JavaScript -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="{{url_for('static', filename='bootstrap/js/bootstrap.min.js')}}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}">
     <style>
-        body {
-            background: url("{{url_for('static', filename='images/foto.jpg')}}") no-repeat center center fixed;
-            background-size: cover;
-        }
+    body {
+        background: url("{{url_for('static', filename='images/foto.jpg')}}") no-repeat center center fixed;
+        background-size: cover;
+    }
     </style>
-    <title>Sobre o Sistema</title>
 </head>
 <body>
     {% include 'navbar.html' %}
-
-    <div class="container rounded mt-5 mb-3">
-        <div class="card bg-light shadow bg-opacity-75 p-4">
-            <h3 class="text-center text-dark">Sistema Meu Tesouro 2.1 Release 4 de Gestão Residencial</h3>
-            <ul class="list-group">
-                <li class="list-group-item text-center">Adotada criptografia nos dados dos usuários como medida de segurança.</li>
-                <li class="list-group-item text-center">Possibilidade de compartilhar lista de compras por meio de link.</li>
-            </ul>
+    <div class="container mt-5">
+        <div class="card bg-light bg-opacity-75 p-4">
+            <h2 class="text-center text-dark">Link para Compartilhar sua Lista de Compras</h2>
+            <div class="text-center">
+                <p class="text-dark">Compartilhe a sua lista de compras pelo link abaixo:</p>
+                <a href="{{ link }}" target="_blank">{{ link }}</a>
+            </div>
         </div>
     </div>
-    {% include 'buttons.html' %}
+    {% include 'buttons.html'%}
     <script>
         document.getElementById('btnSwitch').addEventListener('click', () => {
             const currentTheme = document.documentElement.getAttribute('data-bs-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-bs-theme', newTheme);
             localStorage.setItem('theme', newTheme);
+
+            const tableBody = document.querySelector('.table-body');
+            tableBody.classList.toggle('table-dark');
         });
 
         // Verifica se há um tema armazenado no armazenamento local
         const storedTheme = localStorage.getItem('theme');
         if (storedTheme) {
             document.documentElement.setAttribute('data-bs-theme', storedTheme);
+            const tableBody = document.querySelector('.table-body');
+            if (storedTheme === 'dark') {
+                tableBody.classList.add('table-dark');
+            } else {
+                tableBody.classList.remove('table-dark');
+            }
         }
+
     </script>
     <script src="{{url_for('static', filename='fonts/js/all.js')}}" crossorigin="anonymous"></script>
 </body>
