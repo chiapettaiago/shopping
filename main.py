@@ -606,13 +606,14 @@ def dashboard():
     por_dia_atualizado = round(por_dia, 2)
     
     # Dívidas
-    debts_list = debts.query.filter_by(status=1, username=current_user.username).filter(debts.maturity >= current_month).order_by(debts.maturity.desc()).all()
-    dates_debts = [debt.maturity.strftime('%d/%m/%Y') for debt in debts_list]
-    values_debts = [debt.value for debt in debts_list]
+    diario_list = Diario.query.filter_by(status=1, username=current_user.username).filter(Diario.date >= current_month).order_by(Diario.date.desc()).all()
+    dates_diario = [item.date.strftime('%d/%m/%Y') for item in diario_list]
+    values_diario = [item.value for item in diario_list]
+
     
     pie_chart_debts = go.Pie(
-        labels=dates_debts,
-        values=values_debts,
+        labels=dates_diario,
+        values=values_diario,
         name='Dívidas',
         marker=dict(colors=['rgb(26, 118, 255)', 'rgb(255, 127, 14)', 'rgb(44, 160, 44)', 'rgb(214, 39, 40)', 'rgb(148, 103, 189)']),
         hoverinfo='label+percent+value'
