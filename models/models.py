@@ -30,6 +30,7 @@ class debts(db.Model):
     maturity = db.Column(db.DateTime(50), nullable=False)
     value = db.Column(db.Float, nullable=False)
     status = db.Column(db.Integer)
+    date = db.Column(db.DateTime)
     username = db.Column(db.String(50), db.ForeignKey('user.username'))
     
 class Balance(db.Model):

@@ -108,6 +108,7 @@ def calcular_saldo(balance_total, debts_total, gastos_total):
     saldo_atualizado = balance_total - debts_total - gastos_total
     return round(saldo_atualizado, 2)
 
+
 @app.route('/share', methods=['POST'])
 def share():
     # Consulta para obter os IDs dos itens da lista de compras
@@ -356,7 +357,7 @@ def debitos():
     current_month = datetime.now().date().replace(day=1)
     debts_list = debts.query.filter_by(status=0, username=current_user.username).filter(debts.maturity >= current_month).order_by(debts.value.desc()).all()
     balance_list = Balance.query.filter_by(status=0, username=current_user.username).filter(Balance.date >= current_month).all()
-    debts_1 = debts.query.filter_by(status=1, username=current_user.username).filter(debts.maturity >= current_month).all()
+    debts_1 = debts.query.filter_by(status=1, username=current_user.username).filter(debts.date >= current_month).all()
     gastos = Diario.query.filter_by(status=1, username=current_user.username).filter(Diario.date >= current_month).order_by(Diario.value.desc()).all()
     gastos_total = sum(item.value for item in gastos)
     gastos_formatado = round(gastos_total, 2)
@@ -388,7 +389,7 @@ def listar_gastos():
     gastos = Diario.query.filter_by(status=0, username=current_user.username).filter(Diario.date >= current_month).order_by(Diario.value.desc()).all()
     debts_list = debts.query.filter_by(status=0, username=current_user.username).filter(debts.maturity >= current_month).order_by(debts.value.desc()).all()
     balance_list = Balance.query.filter_by(status=0, username=current_user.username).filter(Balance.date >= current_month).all()
-    debts_1 = debts.query.filter_by(status=1, username=current_user.username).filter(debts.maturity >= current_month).all()
+    debts_1 = debts.query.filter_by(status=1, username=current_user.username).filter(debts.date >= current_month).all()
     gastos_processado = Diario.query.filter_by(status=1, username=current_user.username).filter(Diario.date >= current_month).order_by(Diario.value.desc()).all()
     gastos_total = sum(item.value for item in gastos_processado)
     gastos_nao_processados = sum(item.value for item in gastos)
@@ -485,10 +486,11 @@ def add_debts():
     name = request.form['name']
     maturity = request.form['maturity']
     value = request.form['value']
+    current_time = datetime.now().date()
 
     # Adicione validações e formatação necessárias aqui
 
-    new_item = debts(name=name, maturity=maturity, value=value, status=0, username=current_user.username)
+    new_item = debts(name=name, maturity=maturity, value=value, date=current_time, status=0, username=current_user.username)
     db.session.add(new_item)
     db.session.commit()
     db.session.remove()
@@ -561,8 +563,10 @@ def buy(id):
 @login_required
 def pay(id):
     item_to_buy = debts.query.get(id)
+    current_time = datetime.now().date()
     if item_to_buy:
         item_to_buy.status = 1
+        item_to_buy.date = current_time
         db.session.commit()
         db.session.remove()
     return redirect(url_for('debitos'))
@@ -580,9 +584,9 @@ def dashboard():
     # Calcular quantos dias faltam até o final do mês
     dias_faltando = dias_no_mes - time.localtime().tm_mday + 1
     
-    debts_list = debts.query.filter_by(status=0, username=current_user.username).filter(debts.maturity >= current_month).order_by(debts.value.desc()).all()
+    debts_list = debts.query.filter_by(status=0, username=current_user.username).filter(debts.date >= current_month).order_by(debts.value.desc()).all()
     balance_list = Balance.query.filter_by(status=0, username=current_user.username).filter(Balance.date >= current_month).all()
-    debts_1 = debts.query.filter_by(status=1, username=current_user.username).filter(debts.maturity >= current_month).all()
+    debts_1 = debts.query.filter_by(status=1, username=current_user.username).filter(debts.date >= current_month).all()
     gastos = Diario.query.filter_by(status=1, username=current_user.username).filter(Diario.date >= current_month).order_by(Diario.value.desc()).all()
     gastos_total = sum(item.value for item in gastos)
     gastos_formatado = round(gastos_total, 2)
