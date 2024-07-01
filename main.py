@@ -292,7 +292,7 @@ def daily_history():
 def index():
     update_old_balance_items()
     current_month = datetime.now().date().replace(day=1)
-    shopping_list = ShoppingList.query.filter_by(status=0, username=current_user.username).filter(ShoppingList.date >= current_month).all()
+    shopping_list = ShoppingList.query.filter_by(status=0, username=current_user.username).filter(ShoppingList.date >= current_month).order_by(ShoppingList.name.asc()).all()
     total_price = sum(item.quantity * item.price for item in shopping_list)
     total_price_formatado = round(total_price, 2)
     db.session.remove()
