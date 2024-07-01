@@ -146,7 +146,7 @@ def share():
 
 @app.route('/list/<list_id>')
 def view_list(list_id):
-    shopping_list = ShoppingList.query.filter_by(status=0, list_id=list_id).all()
+    shopping_list = ShoppingList.query.filter_by(status=0, list_id=list_id).order_by(ShoppingList.name.asc()).all()
     total_price = sum(item.price * item.quantity for item in shopping_list)
     return render_template('index.html', shopping_list=shopping_list, total_price=total_price)
 
