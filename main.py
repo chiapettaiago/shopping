@@ -110,6 +110,7 @@ def calcular_saldo(balance_total, debts_total, gastos_total):
 
 
 @app.route('/share', methods=['POST'])
+@login_required
 def share():
     # Consulta para obter os IDs dos itens da lista de compras
     shopping_list = ShoppingList.query.filter_by(status=0).all()
