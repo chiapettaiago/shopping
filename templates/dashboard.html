@@ -26,14 +26,31 @@
         <div class="card bg-light bg-opacity-75 shadow p-4">
             <h1 class="text-center text-dark mt-3">Bem-vindo ao site Meu Tesouro, {{ username }}!</h1>
             <h2 class="text-center text-dark mt-3">Aqui estão suas Informações financeiras desse mês</h2>
-            <div>
-                <h4 class="text-success text-center">Valor Total das Dívidas: R$ {{ '{:.2f}'.format(total_price) }}</h4>
-            </div>
-            <div>
-                <h4 class="text-success text-center">Saldo Atualizado: R$ {{ '{:.2f}'.format(saldo_atualizado) }}</h4>
-            </div>
-            <div>
-                <h4 class="text-success text-center">Limite diário recomendado: R$ {{ '{:.2f}'.format(por_dia) }}</h4>
+            <div class="row text-center">
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title text-success">Valor Total das Dívidas</h4>
+                            <p class="card-text">R$ {{ '{:.2f}'.format(total_price) }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title text-success">Saldo Atualizado</h4>
+                            <p class="card-text">R$ {{ '{:.2f}'.format(saldo_atualizado) }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title text-success">Limite diário recomendado</h4>
+                            <p class="card-text">R$ {{ '{:.2f}'.format(por_dia) }}</p>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="container">
                 <div class="row">
