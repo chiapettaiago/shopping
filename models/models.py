@@ -48,4 +48,9 @@ class Diario(db.Model):
     value = db.Column(db.Float, nullable=False)
     status = db.Column(db.Integer)
     username = db.Column(db.String(50), db.ForeignKey('user.username'))
-
+    
+class Saldo(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    value = db.Column(db.Float, nullable=False)
+    date = db.Column(db.Date, nullable=False, unique=True)
+    username = db.Column(db.String(50), db.ForeignKey('user.username'))

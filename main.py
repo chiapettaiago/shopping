@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, make_response, send_file, session, flash
-from models.models import db, User, ShoppingList, debts, Balance, Diario
+from models.models import db, User, ShoppingList, debts, Balance, Diario, Saldo
 from sqlalchemy import exc, text, create_engine,desc
 from sqlalchemy.pool import QueuePool
 from flask_migrate import Migrate
@@ -606,6 +606,17 @@ def dashboard():
     por_dia = saldo_atualizado_formatado / dias_faltando
     por_dia_atualizado = round(por_dia, 2)
     
+    # Atualizar o saldo no banco de dados
+    novo_saldo = Saldo(username=current_user.username, value=saldo_atualizado_formatado, date=datetime.today())
+    if not novo_saldo:
+        novo_saldo = Saldo(username=current_user.username, value=saldo_atualizado_formatado, date=datetime.today().date())
+        db.session.add(novo_saldo)
+        db.session.commit()
+    else:
+        # Caso queira atualizar o valor em vez de não inserir de novo
+        novo_saldo.value = saldo_atualizado_formatado
+        db.session.commit()
+        
     # Dívidas
     diario_list = Diario.query.filter_by(status=1, username=current_user.username).filter(Diario.date >= current_month).order_by(Diario.date.desc()).all()
     dates_diario = [item.date.strftime('%d/%m/%Y') for item in diario_list]
