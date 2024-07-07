@@ -606,15 +606,18 @@ def dashboard():
     por_dia = saldo_atualizado_formatado / dias_faltando
     por_dia_atualizado = round(por_dia, 2)
     
-    # Atualizar o saldo no banco de dados
-    novo_saldo = Saldo(username=current_user.username, value=saldo_atualizado_formatado, date=datetime.today())
+    # Verificar se já existe um saldo para o usuário e a data atual
+    novo_saldo = Saldo.query.filter_by(username=current_user.username, date=datetime.today().date()).first()
+
     if not novo_saldo:
-        novo_saldo = Saldo(username=current_user.username, value=saldo_atualizado_formatado, date=datetime.today().date())
+        # Se não existir, criar um novo registro
+        novo_saldo = Saldo(username=current_user.username, value=saldo_atualizado_formatado, per_day=por_dia_atualizado, date=datetime.today().date())
         db.session.add(novo_saldo)
         db.session.commit()
     else:
-        # Caso queira atualizar o valor em vez de não inserir de novo
+        # Se existir, atualizar o registro existente
         novo_saldo.value = saldo_atualizado_formatado
+        novo_saldo.per_day = por_dia_atualizado
         db.session.commit()
         
     # Dívidas
