@@ -385,8 +385,7 @@ def debitos():
         novo_saldo.value = saldo_atualizado_formatado
         novo_saldo.per_day = por_dia_atualizado
         db.session.commit()
-    
-    db.session.remove()
+        
     return render_template('finance.html', debts_list=debts_list, total_price=total_price_formatado, saldo_atualizado=saldo_atualizado_formatado, por_dia=por_dia_atualizado, username=current_user.full_name)
 
 # Rota para listar todos os gastos
