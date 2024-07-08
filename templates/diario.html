@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -25,91 +25,114 @@
 </head>
 <body>
     {% include 'navbar.html' %}
-
     {% include 'buttons.html' %}
     
-    <div class="container mt-5">
-        <div class="card bg-light bg-opacity-75 mb-3 p-4">
-        <h2 class="mt-2 text-dark text-center">Diário de gastos</h2>
-        <div>
-            <h4 class="text-success text-center">Gastos ainda não baixados: R$ {{ '{:.2f}'.format(gastos_nao_processados) }}</h4>
-        </div>
-        <div>
-            <h4 class="text-success text-center">Saldo Atualizado: R$ {{ '{:.2f}'.format(saldo_atualizado) }}</h4>
-        </div>
-        <div>
-            <h4 class="text-success text-center">Limite diário recomendado: R$ {{ '{:.2f}'.format(por_dia) }}</h4>
-        </div>
-        <div class="d-flex justify-content-center mb-2 text-center mt-2">
-            <button title="Adicionar Item" type="button" class="btn btn-primary mr-2" data-toggle="modal" data-target="#addGastoModal">
-                <i class="fa-solid fa-plus"></i>
-            </button>
-        </div>
-        <div class="table-responsive">
-        <table class="table table-bordered text-center">
-            <thead class="table-light">
-                <tr>
-                    <th>Descrição</th>
-                    <th>Valor</th>
-                    <th>Data</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for gasto in gastos %}
-                <tr>
-                    <td>{{ gasto.name }}</td>
-                    <td>R$ {{ '{:.2f}'.format(gasto.value) }}</td>
-                    <td>{{ gasto.date.strftime('%d/%m/%Y') }}</td>
-                    <td>
-                        <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editGastoModal{{ gasto.id }}">
-                            <i class="fa-solid fa-pencil"></i>
-                        </button>
-                        <form action="{{ url_for('excluir_gasto', id=gasto.id) }}" method="post" style="display:inline;">
-                            <button type="submit" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
-                        </form>
-                        <form action="{{ url_for('computar_gasto', id=gasto.id) }}" method="post" style="display:inline;">
-                            <button type="submit" class="btn btn-success btn-sm"><i class="fa-solid fa-money-check-dollar"></i></button>
-                        </form>
-                    </td>
-                </tr>
-
-                <!-- Modal para editar gasto -->
-                <div class="modal fade" id="editGastoModal{{ gasto.id }}" tabindex="-1" role="dialog" aria-labelledby="editGastoModalLabel{{ gasto.id }}" aria-hidden="true">
-                    <div class="modal-dialog" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="editGastoModalLabel{{ gasto.id }}">Editar Gasto</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                            </div>
-                            <div class="modal-body">
-                                <form action="{{ url_for('editar_gasto', id=gasto.id) }}" method="post">
-                                    <div class="form-group">
-                                        <label for="descricao">Descrição</label>
-                                        <input type="text" class="form-control" id="descricao" name="descricao" value="{{ gasto.name }}" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="valor">Valor</label>
-                                        <input type="number" step="0.01" class="form-control" id="valor" name="valor" value="{{ gasto.value }}" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="data_gasto">Data</label>
-                                        <input type="date" class="form-control" id="data_gasto" name="data_gasto" value="{{ gasto.date.strftime('%Y-%m-%d') }}" required>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary">Salvar</button>
-                                </form>
-                            </div>
+    <div class="container mt-5 mb-5">
+        <div class="card bg-light bg-opacity-75 p-4">
+            <h2 class="mt-2 text-dark text-center">Diário de Gastos</h2>
+            
+            <div class="row mt-2">
+                <div class="col-md-4 mb-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h4 class="card-title text-success">Gastos não Processados</h4>
+                            <p class="card-text">R$ {{ '{:.2f}'.format(gastos_nao_processados) }}</p>
                         </div>
                     </div>
                 </div>
-                {% endfor %}
-            </tbody>
-        </table>
+                <div class="col-md-4 mb-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h4 class="card-title text-success">Saldo Atualizado</h4>
+                            <p class="card-text">R$ {{ '{:.2f}'.format(saldo_atualizado) }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h4 class="card-title text-success">Limite Diário Recomendado</h4>
+                            <p class="card-text">R$ {{ '{:.2f}'.format(por_dia) }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <hr class="border border-dark">
+            </div>
+
+            <div class="d-flex justify-content-center mb-2 text-center mt-2">
+                <button title="Adicionar Item" type="button" class="btn btn-primary mr-2" data-toggle="modal" data-target="#addGastoModal">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-bordered text-center">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Descrição</th>
+                            <th>Valor</th>
+                            <th>Data</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-body">
+                        {% for gasto in gastos %}
+                        <tr>
+                            <td>{{ gasto.name }}</td>
+                            <td>R$ {{ '{:.2f}'.format(gasto.value) }}</td>
+                            <td>{{ gasto.date.strftime('%d/%m/%Y') }}</td>
+                            <td>
+                                <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" title="Editar" data-target="#editGastoModal{{ gasto.id }}">
+                                    <i class="fa-solid fa-pencil"></i>
+                                </button>
+                                <form action="{{ url_for('excluir_gasto', id=gasto.id) }}" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                                </form>
+                                <form action="{{ url_for('computar_gasto', id=gasto.id) }}" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-success btn-sm" title="Computar"><i class="fa-solid fa-money-check-dollar"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+
+                        <!-- Modal para editar gasto -->
+                        <div class="modal fade" id="editGastoModal{{ gasto.id }}" tabindex="-1" role="dialog" aria-labelledby="editGastoModalLabel{{ gasto.id }}" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="editGastoModalLabel{{ gasto.id }}">Editar Gasto</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form action="{{ url_for('editar_gasto', id=gasto.id) }}" method="post">
+                                            <div class="form-group">
+                                                <label for="descricao">Descrição</label>
+                                                <input type="text" class="form-control" id="descricao" name="descricao" value="{{ gasto.name }}" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="valor">Valor</label>
+                                                <input type="number" step="0.01" class="form-control" id="valor" name="valor" value="{{ gasto.value }}" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="data_gasto">Data</label>
+                                                <input type="date" class="form-control" id="data_gasto" name="data_gasto" value="{{ gasto.date.strftime('%Y-%m-%d') }}" required>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i></button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-    </div>
-</div>
 
     <!-- Modal para adicionar gasto -->
     <div class="modal fade" id="addGastoModal" tabindex="-1" role="dialog" aria-labelledby="addGastoModalLabel" aria-hidden="true">
@@ -135,7 +158,7 @@
                             <label for="data_gasto">Data</label>
                             <input type="date" class="form-control" id="data_gasto" name="data_gasto" required>
                         </div>
-                        <button type="submit" class="btn btn-primary">Adicionar</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-cart-plus"></i></button>
                     </form>
                 </div>
             </div>

@@ -21,6 +21,10 @@
         .btn-height {
             height: 38px; /* Ajuste conforme necessário */
         }
+        .divider {
+            border-bottom: 1px solid black;
+            margin: 1.5rem 0;
+        }
     </style>
 </head>
 <body>
@@ -29,9 +33,16 @@
         <div class="card bg-light bg-opacity-75 p-4">
             <h2 class="text-center text-dark">Carrinho de Compras</h2>
 
-            <!-- Exibição do Valor Total da Compra -->
-            <div>
-                <h4 class="text-success text-center">Valor Total da Compra: R$ {{ '{:.2f}'.format(total_price) }}</h4>
+            <!-- Exibição do Valor Total da Compra em um Card -->
+            <div class="card mb-3 mt-2">
+                <div class="card-body">
+                    <h5 class="card-title text-center text-success">Valor Total da Compra</h5>
+                    <p class="card-text text-center">R$ {{ '{:.2f}'.format(total_price) }}</p>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <hr class="border border-dark">
             </div>
             
             <!-- Botão para abrir o modal de adição -->
