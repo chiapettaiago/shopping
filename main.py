@@ -484,10 +484,10 @@ def add_daily():
 @app.route('/editar/<int:id>', methods=['POST'])
 def editar_gasto(id):
     gasto = Diario.query.get(id)
-    if gasto:
+    if request.method == 'POST':
         gasto.name = request.form['descricao']
-        gasto.valor = request.form['valor']
-        gasto.data_gasto = datetime.strptime(request.form['data_gasto'], '%Y-%m-%d').date()
+        gasto.value = request.form['valor']
+        gasto.date = datetime.strptime(request.form['data_gasto'], '%Y-%m-%d').date()
         db.session.commit()
     return redirect(url_for('listar_gastos'))
 
