@@ -301,7 +301,6 @@ def index():
 
 @app.route('/history')
 @login_required
-@subscription_required
 def history():
     current_month = datetime.now().date().replace(day=1)
     shopping_list = ShoppingList.query.filter_by(status=1, username=current_user.username).filter(ShoppingList.date >= current_month).order_by(ShoppingList.date.desc()).all()
@@ -313,7 +312,6 @@ def history():
 
 @app.route('/debts_history')
 @login_required
-@subscription_required
 def debts_history():
     current_month = datetime.now().date().replace(day=1)
     debts_history = debts.query.filter_by(status=1, username=current_user.username).filter(debts.maturity >= current_month).order_by(debts.maturity.desc()).all()
