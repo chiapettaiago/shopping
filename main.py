@@ -634,20 +634,6 @@ def dashboard():
     percent = round(porcentagem, 2)
     por_dia = saldo_atualizado_formatado / dias_faltando
     por_dia_atualizado = round(por_dia, 2)
-    
-    # Verificar se já existe um saldo para o usuário e a data atual
-    novo_saldo = Saldo.query.filter_by(username=current_user.username, date=datetime.today().date()).first()
-
-    if not novo_saldo:
-        # Se não existir, criar um novo registro
-        novo_saldo = Saldo(username=current_user.username, value=saldo_atualizado_formatado, per_day=por_dia_atualizado, date=datetime.today().date())
-        db.session.add(novo_saldo)
-        db.session.commit()
-    else:
-        # Se existir, atualizar o registro existente
-        novo_saldo.value = saldo_atualizado_formatado
-        novo_saldo.per_day = por_dia_atualizado
-        db.session.commit()
         
     # Dívidas
     diario_list = Diario.query.filter_by(status=1, username=current_user.username).filter(Diario.date >= current_month).order_by(Diario.date.desc()).all()
