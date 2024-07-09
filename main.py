@@ -371,20 +371,6 @@ def debitos():
     saldo_atualizado_formatado = calcular_saldo(balance_total_formatado, debts_1_formatado, gastos_formatado)
     por_dia = saldo_atualizado_formatado / dias_faltando
     por_dia_atualizado = round(por_dia, 2)
-    
-    # Verificar se já existe um saldo para o usuário e a data atual
-    novo_saldo = Saldo.query.filter_by(username=current_user.username, date=datetime.today().date()).first()
-
-    if not novo_saldo:
-        # Se não existir, criar um novo registro
-        novo_saldo = Saldo(username=current_user.username, value=saldo_atualizado_formatado, per_day=por_dia_atualizado, date=datetime.today().date())
-        db.session.add(novo_saldo)
-        db.session.commit()
-    else:
-        # Se existir, atualizar o registro existente
-        novo_saldo.value = saldo_atualizado_formatado
-        novo_saldo.per_day = por_dia_atualizado
-        db.session.commit()
         
     return render_template('finance.html', debts_list=debts_list, total_price=total_price_formatado, saldo_atualizado=saldo_atualizado_formatado, por_dia=por_dia_atualizado, username=current_user.full_name)
 
@@ -418,20 +404,6 @@ def listar_gastos():
     saldo_atualizado_formatado = calcular_saldo(balance_total_formatado, debts_1_formatado, gastos_formatado)
     por_dia = saldo_atualizado_formatado / dias_faltando
     por_dia_atualizado = round(por_dia, 2)
-    
-    # Verificar se já existe um saldo para o usuário e a data atual
-    novo_saldo = Saldo.query.filter_by(username=current_user.username, date=datetime.today().date()).first()
-
-    if not novo_saldo:
-        # Se não existir, criar um novo registro
-        novo_saldo = Saldo(username=current_user.username, value=saldo_atualizado_formatado, per_day=por_dia_atualizado, date=datetime.today().date())
-        db.session.add(novo_saldo)
-        db.session.commit()
-    else:
-        # Se existir, atualizar o registro existente
-        novo_saldo.value = saldo_atualizado_formatado
-        novo_saldo.per_day = por_dia_atualizado
-        db.session.commit()
         
     return render_template('diario.html', gastos=gastos, gastos_nao_processados=gastos_nao_processados, username=current_user.full_name, saldo_atualizado=saldo_atualizado_formatado, por_dia=por_dia_atualizado,)
 
