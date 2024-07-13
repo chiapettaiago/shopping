@@ -15,8 +15,12 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <style>
         body {
-            background: url("{{url_for('static', filename='images/foto.jpg')}}") no-repeat center center fixed;
+            background: url("{{ url_for('static', filename='images/foto.jpg') }}") no-repeat center center fixed;
             background-size: cover;
+        }
+        .divider {
+            border-bottom: 1px solid #000;
+            margin: 20px 0;
         }
     </style>
     <title>Histórico</title>
@@ -28,10 +32,20 @@
         <div class="card bg-light bg-opacity-75 p-4">
             <h2 class="text-center text-dark mt-3">Dívidas quitadas</h2>
 
-            <!-- Exibição do Valor Total das Dívidas Quitadas -->
-            <div>
-                <h4 class="text-success text-center">Dívidas quitadas: R$ {{ '{:.2f}'.format(total_value) }}</h4>
-            </div>
+            <!-- Exibição do Valor Total das Dívidas Quitadas e Saldo Atualizado em Cards -->
+            <div class="row text-center">
+                <div class="col-md-12 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title text-success">Valor Total das Dívidas Quitadas</h5>
+                            <p class="card-text">R$ {{ '{:.2f}'.format(total_value | default(0)) }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <hr class="border border-dark">
+                </div>
 
             <!-- Tabela de Dívidas Quitadas -->
             <div class="table-responsive">
@@ -57,7 +71,6 @@
         </div>
     </div>
 
-    
     {% include 'buttons.html' %}
             
     <script>

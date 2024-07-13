@@ -19,37 +19,56 @@
             background: url("{{url_for('static', filename='images/foto.jpg')}}") no-repeat center center fixed;
             background-size: cover;
         }
+        .divider {
+            border-bottom: 1px solid #000;
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
     {% include 'navbar.html' %}
     <div class="container rounded">
         <div class="card bg-light mt-3 shadow bg-opacity-75 mb-3 p-4">
-        <h2 class="text-dark text-center">Histórico Diário</h2>
-        <div>
-            <h4 class="text-success text-center">Valor Total: R$ {{ '{:.2f}'.format(total_value) }}</h4>
+            <h2 class="text-dark text-center">Histórico Diário</h2>
+            
+            <!-- Exibição do Valor Total dos Recebimentos em um Card -->
+            <div class="text-center mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">Valor Total</h5>
+                        <p class="card-text">R$ {{ '{:.2f}'.format(total_value | default(0)) }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <hr class="border border-dark">
+            </div>
+
+            <!-- Tabela de Recebimentos Diários -->
+            <div class="table-responsive">
+                <table class="table table-bordered text-center">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Desc.</th>
+                            <th>Valor</th>
+                            <th>Data</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in daily_history %}
+                            <tr>
+                                <td>{{ item.name }}</td>
+                                <td>R$ {{ '{:.2f}'.format(item.value) }}</td>
+                                <td>{{ item.date.strftime('%d/%m/%Y') }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <div class="table-responsive"></div>
-        <table class="table table-bordered text-center">
-            <thead class="table-light">
-                <tr>
-                    <th>Desc.</th>
-                    <th>Valor:</th>
-                    <th>Data:</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in daily_history %}
-                    <tr>
-                        <td>{{ item.name }}</td>
-                        <td>R$ {{ '{:.2f}'.format(item.value) }}</td>
-                        <td>{{ item.date.strftime('%d/%m/%Y') }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
     </div>
-        
+    
     {% include 'buttons.html' %}
             
     <script>
@@ -75,5 +94,6 @@
             }
         }
     </script>
-    <script src="{{url_for('static', filename='fonts/js/all.js')}}" crossorigin="anonymous"></script></body>
+    <script src="{{url_for('static', filename='fonts/js/all.js')}}" crossorigin="anonymous"></script>
+</body>
 </html>

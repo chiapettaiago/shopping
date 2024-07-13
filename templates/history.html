@@ -19,6 +19,10 @@
             background: url("{{url_for('static', filename='images/foto.jpg')}}") no-repeat center center fixed;
             background-size: cover;
         }
+        .divider {
+            border-bottom: 1px solid #000;
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
@@ -27,9 +31,18 @@
         <div class="card bg-light bg-opacity-75 p-4">
             <h2 class="text-center text-dark">Compras realizadas</h2>
 
-            <!-- Exibição do Valor Total da Compra -->
-            <div>
-                <h4 class="text-success text-center">Valor Total das Compras Realizadas: R$ {{ '{:.2f}'.format(total_price) }}</h4>
+            <!-- Exibição do Valor Total das Compras em um Card -->
+            <div class="text-center mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">Valor Total das Compras Realizadas</h5>
+                        <p class="card-text">R$ {{ '{:.2f}'.format(total_price | default(0)) }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <hr class="border border-dark">
             </div>
 
             <!-- Tabela de Compras -->
@@ -58,9 +71,7 @@
         </div>
     </div>
 
-    
     {% include 'buttons.html' %}
-            
 
     <script>
         // Define o tema claro por padrão em dispositivos móveis

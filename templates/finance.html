@@ -22,6 +22,10 @@
         .btn-height {
             height: 38px; /* Ajuste conforme necessário */
         }
+        .divider {
+            border-bottom: 1px solid #000;
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
@@ -31,13 +35,28 @@
         <div class="card bg-light rounded shadow bg-opacity-75 p-4">
             <h2 class="text-center text-dark mt-3">Contas a pagar</h2>
 
-            <!-- Exibição do Valor Total das Dívidas -->
-            <div>
-                <h4 class="text-success text-center">Valor Total das Dívidas: R$ {{ '{:.2f}'.format(total_price) }}</h4>
+            <!-- Exibição do Valor Total das Dívidas e Saldo Atualizado em Cards -->
+            <div class="row text-center">
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title text-success">Valor Total das Dívidas</h5>
+                            <p class="card-text">R$ {{ '{:.2f}'.format(total_price) }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title text-success">Saldo Atualizado</h5>
+                            <p class="card-text">R$ {{ '{:.2f}'.format(saldo_atualizado) }}</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <!-- Exibição do Saldo Atualizado -->
-            <div>
-                <h4 class="text-success text-center">Saldo Atualizado: R$ {{ '{:.2f}'.format(saldo_atualizado) }}</h4>
+
+            <div class="col-12">
+                <hr class="border border-dark">
             </div>
 
             <!-- Botões de Ação -->
@@ -73,8 +92,7 @@
                                         <i class="fa-solid fa-trash"></i>
                                     </button>
                                     <button type="button" class="btn btn-primary" data-toggle="modal" title="Editar" data-target="#editItemModal{{ item.id }}">
-                                        <i class="fa-solid fa-pencil"></i>
-                                    </button>
+                                        <i class="fa-solid fa-pencil"></i></button>
                                     <a href="{{ url_for('pay', id=item.id) }}" title="Pagar" class="btn btn-success"><i class="fa-solid fa-cash-register"></i></a>
                                 </td>
                             </tr>

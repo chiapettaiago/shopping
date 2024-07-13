@@ -23,11 +23,11 @@
 <body>
     {% include 'navbar.html' %}
     <div class="container mt-5">
-        <div class="card bg-light bg-opacity-75 p-4">
+        <div class="card rounded shadow bg-light bg-opacity-75 p-4">
             <h2 class="text-center text-dark">Link para Compartilhar sua Lista de Compras</h2>
             <div class="text-center">
                 <p class="text-dark">Compartilhe a sua lista de compras pelo link abaixo:</p>
-                <a href="{{ link }}" target="_blank">{{ link }}</a>
+                <a class="link-primary" href="{{ link }}" target="_blank">{{ link }}</a>
             </div>
         </div>
     </div>
