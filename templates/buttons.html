@@ -62,7 +62,7 @@
                     <form action="{{ url_for('report') }}" method="post" enctype="multipart/form-data">
                         <div class="mb-3">
                             <label for="reportEmail" class="form-label">Seu Email</label>
-                            <input type="email" class="form-control" id="reportEmail" name="reportEmail" placeholder="nome@exemplo.com">
+                            <input type="email" class="form-control" value="{{current_user.email}}" id="reportEmail" name="reportEmail" placeholder="nome@exemplo.com">
                         </div>
                         <div class="mb-3">
                             <label for="reportDescription" class="form-label">Descrição do Problema</label>
