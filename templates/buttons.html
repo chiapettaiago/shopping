@@ -36,13 +36,15 @@
                     <h4 class="text-center">Sistema de Gerenciamento Financeiro Meu Tesouro</h4>
                     <p class="mt-3 text-center">Versão do sistema: 2.1 Release 4</p>
                     <p class="text-center">Desenvolvedor: Iago Filgueiras Chiapetta</p>
-                    <p class="text-center">Atualização mais recente: 13 de julho de 2024.</p>
+                    <p class="text-center">Atualização mais recente: 14 de julho de 2024.</p>
+                    {% if current_user.subscription_status is none %}
                     <!-- Botão para Reportar Problemas na Ativação da Conta PRO -->
-                    <div class="text-center style="margin-right: 4rem;">
+                    <div class="text-center">
                         <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#reportModal">
                             Problemas na ativação da conta Pro? Clique aqui
                         </button>
                     </div>
+                    {% endif %}
                     <p class="text-center"><a class="link-opacity-100" href="/about">Notas de Versão</a></p>
                     <!-- Adicione mais informações conforme necessário -->
                 </div>
