@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, make_response, send_file, session, flash
-from models.models import db, User, ShoppingList, debts, Balance, Diario, Saldo
+from models.models import db, User, ShoppingList, debts, Balance, Diario, Report
 from sqlalchemy import exc, text, create_engine,desc
 from sqlalchemy.pool import QueuePool
 from flask_migrate import Migrate
@@ -470,6 +470,34 @@ def excluir_gasto(id):
         db.session.delete(gasto)
         db.session.commit()
     return redirect(url_for('listar_gastos'))
+
+@app.route('/flash_report')
+@login_required
+def flash_report():
+    return render_template('flash_report.html')
+
+# Rota para lidar com o envio do formulário
+@app.route('/report', methods=['POST'])
+def report():
+    if request.method == 'POST':
+        email = request.form['reportEmail']
+        description = request.form['reportDescription']
+        attachment = request.files['reportAttachment']
+
+        # Salvar o arquivo anexo
+        attachment_path = None
+        if attachment:
+            filename = attachment.filename
+            attachment_path = os.path.join('uploads', filename)
+            attachment.save(attachment_path)
+
+        # Inserir os dados no banco de dados
+        new_report = Report(email=email, description=description, attachment=attachment_path)
+        db.session.add(new_report)
+        db.session.commit()
+
+        flash('Problema reportado com sucesso!', 'success')
+        return redirect(url_for('flash_report'))
 
 # Rota para computar um gasto
 @app.route('/computar/<int:id>', methods=['POST'])

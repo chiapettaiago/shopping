@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Problema Reportado com Sucesso</title>
+    <meta http-equiv="refresh" content="300">
+    <link rel="apple-touch-icon" sizes="180x180" href={{ url_for('static', filename='images/apple-touch-icon.png') }}>
+    <link rel="icon" type="image/png" sizes="32x32" href={{ url_for('static', filename='images/favicon-32x32.png') }}>
+    <link rel="icon" type="image/png" sizes="16x16" href={{ url_for('static', filename='images/favicon-16x16.png') }}>
+    <link rel="manifest" href={{ url_for('static', filename='images/site.webmanifest') }}>
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}"></script>
+    <style>
+        body {
+            background: url("{{ url_for('static', filename='images/foto.jpg') }}") no-repeat center center fixed;
+            background-size: cover;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="card rounded shadow bg-light bg-opacity-75 p-4">
+            <h2 class="text-center text-dark">Problema Reportado com Sucesso</h2>
+            <button id="voltarButton" class="btn btn-link mt-2"><i class="fa-solid fa-arrow-left"></i> Voltar</button>
+            <div class="text-center">
+                <p class="text-dark text-bold">Problema foi reportado com sucesso. Vamos analisar e em no máximo 24 horas responderemos no e-mail informado. <br> Se estiver tudo certinho, a sua conta PRO será ativada no decorrer desse prazo. <br> É só aguardar.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('voltarButton').addEventListener('click', function () {
+            window.history.back();
+        });
+    </script>
+    <script src="{{ url_for('static', filename='fonts/js/all.js') }}" crossorigin="anonymous"></script>
+</body>
+</html>

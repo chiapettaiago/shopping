@@ -49,9 +49,8 @@ class Diario(db.Model):
     status = db.Column(db.Integer)
     username = db.Column(db.String(50), db.ForeignKey('user.username'))
     
-class Saldo(db.Model):
+class Report(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    value = db.Column(db.Float, nullable=False)
-    per_day = db.Column(db.Float, nullable=False)
-    date = db.Column(db.Date, nullable=False, unique=True)
-    username = db.Column(db.String(50), db.ForeignKey('user.username'))
+    email = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    attachment = db.Column(db.String(255))
