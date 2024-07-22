@@ -112,10 +112,9 @@ def calcular_saldo(balance_total, debts_total, gastos_total):
 @app.route('/share', methods=['POST'])
 @login_required
 def share():
-    # Consulta para obter os IDs dos itens da lista de compras
-    shopping_list = ShoppingList.query.filter_by(status=0).all()
+    # Consulta para obter os IDs dos itens da lista de compras do usuário logado
+    shopping_list = ShoppingList.query.filter_by(status=0, username=current_user.username).all()
     shopping_list_ids = [item.id for item in shopping_list]
-
 
     if not shopping_list_ids:
         return "Sua lista de compras está vazia."
@@ -138,7 +137,7 @@ def share():
             print(f"ID: {item.id}, List ID: {item.list_id}, Status: {item.status}")
 
         shareable_link = url_for('view_list', list_id=list_id, _external=True)
-        return render_template('shared.html', link=shareable_link)
+        return render_template('shared.html', link=shareable_link, username=current_user.full_name)
 
     except Exception as e:
         db.session.rollback()
