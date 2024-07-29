@@ -428,7 +428,7 @@ def add_balance():
     db.session.add(new_item)
     db.session.commit()
     db.session.remove()
-    return redirect(url_for('finance'))
+    return redirect(url_for('debitos'))
 
 # Rota para adicionar um gasto
 @app.route('/add_diario', methods=['POST'])
