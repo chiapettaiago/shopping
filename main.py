@@ -223,7 +223,7 @@ def auth():
             user = User.query.filter_by(username=username).first()
             if user and check_password_hash(user.password, password):
                 login_user(user)
-                return redirect(url_for('dashboard'))
+                return redirect(url_for('balance'))
             else:
                 return render_template('auth.html', login_error='Usuário ou senha incorretos.')
 
@@ -428,7 +428,7 @@ def add_balance():
     db.session.add(new_item)
     db.session.commit()
     db.session.remove()
-    return redirect(url_for('balance'))
+    return redirect(url_for('finance'))
 
 # Rota para adicionar um gasto
 @app.route('/add_diario', methods=['POST'])
