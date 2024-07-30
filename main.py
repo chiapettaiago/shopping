@@ -249,7 +249,7 @@ def mover_debitos_para_historico():
     data_limite = datetime.now() - timedelta(days=32)
 
     # Obter débitos com mais de um mês
-    debitos_antigos = debts.query.filter(debts.maturity < data_limite, debts.username == current_user.username).all()
+    debitos_antigos = debts.query.filter(debts.maturity < data_limite).all()
 
     # Inserir débitos na tabela historico
     for debito in debitos_antigos:
