@@ -1,5 +1,5 @@
-from flask import Flask, render_template, request, redirect, url_for, make_response, send_file, session, flash
-from models.models import db, User, ShoppingList, debts, Balance, Diario, Report
+from flask import Flask, render_template, request, redirect, url_for, make_response, send_file, session, flash, abort
+from models.models import db, User, ShoppingList, debts, Balance, Diario, Report, Historico
 from sqlalchemy import exc, text, create_engine,desc
 from sqlalchemy.pool import QueuePool
 from flask_migrate import Migrate
@@ -244,6 +244,31 @@ def logout():
     logout_user()  # Logout do usuário
     return redirect(url_for('index'))
 
+def mover_debitos_para_historico():
+    # Data limite para considerar débitos com mais de um mês
+    data_limite = datetime.now() - timedelta(days=32)
+
+    # Obter débitos com mais de um mês
+    debitos_antigos = debts.query.filter(debts.maturity < data_limite, debts.username == current_user.username).all()
+
+    # Inserir débitos na tabela historico
+    for debito in debitos_antigos:
+        historico = Historico(
+            username=debito.username,
+            value=debito.value,
+            date=debito.date,
+            maturity=debito.maturity,
+            name=debito.name
+        )
+        db.session.add(historico)
+
+    # Remover débitos da tabela original
+    for debito in debitos_antigos:
+        db.session.delete(debito)
+
+    # Confirmar as mudanças no banco de dados
+    db.session.commit()
+
 @app.route('/account', methods=['GET', 'POST'])
 @login_required
 def account():
@@ -449,6 +474,15 @@ def add_daily():
     db.session.commit()
 
     return redirect(url_for('listar_gastos'))
+
+@app.route('/mover-debitos')
+@login_required
+def mover_debitos_view():
+    if current_user.username != 'Iago':
+        abort(403)  # Retorna um erro 403 Forbidden se o usuário não for "Iago"
+    mover_debitos_para_historico()
+    return redirect(url_for('listar_gastos'))
+
 
 # Rota para editar um gasto
 @app.route('/editar/<int:id>', methods=['POST'])
