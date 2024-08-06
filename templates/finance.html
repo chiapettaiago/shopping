@@ -88,12 +88,12 @@
                                 <td> R$ {{ '{:.2f}'.format(item.value) }}</td>
                                 <td>
                                     <!-- Botões de Ação -->
-                                    <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" title="Excluir" data-target="#deleteItemModal{{ item.id }}">
+                                    <button type="button" class="btn btn-danger btn-sm mr-1 mb-2" data-toggle="modal" title="Excluir" data-target="#deleteItemModal{{ item.id }}">
                                         <i class="fa-solid fa-xmark"></i>
                                     </button>
-                                    <button type="button" class="btn btn-secondary btn-sm" data-toggle="modal" title="Editar" data-target="#editItemModal{{ item.id }}">
+                                    <button type="button" class="btn btn-secondary btn-sm mr-1 mb-2" data-toggle="modal" title="Editar" data-target="#editItemModal{{ item.id }}">
                                         <i class="fa-solid fa-pen"></i></button>
-                                    <a href="{{ url_for('pay', id=item.id) }}" title="Pagar" class="btn btn-success btn-sm"><i class="fa-regular fa-circle-check"></i></a>
+                                    <a href="{{ url_for('pay', id=item.id) }}" title="Pagar" class="btn btn-success btn-sm mr-1 mb-2"><i class="fa-regular fa-circle-check"></i></a>
                                 </td>
                             </tr>
                         {% endfor %}
