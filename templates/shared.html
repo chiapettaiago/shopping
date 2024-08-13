@@ -5,19 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Link Compartilhável</title>
     <meta http-equiv="refresh" content="300">
-    <link rel="apple-touch-icon" sizes="180x180" href={{ url_for('static', filename='images/apple-touch-icon.png') }}>
-    <link rel="icon" type="image/png" sizes="32x32" href={{ url_for('static', filename='images/favicon-32x32.png') }}>
-    <link rel="icon" type="image/png" sizes="16x16" href={{ url_for('static', filename='images/favicon-16x16.png') }}>
-    <link rel="manifest" href={{ url_for('static', filename='images/site.webmanifest') }}>
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='images/site.webmanifest') }}">
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="{{url_for('static', filename='bootstrap/js/bootstrap.min.js')}}"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}">
     <style>
-    body {
-        background: url("{{url_for('static', filename='images/foto.jpeg')}}") no-repeat center center fixed;
-        background-size: cover;
-    }
+        body {
+            background: url("{{url_for('static', filename='images/foto.jpeg')}}") no-repeat center center fixed;
+            background-size: cover;
+        }
     </style>
 </head>
 <body>
@@ -27,12 +27,34 @@
             <h2 class="text-center text-dark">Link para Compartilhar sua Lista de Compras</h2>
             <div class="text-center">
                 <p class="text-dark">Compartilhe a sua lista de compras pelo link abaixo:</p>
-                <a class="link-primary" href="{{ link }}" target="_blank">{{ link }}</a>
+                <div class="d-flex justify-content-center align-items-center">
+                    <div class="bg-success text-white rounded p-3 d-flex align-items-center">
+                        <a class="text-white text-decoration-none" href="{{ link }}" target="_blank">{{ link }}</a>
+                    </div>
+                    <button class="btn btn-primary ms-2 p-3 d-flex align-items-center" title="Copiar Link" style="height: 100%;" onclick="copyLink()"><i class="fa-solid fa-copy"></i></button>
+                </div>
             </div>
         </div>
     </div>
     {% include 'buttons.html'%}
     <script>
+        function copyLink() {
+            // Cria um elemento de input temporário
+            const tempInput = document.createElement('input');
+            // Define o valor do input como o link que você deseja copiar
+            tempInput.value = "{{ link }}";
+            // Adiciona o input ao corpo do documento
+            document.body.appendChild(tempInput);
+            // Seleciona o texto do input
+            tempInput.select();
+            // Copia o texto selecionado
+            document.execCommand('copy');
+            // Remove o input temporário
+            document.body.removeChild(tempInput);
+            // Alerta de confirmação
+            alert('Link copiado para a área de transferência!');
+        }
+
         document.getElementById('btnSwitch').addEventListener('click', () => {
             const currentTheme = document.documentElement.getAttribute('data-bs-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -54,7 +76,6 @@
                 tableBody.classList.remove('table-dark');
             }
         }
-
     </script>
     <script src="{{url_for('static', filename='fonts/js/all.js')}}" crossorigin="anonymous"></script>
 </body>

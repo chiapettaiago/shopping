@@ -244,6 +244,32 @@ def logout():
     logout_user()  # Logout do usuário
     return redirect(url_for('index'))
 
+def atualizar_status_mes_passado():
+    # Obtém a data de hoje e calcula o primeiro e o último dia do mês passado
+    hoje = datetime.now()
+    primeiro_dia_mes_passado = (hoje.replace(day=1) - timedelta(days=1)).replace(day=1)
+    ultimo_dia_mes_passado = hoje.replace(day=1) - timedelta(days=1)
+
+    # Atualiza o status dos itens do mês passado
+    stmt = (
+        db.update(ShoppingList).
+        where(ShoppingList.date.between(primeiro_dia_mes_passado, ultimo_dia_mes_passado)).
+        values(status=1)
+    )
+    
+    # Executa a atualização
+    db.session.execute(stmt)
+    db.session.commit()
+        
+@app.route('/atualizar_compras')
+@login_required
+def atualizar_compras_view():
+    if current_user.username != 'Iago':
+        abort(403)  # Retorna um erro 403 Forbidden se o usuário não for "Iago"
+    atualizar_status_mes_passado()
+    return redirect(url_for('listar_gastos'))
+
+
 def mover_debitos_para_historico():
     # Data limite para considerar débitos com mais de um mês
     data_limite = datetime.now() - timedelta(days=32)
