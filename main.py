@@ -466,6 +466,73 @@ def balance():
     db.session.remove()
     return render_template('balance.html', balance_list=balance_list, total_price=total_price_formatado, username=current_user.full_name)
 
+@app.route('/assistente-ia', methods=['GET', 'POST'])
+@login_required
+@subscription_required
+def assistente_ia():
+    # Inicialização do histórico do chat na sessão
+    if 'chat_history' not in session:
+        session['chat_history'] = []
+
+    # Cálculos e consultas ao banco de dados (mantidos do código original)
+    current_month = datetime.now().date().replace(day=1)
+    ano_atual = time.localtime().tm_year
+    mes_atual = time.localtime().tm_mon
+    dias_no_mes = calendar.monthrange(ano_atual, mes_atual)[1]
+    dias_faltando = dias_no_mes - time.localtime().tm_mday + 1
+
+    gastos = Diario.query.filter_by(status=0, username=current_user.username).filter(Diario.date >= current_month).order_by(Diario.value.desc()).all()
+    debts_list = debts.query.filter_by(status=0, username=current_user.username).filter(debts.maturity >= current_month).order_by(debts.value.desc()).all()
+    balance_list = Balance.query.filter_by(status=0, username=current_user.username).filter(Balance.date >= current_month).all()
+    debts_1 = debts.query.filter_by(status=1, username=current_user.username).filter(debts.date >= current_month).all()
+    gastos_processado = Diario.query.filter_by(status=1, username=current_user.username).filter(Diario.date >= current_month).order_by(Diario.value.desc()).all()
+
+    gastos_total = sum(item.value for item in gastos_processado)
+    gastos_nao_processados = sum(item.value for item in gastos)
+    gastos_formatado = round(gastos_total, 2)
+    balance_total = sum(item.value for item in balance_list)
+    debts_total = sum(item.value for item in debts_1)
+    balance_total_formatado = round(balance_total, 2)
+    debts_1_formatado = round(debts_total, 2)
+    total_price = sum(item.value for item in debts_list)
+    total_price_formatado = round(total_price, 2)
+    saldo_atualizado_formatado = calcular_saldo(balance_total_formatado, debts_1_formatado, gastos_formatado)
+    por_dia = saldo_atualizado_formatado / dias_faltando if dias_faltando > 0 else 0
+    por_dia_atualizado = round(por_dia, 2)
+
+    if request.method == 'POST':
+        user_input = request.form.get('user_input')
+        if user_input:
+            # Adiciona a mensagem do usuário ao histórico
+            session['chat_history'].append({'type': 'user', 'text': user_input})
+            
+            # Processa o comando do usuário
+            response = process_user_input(user_input, saldo_atualizado_formatado, gastos_formatado, por_dia_atualizado)
+            
+            # Adiciona a resposta ao histórico
+            session['chat_history'].append({'type': 'ai', 'text': response})
+            
+            # Marca a sessão como modificada
+            session.modified = True
+
+    return render_template('assistente_ia.html', 
+                           chat_history=session['chat_history'],
+                           username=current_user.full_name)
+
+def process_user_input(user_input, saldo, gastos, por_dia):
+    user_input = user_input.lower()
+    if "saldo" in user_input:
+        return f"Seu saldo atual é: R$ {saldo:.2f}"
+    elif "gastos" in user_input:
+        return f"Seus gastos totais são: R$ {gastos:.2f}"
+    elif "por dia" in user_input or "dia" in user_input:
+        return f"Seu gasto diário disponível é: R$ {por_dia:.2f}"
+    else:
+        return "Desculpe, não entendi seu comando. Posso fornecer informações sobre seu saldo, gastos ou gasto diário disponível."
+
+def calcular_saldo(balance, debts, gastos):
+    return balance - debts - gastos
+
 @app.route('/add_balance', methods=['POST'])
 @login_required
 def add_balance():

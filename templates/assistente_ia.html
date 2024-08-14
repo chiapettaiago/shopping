@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assistente de IA</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}">
+    <style>
+         body {
+            background: url("{{url_for('static', filename='images/foto.jpeg')}}") no-repeat center center fixed;
+            background-size: cover;
+        }
+        .chat-container {
+            height: 70vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .message {
+            max-width: 80%;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 20px;
+        }
+        .user-message {
+            align-self: flex-end;
+            background-color: #007bff;
+            color: white;
+        }
+        .ai-message {
+            align-self: flex-start;
+            background-color: #f8f9fa;
+            color: #343a40;
+        }
+        .chat-input {
+            position: sticky;
+            bottom: 0;
+            background-color: white;
+            padding: 10px;
+            border-top: 1px solid #dee2e6;
+        }
+    </style>
+</head>
+<body>
+    {% include 'navbar.html' %}
+    <div class="container mt-5 mb-5">
+        <div class="card bg-light bg-opacity-75 shadow-sm rounded">
+            <div class="card-body d-flex flex-column">
+                <h1 class="card-title text-center text-dark mb-4">Meu Tesouro IA</h1>
+                
+                <div class="chat-container mb-3">
+                    {% for message in chat_history %}
+                        <div class="message {% if message.type == 'user' %}user-message{% else %}ai-message{% endif %}">
+                            {{ message.text }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="chat-input">
+                    <form method="POST" class="d-flex">
+                        <input type="text" name="user_input" class="form-control me-2" placeholder="Digite sua mensagem" required>
+                        <button type="submit" class="btn btn-primary">Enviar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% include 'buttons.html' %}
+    <script>
+         document.getElementById('btnSwitch').addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            const tableBody = document.querySelector('.table-body');
+            tableBody.classList.toggle('table-dark');
+        });
+
+        // Verifica se há um tema armazenado no armazenamento local
+        const storedTheme = localStorage.getItem('theme');
+        if (storedTheme) {
+            document.documentElement.setAttribute('data-bs-theme', storedTheme);
+            const tableBody = document.querySelector('.table-body');
+            if (storedTheme === 'dark') {
+                tableBody.classList.add('table-dark');
+            } else {
+                tableBody.classList.remove('table-dark');
+            }
+        }
+    </script>
+    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}"></script>
+    <script src="{{url_for('static', filename='fonts/js/all.js')}}" crossorigin="anonymous"></script>
+</body>
+</html>
