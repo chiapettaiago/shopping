@@ -466,6 +466,12 @@ def balance():
     db.session.remove()
     return render_template('balance.html', balance_list=balance_list, total_price=total_price_formatado, username=current_user.full_name)
 
+@app.route('/delete_history', methods=['POST'])
+def delete_history():
+    # Aqui você limpa o histórico de chat, pode ser no banco de dados ou em sessão
+    session.pop('chat_history', None)
+    return redirect(url_for('assistente_ia'))
+
 @app.route('/ia', methods=['GET', 'POST'])
 @login_required
 @subscription_required
