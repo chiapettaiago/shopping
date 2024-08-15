@@ -466,7 +466,7 @@ def balance():
     db.session.remove()
     return render_template('balance.html', balance_list=balance_list, total_price=total_price_formatado, username=current_user.full_name)
 
-@app.route('/assistente-ia', methods=['GET', 'POST'])
+@app.route('/ia', methods=['GET', 'POST'])
 @login_required
 @subscription_required
 def assistente_ia():
