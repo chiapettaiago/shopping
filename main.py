@@ -5,6 +5,7 @@ from sqlalchemy.pool import QueuePool
 from flask_migrate import Migrate
 from datetime import datetime, timedelta, timezone
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+import google.generativeai as genai
 from werkzeug.security import generate_password_hash, check_password_hash
 import mysql.connector
 from reportlab.pdfgen import canvas
@@ -480,7 +481,7 @@ def assistente_ia():
     if 'chat_history' not in session:
         session['chat_history'] = []
 
-    # Cálculos e consultas ao banco de dados (mantidos do código original)
+    # Cálculos e consultas ao banco de dados
     current_month = datetime.now().date().replace(day=1)
     ano_atual = time.localtime().tm_year
     mes_atual = time.localtime().tm_mon
@@ -493,6 +494,7 @@ def assistente_ia():
     debts_1 = debts.query.filter_by(status=1, username=current_user.username).filter(debts.date >= current_month).all()
     gastos_processado = Diario.query.filter_by(status=1, username=current_user.username).filter(Diario.date >= current_month).order_by(Diario.value.desc()).all()
 
+    # Cálculos de totais e saldo
     gastos_total = sum(item.value for item in gastos_processado)
     gastos_nao_processados = sum(item.value for item in gastos)
     gastos_formatado = round(gastos_total, 2)
@@ -511,13 +513,13 @@ def assistente_ia():
         if user_input:
             # Adiciona a mensagem do usuário ao histórico
             session['chat_history'].append({'type': 'user', 'text': user_input})
-            
-            # Processa o comando do usuário
+
+            # Processa a entrada do usuário
             response = process_user_input(user_input, saldo_atualizado_formatado, gastos_formatado, por_dia_atualizado)
-            
+
             # Adiciona a resposta ao histórico
             session['chat_history'].append({'type': 'ai', 'text': response})
-            
+
             # Marca a sessão como modificada
             session.modified = True
 
@@ -525,19 +527,54 @@ def assistente_ia():
                            chat_history=session['chat_history'],
                            username=current_user.full_name)
 
+
+# Configuração do Gemini
+genai.configure(api_key='AIzaSyACwhkVuzzzK4tXoSarhqaL9Y4CJ-FUc3M')
+
+generation_config = {
+    "temperature": 1,
+    "top_p": 0.95,
+    "top_k": 64,
+    "max_output_tokens": 8192
+}
+
+model = genai.GenerativeModel(
+    model_name="gemini-1.5-flash",
+    generation_config=generation_config,
+)
+
+chat_session = model.start_chat(history=[])
+
+
 def process_user_input(user_input, saldo, gastos, por_dia):
-    user_input = user_input.lower()
-    if "saldo" in user_input:
-        return f"Seu saldo atual é: R$ {saldo:.2f}"
-    elif "gastos" in user_input:
-        return f"Seus gastos totais são: R$ {gastos:.2f}"
-    elif "por dia" in user_input or "dia" in user_input:
-        return f"Seu gasto diário disponível é: R$ {por_dia:.2f}"
-    else:
-        return "Desculpe, não entendi seu comando. Posso fornecer informações sobre seu saldo, gastos ou gasto diário disponível."
+    user_input = user_input.lower().strip()
+
+    # Cria um contexto mais estruturado e informativo
+    context_info = f"""
+    Informações financeiras atuais:
+    - Saldo: R$ {saldo:.2f}
+    - Gastos totais no mês: R$ {gastos:.2f}
+    - Gasto médio por dia restante no mês: R$ {por_dia:.2f}
+    """
+
+    # Adiciona o contexto à mensagem do usuário
+    full_input = f"{user_input}\n\n{context_info}"
+
+    return get_gemini_response(full_input)
+
+
+def get_gemini_response(user_input):
+    try:
+        response = chat_session.send_message(user_input)
+        return response.text  # Retorna a resposta da IA
+    except Exception as e:
+        # Captura a mensagem de erro e exibe para depuração
+        return f"Desculpe, houve um erro ao processar sua solicitação: {str(e)}"
+
 
 def calcular_saldo(balance, debts, gastos):
     return balance - debts - gastos
+
 
 @app.route('/add_balance', methods=['POST'])
 @login_required
