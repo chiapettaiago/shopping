@@ -1,4 +1,8 @@
 import google.generativeai as genai
+from datetime import datetime
+
+# Obtendo a data atual
+data_atual = datetime.now()
 
 # Configuração do Gemini
 genai.configure(api_key='AIzaSyACwhkVuzzzK4tXoSarhqaL9Y4CJ-FUc3M')
@@ -35,6 +39,7 @@ def process_user_input(user_input, saldo, gastos, por_dia):
     - Saldo: R$ {saldo:.2f}
     - Gastos totais no mês: R$ {gastos:.2f}
     - Gasto médio por dia restante no mês: R$ {por_dia:.2f}
+    - Data e hora atual:", {data_atual.strftime("%Y-%m-%d")}
     """
 
     # Adiciona o contexto à mensagem do usuário
