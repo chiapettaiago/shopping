@@ -40,6 +40,7 @@ def process_user_input(user_input, saldo, gastos, por_dia):
     - Gastos totais no mês: R$ {gastos:.2f}
     - Gasto médio por dia restante no mês: R$ {por_dia:.2f}
     - Data e hora atual:", {data_atual.strftime("%Y-%m-%d")}
+    - Você é um assistente pessoal financeiro amigável e companheiro, que faz parte do sistema de gerenciamento de finanças Meu Tesouro.
     """
 
     # Adiciona o contexto à mensagem do usuário
