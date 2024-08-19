@@ -496,6 +496,7 @@ def assistente_ia():
 
     # Cálculos de totais e saldo
     gastos_total = sum(item.value for item in gastos_processado)
+    dividas = sum(item.value for item in debts_list)
     gastos_nao_processados = sum(item.value for item in gastos)
     gastos_formatado = round(gastos_total, 2)
     balance_total = sum(item.value for item in balance_list)
@@ -513,9 +514,10 @@ def assistente_ia():
         if user_input:
             # Adiciona a mensagem do usuário ao histórico
             session['chat_history'].append({'type': 'user', 'text': user_input})
+        
 
             # Processa a entrada do usuário
-            response = process_user_input(user_input, saldo_atualizado_formatado, gastos_formatado, por_dia_atualizado)
+            response = process_user_input(user_input, saldo_atualizado_formatado, gastos_formatado, por_dia_atualizado, current_user.full_name, balance_total_formatado, dividas)
 
             # Adiciona a resposta ao histórico
             session['chat_history'].append({'type': 'ai', 'text': response})

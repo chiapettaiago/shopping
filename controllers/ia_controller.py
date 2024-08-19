@@ -30,7 +30,7 @@ def get_gemini_response(user_input):
         return f"Desculpe, houve um erro ao processar sua solicitação: {str(e)}"
 
 
-def process_user_input(user_input, saldo, gastos, por_dia):
+def process_user_input(user_input, saldo, gastos, por_dia, usuario, balance, dividas):
     user_input = user_input.lower().strip()
 
     # Cria um contexto mais estruturado e informativo
@@ -41,6 +41,9 @@ def process_user_input(user_input, saldo, gastos, por_dia):
     - Gasto médio por dia restante no mês: R$ {por_dia:.2f}
     - Data e hora atual:", {data_atual.strftime("%Y-%m-%d")}
     - Você é um assistente pessoal financeiro amigável e companheiro, que faz parte do sistema de gerenciamento de finanças Meu Tesouro.
+    - O nome de quem está utilizando você é: {usuario}.
+    - O valor total recebido esse mês é: R${balance}.
+    - O total de dividas ainda não pagas é: R$ {dividas}.
     """
 
     # Adiciona o contexto à mensagem do usuário
