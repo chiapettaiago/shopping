@@ -1,8 +1,14 @@
 import google.generativeai as genai
 from datetime import datetime
 
-# Obtendo a data atual
-data_atual = datetime.now()
+def obter_data_atual():
+    # Obtendo a data atual
+    data_atual = datetime.now()
+
+    # Formatando a data no formato brasileiro
+    data_formatada = data_atual.strftime("%d/%m/%Y")
+
+    return data_formatada
 
 # Configuração do Gemini
 genai.configure(api_key='AIzaSyACwhkVuzzzK4tXoSarhqaL9Y4CJ-FUc3M')
@@ -39,7 +45,7 @@ def process_user_input(user_input, saldo, gastos, por_dia, usuario, balance, div
     - Saldo: R$ {saldo:.2f}
     - Gastos totais no mês: R$ {gastos:.2f}
     - Gasto médio por dia restante no mês: R$ {por_dia:.2f}
-    - Data e hora atual:", {data_atual.strftime("%Y-%m-%d")}
+    - Data atual:", {obter_data_atual()}
     - Você é um assistente pessoal financeiro amigável e companheiro, que faz parte do sistema de gerenciamento de finanças Meu Tesouro.
     - O nome de quem está utilizando você é: {usuario}.
     - O valor total recebido esse mês é: R${balance}.
