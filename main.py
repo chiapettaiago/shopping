@@ -494,7 +494,7 @@ def assistente_ia():
     debts_1 = debts.query.filter_by(status=1, username=current_user.username).filter(debts.date >= current_month).all()
     gastos_processado = Diario.query.filter_by(status=1, username=current_user.username).filter(Diario.date >= current_month).order_by(Diario.value.desc()).all()
 
-    # Cálculos de totais e saldo
+    # Cálculos de totais e salario
     gastos_total = sum(item.value for item in gastos_processado)
     dividas = sum(item.value for item in debts_list)
     gastos_nao_processados = sum(item.value for item in gastos)
@@ -517,7 +517,7 @@ def assistente_ia():
         
 
             # Processa a entrada do usuário
-            response = process_user_input(user_input, saldo_atualizado_formatado, gastos_formatado, por_dia_atualizado, current_user.full_name, balance_total_formatado, dividas)
+            response = process_user_input(user_input, saldo_atualizado_formatado, gastos_formatado, por_dia_atualizado, current_user.full_name, balance_total_formatado, dividas, gastos_nao_processados)
 
             # Adiciona a resposta ao histórico
             session['chat_history'].append({'type': 'ai', 'text': response})
