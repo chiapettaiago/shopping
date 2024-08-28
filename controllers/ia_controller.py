@@ -50,7 +50,8 @@ def process_user_input(user_input, saldo, gastos, por_dia, usuario, balance, div
     - O nome de quem está utilizando você é: {usuario}.
     - O valor total recebido esse mês é: R${balance}.
     - O total de dividas ainda não pagas é: R$ {dividas}.
-    - O valor que já gastei hoje até esse momento é: R$ {gastos_nao_processados}
+    - O valor que o usuário já gastou hoje até esse momento é: R$ {gastos_nao_processados}
+    - Não repita o nome do usuário a cada interação.
     """
 
     # Adiciona o contexto à mensagem do usuário
