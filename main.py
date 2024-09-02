@@ -425,7 +425,7 @@ def debitos():
     return render_template('finance.html', debts_list=debts_list, total_price=total_price_formatado, saldo_atualizado=saldo_atualizado_formatado, por_dia=por_dia_atualizado, username=current_user.full_name)
 
 # Rota para listar todos os gastos
-@app.route('/diario')
+@app.route('/daily')
 @login_required
 @subscription_required
 def listar_gastos():
@@ -944,4 +944,4 @@ if __name__ == '__main__':
         
         # Confirmar as alterações no banco de dados
         db.session.commit()
-    app.run(debug=True, host='0.0.0.0', port=3000)
+    app.run(host='0.0.0.0', port=3000)
