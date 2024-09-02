@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, make_response, send_file, session, flash, abort
+from flask import Flask, render_template, request, redirect, url_for, make_response, send_file, session, flash, abort, Response
 from models.models import db, User, ShoppingList, debts, Balance, Diario, Report, Historico
 from controllers.ia_controller import process_user_input
 from sqlalchemy import exc, text, create_engine,desc
@@ -601,6 +601,39 @@ def excluir_gasto(id):
 @login_required
 def flash_report():
     return render_template('flash_report.html')
+
+@app.route('/sitemap.xml')
+def sitemap():
+    # Consultar as URLs das tabelas relevantes
+    pages = [
+        {'url': 'https://meutesouro.site/', 'lastmod': datetime.utcnow(), 'changefreq': 'daily', 'priority': 1.0},
+        {'url': 'https://meutesouro.site/about', 'lastmod': datetime.utcnow(), 'changefreq': 'daily', 'priority': 1.0},
+        {'url': 'https://meutesouro.site/balance', 'lastmod': datetime.utcnow(), 'changefreq': 'daily', 'priority': 1.0},
+        {'url': 'https://meutesouro.site/debts_history', 'lastmod': datetime.utcnow(), 'changefreq': 'daily', 'priority': 1.0},
+        {'url': 'https://meutesouro.site/debts', 'lastmod': datetime.utcnow(), 'changefreq': 'daily', 'priority': 1.0},
+        {'url': 'https://meutesouro.site/history', 'lastmod': datetime.utcnow(), 'changefreq': 'daily', 'priority': 1.0},
+        {'url': 'https://meutesouro.site/ia', 'lastmod': datetime.utcnow(), 'changefreq': 'daily', 'priority': 1.0},
+        {'url': 'https://meutesouro.site/dashboard', 'lastmod': datetime.utcnow(), 'changefreq': 'daily', 'priority': 1.0},
+        {'url': 'https://meutesouro.site/account', 'lastmod': datetime.utcnow(), 'changefreq': 'daily', 'priority': 1.0},
+        
+        # Adicione URLs relevantes das tabelas aqui
+    ]
+
+    # Criar o conteúdo do sitemap XML
+    sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+
+    for page in pages:
+        sitemap_xml += '  <url>\n'
+        sitemap_xml += f'    <loc>{page["url"]}</loc>\n'
+        sitemap_xml += f'    <lastmod>{page["lastmod"].strftime("%Y-%m-%d")}</lastmod>\n'
+        sitemap_xml += f'    <changefreq>{page["changefreq"]}</changefreq>\n'
+        sitemap_xml += f'    <priority>{page["priority"]}</priority>\n'
+        sitemap_xml += '  </url>\n'
+
+    sitemap_xml += '</urlset>'
+
+    return Response(sitemap_xml, mimetype='application/xml')
 
 # Rota para lidar com o envio do formulário
 @app.route('/report', methods=['POST'])

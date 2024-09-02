@@ -1,0 +1,12 @@
+# Bloquear todos os rastreadores de acessar pastas específicas
+User-agent: *
+Disallow: /models/
+Disallow: /controllers/
+Disallow: /static/
+
+# Permitir todos os rastreadores de acessar o restante do site
+User-agent: *
+Allow: /
+
+# Especificar a localização do Sitemap
+Sitemap: https://meutesouro.site/sitemap.xml
