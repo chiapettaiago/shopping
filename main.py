@@ -977,4 +977,4 @@ if __name__ == '__main__':
         
         # Confirmar as alterações no banco de dados
         db.session.commit()
-    app.run(debug=True, host='0.0.0.0', port=3000)
+    app.run(host='0.0.0.0', port=3000)
