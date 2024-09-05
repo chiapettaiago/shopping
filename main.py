@@ -261,15 +261,6 @@ def atualizar_status_mes_passado():
     # Executa a atualização
     db.session.execute(stmt)
     db.session.commit()
-        
-@app.route('/atualizar_compras')
-@login_required
-def atualizar_compras_view():
-    if current_user.username != 'Iago':
-        abort(403)  # Retorna um erro 403 Forbidden se o usuário não for "Iago"
-    atualizar_status_mes_passado()
-    return redirect(url_for('listar_gastos'))
-
 
 def mover_debitos_para_historico():
     # Data limite para considerar débitos com mais de um mês
@@ -568,12 +559,13 @@ def add_daily():
 
     return redirect(url_for('listar_gastos'))
 
-@app.route('/mover-debitos')
+@app.route('/atualizar')
 @login_required
 def mover_debitos_view():
-    if current_user.username != 'Iago':
-        abort(403)  # Retorna um erro 403 Forbidden se o usuário não for "Iago"
+    if current_user.username not in ['Iago', 'ma720']:
+        abort(403)  # Retorna um erro 403 Forbidden se o usuário não for "Iago" ou "ma720"
     mover_debitos_para_historico()
+    atualizar_status_mes_passado()
     return redirect(url_for('listar_gastos'))
 
 
