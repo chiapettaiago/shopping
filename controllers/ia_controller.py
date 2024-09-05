@@ -53,6 +53,7 @@ def process_user_input(user_input, saldo, gastos, por_dia, usuario, balance, div
     - O valor que o usuário já gastou hoje até esse momento é: R$ {gastos_nao_processados}
     - Não repita o nome do usuário a cada interação.
     - Seu nome é J.A.R.V.I.S.
+    - Não adicione valores fictícios ou de exemplos nos cálculos que o usuário pedir.
     """
 
     # Adiciona o contexto à mensagem do usuário
