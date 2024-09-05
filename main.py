@@ -566,7 +566,7 @@ def mover_debitos_view():
         abort(403)  # Retorna um erro 403 Forbidden se o usuário não for "Iago" ou "ma720"
     mover_debitos_para_historico()
     atualizar_status_mes_passado()
-    return redirect(url_for('listar_gastos'))
+    return redirect(url_for('debitos'))
 
 
 # Rota para editar um gasto
