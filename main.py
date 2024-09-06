@@ -45,6 +45,8 @@ app.config['SECRET_KEY'] = 'homium-001'  # Defina uma chave secreta única e seg
 csrf = CSRFProtect(app)
 csrf.init_app(app)
 
+app.config['WTF_CSRF_ENABLED'] = False  # Desabilita a proteção global
+
 engine = create_engine(
   app.config['SQLALCHEMY_DATABASE_URI'],
   poolclass=QueuePool,
