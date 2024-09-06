@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, make_response, send_file, session, flash, abort, Response
+from flask import Flask, render_template, request, redirect, url_for, make_response, send_file, session, flash, abort, Response, jsonify
 from models.models import db, User, ShoppingList, debts, Balance, Diario, Report, Historico
 from controllers.ia_controller import process_user_input
 from sqlalchemy import exc, text, create_engine,desc
@@ -7,6 +7,7 @@ from flask_migrate import Migrate
 from datetime import datetime, timedelta, timezone
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_wtf import CSRFProtect
 import mysql.connector
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
@@ -40,6 +41,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://casaos:casaos@me
 app.config['SQLALCHEMY_POOL_TIMEOUT'] = 20
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Desativar o rastreamento de modificações para evitar avisos
 app.config['SECRET_KEY'] = 'homium-001'  # Defina uma chave secreta única e segura
+
+csrf = CSRFProtect(app)
+csrf.init_app(app)
 
 engine = create_engine(
   app.config['SQLALCHEMY_DATABASE_URI'],
@@ -108,6 +112,13 @@ def before_request():
 def calcular_saldo(balance_total, debts_total, gastos_total):
     saldo_atualizado = balance_total - debts_total - gastos_total
     return round(saldo_atualizado, 2)
+
+@app.route('/delete_history', methods=['POST'])
+@login_required
+def delete_chat_history():
+    if 'chat_history' in session:
+        session.pop('chat_history')  # Remove o histórico da sessão
+    return redirect(url_for('assistente_ia'))
 
 
 @app.route('/share', methods=['POST'])
@@ -501,11 +512,10 @@ def assistente_ia():
     por_dia_atualizado = round(por_dia, 2)
 
     if request.method == 'POST':
-        user_input = request.form.get('user_input')
+        user_input = request.json.get('user_input')
         if user_input:
             # Adiciona a mensagem do usuário ao histórico
             session['chat_history'].append({'type': 'user', 'text': user_input})
-        
 
             # Processa a entrada do usuário
             response = process_user_input(user_input, saldo_atualizado_formatado, gastos_formatado, por_dia_atualizado, current_user.full_name, balance_total_formatado, dividas, gastos_nao_processados)
@@ -516,13 +526,13 @@ def assistente_ia():
             # Marca a sessão como modificada
             session.modified = True
 
+            # Retorna a resposta como JSON
+            return jsonify({'response': response})
+
     return render_template('assistente_ia.html', 
                            chat_history=session['chat_history'],
                            username=current_user.full_name)
-
-def calcular_saldo(balance, debts, gastos):
-    return balance - debts - gastos
-
+    
 
 @app.route('/add_balance', methods=['POST'])
 @login_required

@@ -4,6 +4,7 @@
     <title>Assistente de IA</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta http-equiv="refresh" content="300">
     <link rel="apple-touch-icon" sizes="180x180" href={{ url_for('static', filename='images/apple-touch-icon.png') }}>
     <link rel="icon" type="image/png" sizes="32x32" href={{ url_for('static', filename='images/favicon-32x32.png') }}>
@@ -42,8 +43,15 @@
         .card-clickable {
             cursor: pointer;
         }
+        .typing-indicator::after {
+            content: '▋';
+            animation: blink 1s step-start infinite;
+        }
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
     </style>
-    </head>
+</head>
 
 <body>
     {% include 'navbar.html' %}
@@ -52,7 +60,7 @@
             <div class="card-body d-flex flex-column">
                 <h2 class="card-title text-center text-dark mb-4">Assistente de IA (Experimental)</h2>
 
-                <div class="chat-container mb-3">
+                <div id="chatContainer" class="chat-container mb-3">
                     {% if chat_history %}
                         {% for message in chat_history %}
                             <div class="message {% if message.type == 'user' %}user-message{% else %}ai-message{% endif %}">
@@ -63,13 +71,15 @@
                 </div>
 
                 {% if chat_history %}
-                    <div class="text-center delete-history-btn">
-                        <form method="POST" action="{{ url_for('delete_history') }}">
-                            <button type="submit" title="Limpar Conversa" class="btn btn-danger"><i class="fa-solid fa-eraser"></i></button>
-                        </form>
-                    </div>
+                <div class="text-center delete-history-btn">
+                    <form method="POST" action="{{ url_for('delete_chat_history') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" title="Limpar Conversa" class="btn btn-danger">
+                            <i class="fa-solid fa-eraser"></i>
+                        </button>
+                    </form>
+                </div>
                 {% endif %}
-
                 {% if not chat_history %}
                     <div id="recommendations" class="d-flex flex-column justify-content-center align-items-center h-100">
                         <div class="row row-cols-1 row-cols-md-3 g-4 w-100">
@@ -112,27 +122,73 @@
     </div>
     {% include 'buttons.html' %}
     <script>
-        // Função que insere o texto na caixa de entrada ao clicar no card
         function fillInput(text) {
             document.getElementById('userInput').value = text;
         }
 
-        // Função para ocultar os cartões de recomendação ao enviar a mensagem
         document.getElementById('chatForm').addEventListener('submit', function(event) {
-            document.getElementById('recommendations').style.display = 'none';
+            event.preventDefault();
+
+            const userInput = document.getElementById('userInput').value;
+            const chatContainer = document.getElementById('chatContainer');
+            const recommendations = document.getElementById('recommendations');
+
+            // Remove as recomendações permanentemente
+            if (recommendations) {
+                recommendations.remove();
+            }
+
+            // Adiciona a mensagem do usuário
+            const userMessageDiv = document.createElement('div');
+            userMessageDiv.classList.add('message', 'user-message');
+            userMessageDiv.innerText = userInput;
+            chatContainer.appendChild(userMessageDiv);
+
+            // Adiciona o indicador de digitação
+            const typingIndicator = document.createElement('div');
+            typingIndicator.classList.add('message', 'ai-message', 'typing-indicator');
+            typingIndicator.innerText = 'Digitando';
+            chatContainer.appendChild(typingIndicator);
+
+            // Rola para o final do chat
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            // Limpa o campo de entrada de texto
+            document.getElementById('userInput').value = '';
+
+            fetch('{{ url_for("assistente_ia") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({user_input: userInput})
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Remove o indicador de digitação
+                chatContainer.removeChild(typingIndicator);
+
+                // Adiciona a resposta da IA
+                const aiMessageDiv = document.createElement('div');
+                aiMessageDiv.classList.add('message', 'ai-message');
+                chatContainer.appendChild(aiMessageDiv);
+
+                // Simula a digitação da resposta
+                let i = 0;
+                const typingEffect = setInterval(() => {
+                    if (i < data.response.length) {
+                        aiMessageDiv.innerHTML += data.response.charAt(i);
+                        i++;
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                    } else {
+                        clearInterval(typingEffect);
+                    }
+                }, 30);
+            })
+            .catch(error => console.error('Erro:', error));
         });
 
-        document.getElementById('btnSwitch').addEventListener('click', () => {
-            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-bs-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-
-            const tableBody = document.querySelector('.table-body');
-            tableBody.classList.toggle('table-dark');
-        });
-
-        // Verifica se há um tema armazenado no armazenamento local
         const storedTheme = localStorage.getItem('theme');
         if (storedTheme) {
             document.documentElement.setAttribute('data-bs-theme', storedTheme);
@@ -144,7 +200,6 @@
             }
         }
 
-        // Mostrar as recomendações ao carregar a página
         window.onload = function() {
             const recommendations = document.getElementById('recommendations');
             if (recommendations) {
