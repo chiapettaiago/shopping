@@ -36,7 +36,7 @@ def get_gemini_response(user_input):
         return f"Desculpe, houve um erro ao processar sua solicitação: {str(e)}"
 
 
-def process_user_input(user_input, saldo, gastos, por_dia, usuario, balance, dividas, gastos_nao_processados):
+def process_user_input(user_input, saldo, gastos, por_dia, usuario, balance, dividas, gastos_nao_processados, debts_list, debts_values):
     user_input = user_input.lower().strip()
 
     # Cria um contexto mais estruturado e informativo
@@ -54,6 +54,9 @@ def process_user_input(user_input, saldo, gastos, por_dia, usuario, balance, div
     - Não repita o nome do usuário a cada interação.
     - Seu nome é J.A.R.V.I.S.
     - Não adicione valores fictícios ou de exemplos nos cálculos que o usuário pedir.
+    - Lista de contas a serem pagas: {debts_list}
+    - E o valor de cada conta a ser paga respectivamente é: {debts_values}
+    - Não use asterísticos antes e depois dos valores para que pareça mais natural.
     """
 
     # Adiciona o contexto à mensagem do usuário
