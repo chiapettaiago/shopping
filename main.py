@@ -526,7 +526,7 @@ def assistente_ia():
             debts_values = [debt.value for debt in debts_list]
 
             # Processa a entrada do usuário
-            response = process_user_input(user_input, saldo_atualizado_formatado, gastos_formatado, por_dia_atualizado, current_user.full_name, balance_total_formatado, dividas, gastos_nao_processados, debts_names, debts_values)
+            response = process_user_input(user_input, saldo_atualizado_formatado, gastos_formatado, por_dia_atualizado, current_user.full_name, balance_total_formatado, dividas, gastos_nao_processados, debts_names, debts_values, debts_1_formatado)
 
             # Adiciona a resposta ao histórico
             session['chat_history'].append({'type': 'ai', 'text': response})
