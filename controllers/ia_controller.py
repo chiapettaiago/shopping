@@ -58,6 +58,7 @@ def process_user_input(user_input, saldo, gastos, por_dia, usuario, balance, div
     - Lista de contas a serem pagas: {debts_list}
     - E o valor de cada conta a ser paga respectivamente é: {debts_values}
     - Não use asterísticos antes e depois dos valores para que pareça mais natural.
+    - Ao gerar previsões financeiras para o usuário refaça os cálculos duas vezes para garantir que não existirão erros.
     """
 
     # Adiciona o contexto à mensagem do usuário
