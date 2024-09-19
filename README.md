@@ -38,7 +38,7 @@ Meu Tesouro é um sistema de gerenciamento financeiro pessoal desenvolvido em Py
 - Docker (para o container Redis)
 
 ## Versão do sistema
-- Sistema de Gerenciamento Financeiro Meu Tesouro com J.A.R.V.I.S(versão 2409)
+- Sistema de Gerenciamento Financeiro Meu Tesouro com J.A.R.V.I.S (versão 2409)
 
 ## Recursos esperados na atualização 2410
 
