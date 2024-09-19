@@ -37,7 +37,15 @@ load_env()
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://casaos:casaos@localhost/casaos'
+
+# Obtém as variáveis de ambiente para construir a URI do banco de dados
+db_username = os.getenv('DB_USERNAME')
+db_password = os.getenv('DB_PASSWORD')
+db_host = os.getenv('DB_HOST')
+db_name = os.getenv('DB_NAME')
+
+# Monta a URI do banco de dados com as variáveis de ambiente
+app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+mysqlconnector://{db_username}:{db_password}@{db_host}/{db_name}'
 app.config['SQLALCHEMY_POOL_TIMEOUT'] = 20
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Desativar o rastreamento de modificações para evitar avisos
 app.config['SECRET_KEY'] = 'homium-001'  # Defina uma chave secreta única e segura
