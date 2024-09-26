@@ -57,6 +57,25 @@
                 <hr class="border border-dark">
             </div>
 
+            <!-- Card "Vamos começar" com opções de uso -->
+            <div class="card mt-5 mb-3">
+                <div class="card-body">
+                    <h3 class="card-title text-center">Não sabe por onde começar?</h3>
+                    <p class="card-text text-center">Selecione uma das opções abaixo para começar a usar o sistema:</p>
+                    <div class="row text-center">
+                        <div class="col-md-4 mb-3">
+                            <a href="{{url_for('balance')}}" class="btn btn-primary">Inserir meus recebimentos</a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <a href="{{url_for('debitos')}}" class="btn btn-warning">Gerenciar Pagamentos</a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <a href="{{url_for('listar_gastos')}}" class="btn btn-success">Ver minhas despesas e gastos</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="container">
                 <div class="row">
                     <div class="col-md-6">
@@ -71,7 +90,7 @@
                     </div>
                 </div>
             </div>
-            <div class="table-responsive">
+            <div class="table-responsive mt-4">
                 {% if porcentagem_formatado %}
                 <table class="table table-bordered text-center">
                     <thead class="table-light">

@@ -245,7 +245,7 @@ def auth():
             user = User.query.filter_by(username=username).first()
             if user and check_password_hash(user.password, password):
                 login_user(user)
-                return redirect(url_for('balance'))
+                return redirect(url_for('dashboard'))
             else:
                 return render_template('auth.html', login_error='Usuário ou senha incorretos.')
 
