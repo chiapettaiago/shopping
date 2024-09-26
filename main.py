@@ -375,6 +375,7 @@ def history():
 
 
 @app.route('/debts_history')
+@subscription_required
 @login_required
 def debts_history():
     current_month = datetime.now().date().replace(day=1)

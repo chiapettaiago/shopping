@@ -23,21 +23,21 @@
             margin: 20px 0;
         }
     </style>
-    <title>Histórico</title>
+    <title>Histórico de Pagamentos</title>
 </head>
 <body>
     {% include 'navbar.html' %}
     
     <div class="container mt-5 mb-5 pb-4">
         <div class="card bg-light bg-opacity-75 p-4">
-            <h2 class="text-center text-dark mb-3">Dívidas quitadas</h2>
+            <h2 class="text-center text-dark mb-3">Pagamentos realizados</h2>
 
             <!-- Exibição do Valor Total das Dívidas Quitadas e Saldo Atualizado em Cards -->
             <div class="row text-center">
                 <div class="col-md-12 mb-3">
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title text-success">Valor Total das Dívidas Quitadas</h5>
+                            <h5 class="card-title text-success">Valor Total dos Pagamentos Realizados</h5>
                             <p class="card-text">R$ {{ '{:.2f}'.format(total_value | default(0)) }}</p>
                         </div>
                     </div>

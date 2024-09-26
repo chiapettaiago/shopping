@@ -20,7 +20,7 @@
     <!-- Navbar para telas grandes -->
     <nav class="navbar navbar-expand-lg bg-body-tertiary border sticky-top floating-navbar d-none d-lg-flex">
         <div class="container-fluid">
-            <a class="navbar-brand ml-2" href="/dashboard"><i class="fas fa-house fa-lg" style="color: #74C0FC;"></i></a>
+            <a class="navbar-brand ml-2" title="Dashboard" href="/dashboard"><i class="fa-solid fa-gauge-high fa-lg" style="color: #74C0FC;"></i></a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -31,21 +31,11 @@
                             Financeiro
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/debts">Contas</a></li>
+                            <li><a class="dropdown-item" href="/daily">Despesas</a></li>
+                            <li><a class="dropdown-item" href="/debts">Pagamentos</a></li>
                             <!--<li><a class="dropdown-item" href="#">Cartão</a></li> -->
-                            <li><a class="dropdown-item" href="/debts_history">Histórico Financeiro</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="/balance">Recebimentos</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Diário
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/daily">Gastos</a></li>
-                            <li><a class="dropdown-item" href="/daily_history">Histórico</a></li>
-                            
                         </ul>
                     </li>
                 <li class="nav-item dropdown">
@@ -57,9 +47,19 @@
                         <li><a class="dropdown-item" href="/history">Estoque</a></li>
                     </ul>
                 </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Histórico
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/daily_history">Despesas</a></li>
+                        <li><a class="dropdown-item" href="/debts_history">Pagamentos</a></li>
+                        
+                    </ul>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/ia">Assistente</a>
-                  </li>
+                </li>
             </ul>
         </ul>
                 <ul class="navbar-nav me-0 mb-2 mb-lg-0" style="list-style-type: none;">
@@ -69,7 +69,6 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><a class="dropdown-item" href="/account">Minha Conta</a></li>
-                            <li><a class="dropdown-item" href="/dashboard">Dashboard</a></li>
                             <li><a class="dropdown-item" href="/logout">Sair</a></li>
                         </ul>
                     </li>
@@ -82,7 +81,7 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-bottom d-lg-none">
         <div class="container-fluid justify-content-around">
             <div class="dropup">
-                <a class="navbar-brand" href="/dashboard"><i class="fas fa-house fa-lg" style="color: #74C0FC;"></i></a>
+                <a class="navbar-brand" href="/dashboard"><i class="fa-solid fa-gauge-high fa-lg" style="color: #74C0FC;"></i></a>
             </div>
             <div class="dropup">
                 <a class="navbar-brand" href="#" id="financeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">

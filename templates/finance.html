@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contas</title>
+    <title>Pagamentos</title>
     <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
@@ -33,14 +33,14 @@
     
     <div class="container mt-5 mb-5 pb-4">
         <div class="card bg-light rounded shadow bg-opacity-75 p-4">
-            <h2 class="text-center text-dark mb-3">Contas a pagar</h2>
+            <h2 class="text-center text-dark mb-3">Pagamentos</h2>
 
             <!-- Exibição do Valor Total das Dívidas e Saldo Atualizado em Cards -->
             <div class="row text-center">
                 <div class="col-md-6 mb-3">
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title text-success">Valor Total das Dívidas</h5>
+                            <h5 class="card-title text-success">Valor Total dos Pagamentos</h5>
                             <p class="card-text">R$ {{ '{:.2f}'.format(total_price) }}</p>
                         </div>
                     </div>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diário de Gastos</title>
+    <title>Diário de Despesas</title>
     <!-- Incluindo Bootstrap CSS -->
     <link rel="apple-touch-icon" sizes="180x180" href={{ url_for('static', filename='images/apple-touch-icon.png') }}>
     <link rel="icon" type="image/png" sizes="32x32" href={{ url_for('static', filename='images/favicon-32x32.png') }}>
@@ -29,13 +29,13 @@
     
     <div class="container mt-5 mb-5 pb-4">
         <div class="card bg-light bg-opacity-75 p-4">
-            <h2 class="mt-2 text-dark text-center">Diário de Gastos</h2>
+            <h2 class="mt-2 text-dark text-center">Diário de Despesas</h2>
             
             <div class="row mt-2">
                 <div class="col-md-4 mb-3">
                     <div class="card text-center">
                         <div class="card-body">
-                            <h4 class="card-title text-success">Gastos não Processados</h4>
+                            <h4 class="card-title text-success">Despesas não Processadas</h4>
                             <p class="card-text">R$ {{ '{:.2f}'.format(gastos_nao_processados) }}</p>
                         </div>
                     </div>
