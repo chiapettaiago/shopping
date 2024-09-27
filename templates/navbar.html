@@ -28,14 +28,23 @@
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Financeiro
+                            Pagamentos
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/debts">Pagamentos</a></li>
+                            <li><a class="dropdown-item" href="/debts_history">Pagamentos realizados</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/balance">Recebimentos</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Despesas
                         </a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="/daily">Despesas</a></li>
-                            <li><a class="dropdown-item" href="/debts">Pagamentos</a></li>
-                            <!--<li><a class="dropdown-item" href="#">Cartão</a></li> -->
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/balance">Recebimentos</a></li>
+                            <li><a class="dropdown-item" href="/daily_history">Histórico</a></li>
                         </ul>
                     </li>
                 <li class="nav-item dropdown">
@@ -45,16 +54,6 @@
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="/">Lista</a></li>
                         <li><a class="dropdown-item" href="/history">Estoque</a></li>
-                    </ul>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Histórico
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="/daily_history">Despesas</a></li>
-                        <li><a class="dropdown-item" href="/debts_history">Pagamentos</a></li>
-                        
                     </ul>
                 </li>
                 <li class="nav-item">
@@ -88,11 +87,20 @@
                     <i class="fa-solid fa-wallet fa-lg"></i>
                 </a>
                 <ul class="dropdown-menu" aria-labelledby="financeDropdown">
-                    <li><a class="dropdown-item" href="/daily">Despesas</a></li>
                             <li><a class="dropdown-item" href="/debts">Pagamentos</a></li>
+                            <li><a class="dropdown-item" href="/debts_history">Pagamentos realizados</a></li>
                             <!--<li><a class="dropdown-item" href="#">Cartão</a></li> -->
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="/balance">Recebimentos</a></li>
+                </ul>
+            </div>
+            <div class="dropup">
+                <a class="navbar-brand" href="#" id="financeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-money-bill-wave fa-lg"></i>
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="financeDropdown">
+                    <li><a class="dropdown-item" href="/daily">Despesas</a></li>
+                    <li><a class="dropdown-item" href="/daily_history">Históricos de Despesas</a></li>
                 </ul>
             </div>
             <div class="dropup">
@@ -102,15 +110,6 @@
                 <ul class="dropdown-menu" aria-labelledby="purchasesDropdown">
                     <li><a class="dropdown-item" href="/">Lista</a></li>
                     <li><a class="dropdown-item" href="/history">Estoque</a></li>
-                </ul>
-            </div>
-            <div class="dropup">
-                <a class="navbar-brand" href="#" id="financeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fa-solid fa-clock-rotate-left fa-lg"></i>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="financeDropdown">
-                    <li><a class="dropdown-item" href="/daily_history">Histórico de Despesas</a></li>
-                    <li><a class="dropdown-item" href="/debts_history">Pagamentos realizados</a></li>
                 </ul>
             </div>
             <div class="dropup">
