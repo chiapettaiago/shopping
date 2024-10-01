@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, make_response, send_file, session, flash, abort, Response, jsonify
 from models.models import db, User, ShoppingList, debts, Balance, Diario, Report, Historico
 from controllers.ia_controller import process_user_input
-from sqlalchemy import exc, text, create_engine,desc
+from sqlalchemy import exc, text, create_engine, desc
 from sqlalchemy.pool import QueuePool
 from flask_migrate import Migrate
 from datetime import datetime, timedelta, timezone
@@ -21,6 +21,9 @@ import plotly.graph_objs as go
 import stripe
 from functools import wraps
 import uuid
+import redis
+import json
+import hashlib
 
 def load_env():
     """Carregar variáveis de ambiente do arquivo .env."""
@@ -50,18 +53,26 @@ app.config['SQLALCHEMY_POOL_TIMEOUT'] = 20
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Desativar o rastreamento de modificações para evitar avisos
 app.config['SECRET_KEY'] = 'homium-001'  # Defina uma chave secreta única e segura
 
+redis_cache = redis.StrictRedis(
+    host=os.getenv('REDIS_HOST'),
+    port=int(os.getenv('REDIS_PORT', 6379)),
+    password=os.getenv('REDIS_PASSWORD'),
+    db=int(os.getenv('REDIS_DB', 0)),
+    decode_responses=True
+)
+
 csrf = CSRFProtect(app)
 csrf.init_app(app)
 
 app.config['WTF_CSRF_ENABLED'] = False  # Desabilita a proteção global
 
 engine = create_engine(
-  app.config['SQLALCHEMY_DATABASE_URI'],
-  poolclass=QueuePool,
-  pool_size=20,
-  max_overflow=0,
-  pool_recycle=3600,
-  execution_options={'autoflush': False, 'expire_on_commit': False}
+    app.config['SQLALCHEMY_DATABASE_URI'],
+    poolclass=QueuePool,
+    pool_size=20,
+    max_overflow=0,
+    pool_recycle=3600,
+    execution_options={'autoflush': False, 'expire_on_commit': False}
 )
 
 # Configure a sessão permanente com tempo limite de 10 minutos
@@ -72,7 +83,6 @@ migrate = Migrate(app, db)
 login_manager = LoginManager(app)
 login_manager.login_view = 'auth'  # Define a rota para redirecionamento quando o usuário não estiver logado
 
-
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
@@ -82,7 +92,6 @@ def load_user(user_id):
 def update_session_timeout():
     session.modified = True
     session.permanent = True
-
 
 # Verificar se o tempo limite da sessão expirou e fazer logout do usuário, se necessário
 @app.before_request
@@ -97,7 +106,7 @@ def check_session_timeout():
             return redirect(url_for('auth'))
     # Atualizar o registro de última atividade
     session['last_activity'] = datetime.now(timezone.utc)
-    
+
 def subscription_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -107,6 +116,69 @@ def subscription_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def get_user_data(user_id):
+    cache_key = f'user_data:{user_id}'
+    cached_data = redis_cache.get(cache_key)
+
+    if cached_data:
+        print('Returning data from cache')
+        return json.loads(cached_data)
+
+    user_data = db.session.query(User).filter_by(id=user_id).first()
+
+    if user_data:
+        # Convert user_data to a dictionary before caching
+        user_dict = user_data.to_dict()
+        redis_cache.setex(cache_key, 600, json.dumps(user_dict))  # Cache for 10 minutos
+        print('Data stored in cache')
+        return user_dict
+
+    return None
+
+def cache_route(timeout=300):
+    def decorator(f):
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            # Gerar uma chave única de cache baseada no caminho da requisição e nos parâmetros
+            cache_key = f"route_cache:{request.path}:{request.query_string.decode('utf-8')}"
+            
+            # Verificar se existe uma resposta em cache
+            cached_response = redis_cache.get(cache_key)
+            
+            if cached_response:
+                print(f"Retornando resposta do cache para {cache_key}")
+                return Response(cached_response, mimetype='text/html')
+            
+            # Caso não haja cache, chamar a função original
+            response = f(*args, **kwargs)
+            
+            # Certificar que a resposta seja um objeto Response
+            if isinstance(response, str):
+                response = Response(response, mimetype='text/html')
+            
+            # Gerar um hash do conteúdo da resposta
+            content_hash = hashlib.md5(response.data).hexdigest()
+            
+            # Armazenar no cache se for uma resposta HTML bem-sucedida
+            if response.status_code == 200 and response.mimetype == 'text/html':
+                # Adicionar o hash ao cache para verificação futura
+                redis_cache.setex(f"{cache_key}:hash", timeout, content_hash)
+                redis_cache.setex(cache_key, timeout, response.data)
+                print(f"Armazenando resposta em cache para {cache_key}")
+            
+            return response
+        return wrapped
+    return decorator
+
+
+def invalidate_cache():
+    # Limpar todas as chaves de cache relacionadas
+    keys = redis_cache.keys('route_cache:*')  # Obter todas as chaves de cache
+    for key in keys:
+        redis_cache.delete(key)  # Deletar cada chave
+
+    print("Cache invalidated.")
+    
 # Função para verificar e atualizar automaticamente os itens antigos do balanço com a data atual
 def update_old_balance_items():
     data_atual = datetime.now()
@@ -114,6 +186,8 @@ def update_old_balance_items():
     for item in old_balance_items:
         item.date = data_atual
     db.session.commit()
+    invalidate_cache()
+    
     
 @app.before_request
 def before_request():
@@ -152,6 +226,8 @@ def share():
 
         # Realiza o commit após o loop de atualização
         db.session.commit()
+        invalidate_cache()
+        
 
         # Verifica se os itens foram atualizados corretamente
         updated_items = ShoppingList.query.filter_by(list_id=list_id).all()
@@ -233,6 +309,7 @@ def handle_checkout_session(session):
 
 
 @app.route('/auth', methods=['GET', 'POST'])
+@cache_route(timeout=300)
 def auth():
     if request.method == 'POST':
         action = request.form.get('action')
@@ -256,6 +333,8 @@ def auth():
             new_user = User(full_name=full_name, email=email, username=username, password=generate_password_hash(password, method='pbkdf2:sha256'))
             db.session.add(new_user)
             db.session.commit()
+            invalidate_cache()
+            
             return redirect(url_for('auth', login_error='Usuário registrado com sucesso. Faça login.'))
 
     return render_template('auth.html')
@@ -309,6 +388,7 @@ def mover_debitos_para_historico():
     db.session.commit()
 
 @app.route('/account', methods=['GET', 'POST'])
+@cache_route(timeout=300)
 @login_required
 def account():
     if request.method == 'POST':
@@ -324,6 +404,8 @@ def account():
             user = User.query.get(current_user.id)
             user.password = generate_password_hash(new_password)
             db.session.commit()
+            invalidate_cache()
+            
             flash('Sua senha foi alterada com sucesso.', 'success')
         return redirect(url_for('account'))
 
@@ -335,6 +417,7 @@ def account():
 
 
 @app.route('/daily_history')
+@cache_route(timeout=300)
 @login_required
 @subscription_required
 def daily_history():
@@ -351,6 +434,7 @@ def daily_history():
     return render_template('historico_diario.html', daily_history=daily_history, total_value=total_value_formatado, username=current_user.full_name)
 
 @app.route('/')
+@cache_route(timeout=300)
 @login_required
 def index():
     update_old_balance_items()
@@ -363,6 +447,7 @@ def index():
 
 
 @app.route('/history')
+@cache_route(timeout=300)
 @subscription_required
 @login_required
 def history():
@@ -375,6 +460,7 @@ def history():
 
 
 @app.route('/debts_history')
+@cache_route(timeout=300)
 @subscription_required
 @login_required
 def debts_history():
@@ -391,6 +477,7 @@ def about():
     return render_template('about.html', username=current_user.full_name)
 
 @app.route('/add', methods=['POST'])
+@cache_route(timeout=300)
 @login_required
 def add():
     name = request.form['name']
@@ -404,9 +491,13 @@ def add():
     new_item = ShoppingList(name=name, quantity=quantity, price=price, category=category, status=0, date=current_time, username=current_user.username)
     db.session.add(new_item)
     db.session.commit()
+    
+    invalidate_cache()
+    
     return redirect(url_for('index'))
 
 @app.route('/debts', methods=['GET','POST'])
+@cache_route(timeout=300)
 @login_required
 def debitos():
     # Obter o número total de dias no mês atual
@@ -439,6 +530,7 @@ def debitos():
 
 # Rota para listar todos os gastos
 @app.route('/daily')
+@cache_route(timeout=300)
 @login_required
 @subscription_required
 def listar_gastos():
@@ -471,6 +563,7 @@ def listar_gastos():
     return render_template('diario.html', gastos=gastos, gastos_nao_processados=gastos_nao_processados, username=current_user.full_name, saldo_atualizado=saldo_atualizado_formatado, por_dia=por_dia_atualizado,)
 
 @app.route('/balance', methods=['GET','POST'])
+@cache_route(timeout=300)
 @login_required
 def balance():
     current_month = datetime.now().date().replace(day=1)
@@ -552,6 +645,7 @@ def assistente_ia():
     
 
 @app.route('/add_balance', methods=['POST'])
+@cache_route(timeout=300)
 @login_required
 def add_balance():
     name = request.form['name']
@@ -563,11 +657,13 @@ def add_balance():
     new_item = Balance(name=name, value=value, status=0, date=data, username=current_user.username)
     db.session.add(new_item)
     db.session.commit()
+    invalidate_cache()
     db.session.remove()
     return redirect(url_for('debitos'))
 
 # Rota para adicionar um gasto
 @app.route('/add_diario', methods=['POST'])
+@cache_route(timeout=300)
 def add_daily():
     descricao = request.form['descricao']
     valor = request.form['valor']
@@ -583,6 +679,9 @@ def add_daily():
     
     db.session.add(gasto)
     db.session.commit()
+    
+    invalidate_cache()
+    
 
     return redirect(url_for('listar_gastos'))
 
@@ -605,6 +704,8 @@ def editar_gasto(id):
         gasto.value = request.form['valor']
         gasto.date = datetime.strptime(request.form['data_gasto'], '%Y-%m-%d').date()
         db.session.commit()
+        invalidate_cache()
+        
     return redirect(url_for('listar_gastos'))
 
 # Rota para excluir um gasto
@@ -614,6 +715,8 @@ def excluir_gasto(id):
     if gasto:
         db.session.delete(gasto)
         db.session.commit()
+        invalidate_cache()
+        
     return redirect(url_for('listar_gastos'))
 
 @app.route('/flash_report')
@@ -684,10 +787,13 @@ def computar_gasto(id):
     if gasto:
         gasto.status = True
         db.session.commit()
+        invalidate_cache()
+        
     return redirect(url_for('listar_gastos'))
 
 
 @app.route('/add_debts', methods=['POST'])
+@cache_route(timeout=300)
 @login_required
 def add_debts():
     name = request.form['name']
@@ -700,6 +806,7 @@ def add_debts():
     new_item = debts(name=name, maturity=maturity, value=value, date=current_time, status=0, username=current_user.username)
     db.session.add(new_item)
     db.session.commit()
+    invalidate_cache()
     db.session.remove()
     return redirect(url_for('debitos'))
 
@@ -711,6 +818,7 @@ def delete(id):
     if item_to_delete:
         db.session.delete(item_to_delete)
         db.session.commit()
+        invalidate_cache()
         db.session.remove()
     return redirect(url_for('index'))
 
@@ -722,6 +830,7 @@ def delete_debts(id):
     if item_to_delete:
         db.session.delete(item_to_delete)
         db.session.commit()
+        invalidate_cache()
         db.session.remove()
     return redirect(url_for('debitos'))
 
@@ -736,6 +845,7 @@ def edit(id):
         item_to_edit.category = request.form['category']
         item_to_edit.price = request.form['price']
         db.session.commit()
+        invalidate_cache()
         db.session.remove()
         return redirect(url_for('index'))
     return render_template('edit.html', item=item_to_edit)
@@ -750,6 +860,7 @@ def edit_debts(id):
         item_to_edit.maturity = request.form['maturity']
         item_to_edit.value = request.form['value']
         db.session.commit()
+        invalidate_cache()
         db.session.remove()
         return redirect(url_for('debitos'))
     return render_template('edit.html', item=item_to_edit)
@@ -762,6 +873,7 @@ def buy(id):
     if item_to_buy:
         item_to_buy.status = 1
         db.session.commit()
+        invalidate_cache()
         db.session.remove()
     return redirect(url_for('index'))
 
@@ -775,10 +887,12 @@ def pay(id):
         item_to_buy.status = 1
         item_to_buy.date = current_time
         db.session.commit()
+        invalidate_cache()
         db.session.remove()
     return redirect(url_for('debitos'))
 
 @app.route('/dashboard')
+@cache_route(timeout=300)
 @login_required
 def dashboard():
     current_month = datetime.now().date().replace(day=1)
