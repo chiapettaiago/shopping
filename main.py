@@ -169,15 +169,6 @@ def cache_route(timeout=300):
             return response
         return wrapped
     return decorator
-
-
-def invalidate_cache():
-    # Limpar todas as chaves de cache relacionadas
-    keys = redis_cache.keys('route_cache:*')  # Obter todas as chaves de cache
-    for key in keys:
-        redis_cache.delete(key)  # Deletar cada chave
-
-    print("Cache invalidated.")
     
 # Função para verificar e atualizar automaticamente os itens antigos do balanço com a data atual
 def update_old_balance_items():
@@ -186,8 +177,6 @@ def update_old_balance_items():
     for item in old_balance_items:
         item.date = data_atual
     db.session.commit()
-    invalidate_cache()
-    
     
 @app.before_request
 def before_request():
@@ -309,7 +298,6 @@ def handle_checkout_session(session):
 
 
 @app.route('/auth', methods=['GET', 'POST'])
-@cache_route(timeout=300)
 def auth():
     if request.method == 'POST':
         action = request.form.get('action')
@@ -388,7 +376,6 @@ def mover_debitos_para_historico():
     db.session.commit()
 
 @app.route('/account', methods=['GET', 'POST'])
-@cache_route(timeout=300)
 @login_required
 def account():
     if request.method == 'POST':
@@ -417,7 +404,6 @@ def account():
 
 
 @app.route('/daily_history')
-@cache_route(timeout=300)
 @login_required
 @subscription_required
 def daily_history():
@@ -434,7 +420,6 @@ def daily_history():
     return render_template('historico_diario.html', daily_history=daily_history, total_value=total_value_formatado, username=current_user.full_name)
 
 @app.route('/')
-@cache_route(timeout=300)
 @login_required
 def index():
     update_old_balance_items()
@@ -447,7 +432,6 @@ def index():
 
 
 @app.route('/history')
-@cache_route(timeout=300)
 @subscription_required
 @login_required
 def history():
@@ -460,7 +444,6 @@ def history():
 
 
 @app.route('/debts_history')
-@cache_route(timeout=300)
 @subscription_required
 @login_required
 def debts_history():
@@ -492,12 +475,9 @@ def add():
     db.session.add(new_item)
     db.session.commit()
     
-    invalidate_cache()
-    
     return redirect(url_for('index'))
 
 @app.route('/debts', methods=['GET','POST'])
-@cache_route(timeout=300)
 @login_required
 def debitos():
     # Obter o número total de dias no mês atual
@@ -530,7 +510,6 @@ def debitos():
 
 # Rota para listar todos os gastos
 @app.route('/daily')
-@cache_route(timeout=300)
 @login_required
 @subscription_required
 def listar_gastos():
@@ -563,7 +542,6 @@ def listar_gastos():
     return render_template('diario.html', gastos=gastos, gastos_nao_processados=gastos_nao_processados, username=current_user.full_name, saldo_atualizado=saldo_atualizado_formatado, por_dia=por_dia_atualizado,)
 
 @app.route('/balance', methods=['GET','POST'])
-@cache_route(timeout=300)
 @login_required
 def balance():
     current_month = datetime.now().date().replace(day=1)
@@ -657,7 +635,6 @@ def add_balance():
     new_item = Balance(name=name, value=value, status=0, date=data, username=current_user.username)
     db.session.add(new_item)
     db.session.commit()
-    invalidate_cache()
     db.session.remove()
     return redirect(url_for('debitos'))
 
@@ -680,9 +657,6 @@ def add_daily():
     db.session.add(gasto)
     db.session.commit()
     
-    invalidate_cache()
-    
-
     return redirect(url_for('listar_gastos'))
 
 @app.route('/atualizar')
@@ -704,7 +678,6 @@ def editar_gasto(id):
         gasto.value = request.form['valor']
         gasto.date = datetime.strptime(request.form['data_gasto'], '%Y-%m-%d').date()
         db.session.commit()
-        invalidate_cache()
         
     return redirect(url_for('listar_gastos'))
 
@@ -715,7 +688,6 @@ def excluir_gasto(id):
     if gasto:
         db.session.delete(gasto)
         db.session.commit()
-        invalidate_cache()
         
     return redirect(url_for('listar_gastos'))
 
@@ -787,7 +759,6 @@ def computar_gasto(id):
     if gasto:
         gasto.status = True
         db.session.commit()
-        invalidate_cache()
         
     return redirect(url_for('listar_gastos'))
 
@@ -806,7 +777,6 @@ def add_debts():
     new_item = debts(name=name, maturity=maturity, value=value, date=current_time, status=0, username=current_user.username)
     db.session.add(new_item)
     db.session.commit()
-    invalidate_cache()
     db.session.remove()
     return redirect(url_for('debitos'))
 
@@ -818,7 +788,6 @@ def delete(id):
     if item_to_delete:
         db.session.delete(item_to_delete)
         db.session.commit()
-        invalidate_cache()
         db.session.remove()
     return redirect(url_for('index'))
 
@@ -830,7 +799,6 @@ def delete_debts(id):
     if item_to_delete:
         db.session.delete(item_to_delete)
         db.session.commit()
-        invalidate_cache()
         db.session.remove()
     return redirect(url_for('debitos'))
 
@@ -845,7 +813,6 @@ def edit(id):
         item_to_edit.category = request.form['category']
         item_to_edit.price = request.form['price']
         db.session.commit()
-        invalidate_cache()
         db.session.remove()
         return redirect(url_for('index'))
     return render_template('edit.html', item=item_to_edit)
@@ -860,7 +827,6 @@ def edit_debts(id):
         item_to_edit.maturity = request.form['maturity']
         item_to_edit.value = request.form['value']
         db.session.commit()
-        invalidate_cache()
         db.session.remove()
         return redirect(url_for('debitos'))
     return render_template('edit.html', item=item_to_edit)
@@ -873,7 +839,6 @@ def buy(id):
     if item_to_buy:
         item_to_buy.status = 1
         db.session.commit()
-        invalidate_cache()
         db.session.remove()
     return redirect(url_for('index'))
 
@@ -887,12 +852,10 @@ def pay(id):
         item_to_buy.status = 1
         item_to_buy.date = current_time
         db.session.commit()
-        invalidate_cache()
         db.session.remove()
     return redirect(url_for('debitos'))
 
 @app.route('/dashboard')
-@cache_route(timeout=300)
 @login_required
 def dashboard():
     current_month = datetime.now().date().replace(day=1)

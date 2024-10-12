@@ -68,49 +68,37 @@
     {% include 'buttons.html' %}
 
     <script>
-        document.getElementById('btnSwitch').addEventListener('click', () => {
-            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-bs-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-
-            const tableBody = document.querySelector('.table-body');
-            tableBody.classList.toggle('table-dark');
-        });
-
         // Função para definir o tema inicial
         function setInitialTheme() {
             const storedTheme = localStorage.getItem('theme');
             const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const isMobile = window.matchMedia('(max-width: 767.98px)').matches;
 
-            if (isMobile) {
-                document.documentElement.setAttribute('data-bs-theme', 'light');
+            if (storedTheme) {
+                document.documentElement.setAttribute('data-bs-theme', storedTheme);
             } else {
-                if (storedTheme) {
-                    document.documentElement.setAttribute('data-bs-theme', storedTheme);
-                } else {
-                    document.documentElement.setAttribute('data-bs-theme', prefersDarkScheme ? 'dark' : 'light');
-                }
+                document.documentElement.setAttribute('data-bs-theme', prefersDarkScheme ? 'dark' : 'light');
             }
         }
 
-        // Configurar tema inicial
+        // Configurar tema inicial ao carregar a página
         setInitialTheme();
 
         // Lógica do Switch de Tema
         const themeSwitch = document.getElementById('themeSwitch');
-        themeSwitch.addEventListener('change', function() {
+        
+        // Sincroniza o estado do interruptor com o tema atual
+        function syncSwitchWithTheme() {
             const currentTheme = document.documentElement.getAttribute('data-bs-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            themeSwitch.checked = currentTheme === 'dark';
+        }
+
+        syncSwitchWithTheme();
+
+        themeSwitch.addEventListener('change', function() {
+            const newTheme = themeSwitch.checked ? 'dark' : 'light';
             document.documentElement.setAttribute('data-bs-theme', newTheme);
             localStorage.setItem('theme', newTheme);
-            themeSwitch.checked = newTheme === 'dark';
         });
-
-        // Definir o estado inicial do switch baseado no tema atual
-        const currentTheme = document.documentElement.getAttribute('data-bs-theme');
-        themeSwitch.checked = currentTheme === 'dark';
     </script>
     <script src="{{url_for('static', filename='fonts/js/all.js')}}" crossorigin="anonymous"></script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

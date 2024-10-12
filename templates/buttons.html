@@ -10,12 +10,7 @@
 </head>
 <body>
     {% if current_user.is_authenticated %}
-    <!-- Botão flutuante para alternar modo claro/escuro -->
-    <div class="position-fixed bottom-0 start-0 mb-3 ms-3 d-none d-lg-inline">
-        <button type="button" class="btn btn-dark border shadow" title="Alternar entre Modo Claro e Escuro" id="btnSwitch">
-            <i class="fa-solid fa-circle-half-stroke fa-bounce"></i>
-        </button>
-    </div>
+    
     <!-- Botão de Informação do Sistema -->
     <div class="position-fixed bottom-0 end-0 mb-3 me-3 d-none d-lg-inline">
         <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#infoModal">
@@ -23,7 +18,6 @@
         </button>
     </div>
     
-
     <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -46,7 +40,6 @@
                     </div>
                     {% endif %}
                     <p class="text-center"><a class="link-opacity-100" href="/about">Notas de Versão</a></p>
-                    <!-- Adicione mais informações conforme necessário -->
                 </div>
             </div>
         </div>
