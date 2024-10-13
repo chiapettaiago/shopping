@@ -215,7 +215,6 @@ def share():
 
         # Realiza o commit após o loop de atualização
         db.session.commit()
-        invalidate_cache()
         
 
         # Verifica se os itens foram atualizados corretamente
