@@ -18,9 +18,11 @@
 <body>
     {% if current_user.is_authenticated %}
     <!-- Navbar para telas grandes -->
-    <nav class="navbar navbar-expand-lg bg-body-tertiary border sticky-top floating-navbar d-none d-lg-flex">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow" style="background-color: rgba(255, 255, 255, 0.9);">
         <div class="container-fluid">
-            <a class="navbar-brand ml-2" title="Dashboard" href="/dashboard"><i class="fa-solid fa-gauge-high fa-lg"></i></a>
+            <a class="navbar-brand" title="Dashboard" href="/dashboard">
+                <i class="fa-solid fa-gauge-high fa-lg"></i>
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -30,51 +32,52 @@
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fa-solid fa-wallet fa-lg"></i>
                         </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/debts">Pagamentos</a></li>
-                            <li><a class="dropdown-item" href="/debts_history">Pagamentos realizados</a></li>
+                        <ul class="dropdown-menu" style="background-color: #f8f9fa;">
+                            <li><a class="dropdown-item" href="/debts" style="color: black;">Pagamentos</a></li>
+                            <li><a class="dropdown-item" href="/debts_history" style="color: black;">Pagamentos realizados</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/balance">Recebimentos</a></li>
+                            <li><a class="dropdown-item" href="/balance" style="color: black;">Recebimentos</a></li>
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-money-bill-wave fa-lg"></i>
                         </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/daily">Despesas</a></li>
-                            <li><a class="dropdown-item" href="/daily_history">Histórico</a></li>
+                        <ul class="dropdown-menu" style="background-color: #f8f9fa;">
+                            <li><a class="dropdown-item" href="/daily" style="color: black;">Despesas</a></li>
+                            <li><a class="dropdown-item" href="/daily_history" style="color: black;">Histórico</a></li>
                         </ul>
                     </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fas fa-shopping-cart fa-lg"></i>
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="/">Lista</a></li>
-                        <li><a class="dropdown-item" href="/history">Estoque</a></li>
-                    </ul>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/ia"><i class="fa-solid fa-message fa-lg"></i></a>
-                </li>
-            </ul>
-        </ul>
-                <ul class="navbar-nav me-0 mb-2 mb-lg-0" style="list-style-type: none;">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-shopping-cart fa-lg"></i>
+                        </a>
+                        <ul class="dropdown-menu" style="background-color: #f8f9fa;">
+                            <li><a class="dropdown-item" href="/" style="color: black;">Lista</a></li>
+                            <li><a class="dropdown-item" href="/history" style="color: black;">Estoque</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/ia">
+                            <i class="fa-solid fa-message fa-lg"></i>
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             {{ username }}
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="/account">Minha Conta</a></li>
-                            <li><a class="dropdown-item" href="/logout">Sair</a></li>
+                        <ul class="dropdown-menu dropdown-menu-end" style="background-color: #f8f9fa;">
+                            <li><a class="dropdown-item" href="/account" style="color: black;">Minha Conta</a></li>
+                            <li><a class="dropdown-item" href="/logout" style="color: black;">Sair</a></li>
                         </ul>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
-
+    
     <!-- Navbar para dispositivos móveis -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-bottom d-lg-none">
         <div class="container-fluid justify-content-around">
