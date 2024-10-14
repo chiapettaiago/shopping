@@ -18,7 +18,7 @@
 <body>
     {% if current_user.is_authenticated %}
     <!-- Navbar para telas grandes -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow" style="background-color: rgba(255, 255, 255, 0.9);">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow d-none d-lg-flex" style="background-color: rgba(255, 255, 255, 0.9);">
         <div class="container-fluid">
             <a class="navbar-brand" title="Dashboard" href="/dashboard">
                 <i class="fa-solid fa-gauge-high fa-lg"></i>
