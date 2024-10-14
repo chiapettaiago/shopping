@@ -320,7 +320,6 @@ def auth():
             new_user = User(full_name=full_name, email=email, username=username, password=generate_password_hash(password, method='pbkdf2:sha256'))
             db.session.add(new_user)
             db.session.commit()
-            invalidate_cache()
             
             return redirect(url_for('auth', login_error='Usuário registrado com sucesso. Faça login.'))
 
@@ -390,7 +389,6 @@ def account():
             user = User.query.get(current_user.id)
             user.password = generate_password_hash(new_password)
             db.session.commit()
-            invalidate_cache()
             
             flash('Sua senha foi alterada com sucesso.', 'success')
         return redirect(url_for('account'))
