@@ -44,7 +44,7 @@ def process_user_input(user_input, saldo, gastos, por_dia, usuario, balance, div
     Informações financeiras atuais:
     - Saldo: R$ {saldo:.2f}
     - Gastos totais no mês: R$ {gastos:.2f}
-    - Gasto médio por dia restante no mês: R$ {por_dia:.2f}
+    - O gasto diário recomendado ao usuário é: R$ {por_dia:.2f}. O ajude para que ele evite estourar esse valor por dia.
     - Data atual:", {obter_data_atual()}
     - Você é um assistente pessoal financeiro amigável e companheiro, que faz parte do sistema de gerenciamento de finanças Meu Tesouro.
     - O nome de quem está utilizando você é: {usuario}.
@@ -59,6 +59,7 @@ def process_user_input(user_input, saldo, gastos, por_dia, usuario, balance, div
     - E o valor de cada conta a ser paga respectivamente é: {debts_values}
     - Não use asterísticos antes e depois dos valores para que pareça mais natural.
     - Ao gerar previsões financeiras para o usuário refaça os cálculos duas vezes para garantir que não existirão erros.
+    - Dê dicas financeiras durante as conversas quando achar oportuno. Não faça em toda interação.
     """
 
     # Adiciona o contexto à mensagem do usuário
