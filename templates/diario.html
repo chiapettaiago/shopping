@@ -15,12 +15,84 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="{{url_for('static', filename='js/theme.js')}}"></script>
     <style>
+        /* Estilo do corpo */
         body {
-            background: url("{{url_for('static', filename='images/foto.jpeg')}}") no-repeat center center fixed;
+            background: linear-gradient(to bottom right, #c5cae9, #e2e7f1);
             background-size: cover;
+            min-height: 100vh;
+            color: #333;
+            font-family: 'Helvetica Neue', sans-serif;
         }
+
+        /* Estilo dos cartões */
+        .card {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        .card-title {
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        /* Estilo dos botões */
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #004b9a;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+        }
+
+        /* Título da página */
+        h2 {
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        /* Estilo dos Modais */
+        .modal-header {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .modal-footer .btn-primary {
+            background-color: #28a745;
+        }
+
+        /* Estilo das tabelas */
+        .table-bordered {
+            border-color: #ddd;
+        }
+
+        .table-light {
+            background-color: #f9f9f9;
+        }
+
+        /* Estilo dos formulários */
+        input[type="text"], input[type="number"], input[type="date"] {
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+
+        /* Estilo do botão de adicionar item */
         .btn-height {
-            height: 38px; /* Ajuste conforme necessário */
+            height: 38px;
+        }
+
+        /* Novo estilo para ajustar o padding em telas maiores */
+        @media (min-width: 992px) {
+            .container {
+                padding-left: 50px;
+                padding-right: 50px;
+            }
         }
     </style>
 </head>
@@ -28,15 +100,15 @@
     {% include 'navbar.html' %}
     {% include 'buttons.html' %}
     
-    <div class="container mt-5 mb-5 pb-4">
+    <div class="container-fluid mt-2 mb-5 pb-4">
         <div class="card bg-light bg-opacity-75 p-4">
-            <h2 class="mt-2 text-dark text-center">Diário de Despesas</h2>
+            <h2 class="mt-2 text-center text-dark">Diário de Despesas</h2>
             
             <div class="row mt-2">
                 <div class="col-md-4 mb-3">
                     <div class="card text-center">
                         <div class="card-body">
-                            <h4 class="card-title text-success">Despesas não Processadas</h4>
+                            <h4 class="card-title">Despesas não Processadas</h4>
                             <p class="card-text">R$ {{ '{:.2f}'.format(gastos_nao_processados) }}</p>
                         </div>
                     </div>
@@ -44,7 +116,7 @@
                 <div class="col-md-4 mb-3">
                     <div class="card text-center">
                         <div class="card-body">
-                            <h4 class="card-title text-success">Saldo Atualizado</h4>
+                            <h4 class="card-title">Saldo Atualizado</h4>
                             <p class="card-text">R$ {{ '{:.2f}'.format(saldo_atualizado) }}</p>
                         </div>
                     </div>
@@ -52,7 +124,7 @@
                 <div class="col-md-4 mb-3">
                     <div class="card text-center">
                         <div class="card-body">
-                            <h4 class="card-title text-success">Limite Diário</h4>
+                            <h4 class="card-title">Limite Diário</h4>
                             <p class="card-text">R$ {{ '{:.2f}'.format(por_dia) }}</p>
                         </div>
                     </div>
@@ -64,7 +136,7 @@
             </div>
 
             <div class="d-flex justify-content-center mb-2 text-center mt-2">
-                <button title="Adicionar Item" type="button" class="btn btn-primary mr-2" data-toggle="modal" data-target="#addGastoModal">
+                <button title="Adicionar Item" type="button" class="btn btn-primary btn-height mr-2" data-toggle="modal" data-target="#addGastoModal">
                     <i class="fa-solid fa-plus"></i>
                 </button>
             </div>
@@ -122,7 +194,7 @@
                                                 <label for="data_gasto">Data</label>
                                                 <input type="date" class="form-control" id="data_gasto" name="data_gasto" value="{{ gasto.date.strftime('%Y-%m-%d') }}" required>
                                             </div>
-                                            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i></button>
+                                            <button type="submit" class="btn btn-primary">Salvar Alterações</button>
                                         </form>
                                     </div>
                                 </div>
@@ -135,12 +207,12 @@
         </div>
     </div>
 
-    <!-- Modal para adicionar gasto -->
+    <!-- Modal para adicionar novo gasto -->
     <div class="modal fade" id="addGastoModal" tabindex="-1" role="dialog" aria-labelledby="addGastoModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addGastoModalLabel">Adicionar ao diário</h5>
+                    <h5 class="modal-title" id="addGastoModalLabel">Adicionar Gasto</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -159,41 +231,14 @@
                             <label for="data_gasto">Data</label>
                             <input type="date" class="form-control" id="data_gasto" name="data_gasto" required>
                         </div>
-                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-cart-plus"></i></button>
+                        <button type="submit" class="btn btn-primary">Adicionar Gasto</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        document.getElementById('btnSwitch').addEventListener('click', () => {
-            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-bs-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-
-            const tableBody = document.querySelector('.table-body');
-            tableBody.classList.toggle('table-dark');
-        });
-
-        // Verifica se há um tema armazenado no armazenamento local
-        const storedTheme = localStorage.getItem('theme');
-        if (storedTheme) {
-            document.documentElement.setAttribute('data-bs-theme', storedTheme);
-            const tableBody = document.querySelector('.table-body');
-            if (storedTheme === 'dark') {
-                tableBody.classList.add('table-dark');
-            } else {
-                tableBody.classList.remove('table-dark');
-            }
-        }
-    </script>
-
-    <!-- Incluindo Bootstrap JS e jQuery -->
+    <!-- Incluindo ícones da FontAwesome -->
     <script src="{{url_for('static', filename='fonts/js/all.js')}}" crossorigin="anonymous"></script>
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 </body>
 </html>
