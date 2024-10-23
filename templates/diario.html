@@ -3,178 +3,234 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Diário de Despesas - Controle seus gastos diários">
     <title>Diário de Despesas</title>
-    <!-- Incluindo Bootstrap CSS -->
-    <link rel="apple-touch-icon" sizes="180x180" href={{ url_for('static', filename='images/apple-touch-icon.png') }}>
-    <link rel="icon" type="image/png" sizes="32x32" href={{ url_for('static', filename='images/favicon-32x32.png') }}>
-    <link rel="icon" type="image/png" sizes="16x16" href={{ url_for('static', filename='images/favicon-16x16.png') }}>
-    <link rel="manifest" href={{ url_for('static', filename='images/site.webmanifest') }}>
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='images/site.webmanifest') }}">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script src="{{url_for('static', filename='js/theme.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
     <style>
-        /* Estilo do corpo */
+        :root {
+            --primary-color: #007bff;
+            --primary-hover: #0056b3;
+            --success-color: #28a745;
+            --card-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            --border-radius: 8px;
+            --transition-speed: 0.3s;
+        }
+
         body {
-            background: linear-gradient(to bottom right, #c5cae9, #e2e7f1);
-            background-size: cover;
-            min-height: 100vh;
+            background: linear-gradient(135deg, #f3f4f7, #e8ecf1);
             color: #333;
-            font-family: 'Helvetica Neue', sans-serif;
+            font-family: 'Roboto', sans-serif;
+            min-height: 100vh;
         }
 
-        /* Estilo dos cartões */
         .card {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            border-radius: var(--border-radius);
+            border: none;
+            transition: transform var(--transition-speed);
         }
 
-        .card-title {
-            font-weight: bold;
-            color: #007bff;
+        .stats-card {
+            background: white;
+            padding: 1.5rem;
+            height: 100%;
         }
 
-        /* Estilo dos botões */
+        .stats-card .card-title {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .stats-card p {
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .btn {
+            border-radius: var(--border-radius);
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            transition: all var(--transition-speed);
+        }
+
         .btn-primary {
-            background-color: #007bff;
-            border-color: #007bff;
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
         }
 
         .btn-primary:hover {
-            background-color: #0056b3;
-            border-color: #004b9a;
+            background-color: var(--primary-hover);
+            border-color: var(--primary-hover);
+            transform: translateY(-2px);
         }
 
         .btn-success {
-            background-color: #28a745;
+            background-color: var(--success-color);
         }
 
-        /* Título da página */
-        h2 {
-            font-weight: bold;
-            color: #007bff;
-        }
-
-        /* Estilo dos Modais */
-        .modal-header {
-            background-color: #007bff;
-            color: white;
-        }
-
-        .modal-footer .btn-primary {
-            background-color: #28a745;
-        }
-
-        /* Estilo das tabelas */
-        .table-bordered {
-            border-color: #ddd;
-        }
-
-        .table-light {
-            background-color: #f9f9f9;
-        }
-
-        /* Estilo dos formulários */
-        input[type="text"], input[type="number"], input[type="date"] {
-            border-radius: 5px;
-            border: 1px solid #ddd;
-            padding: 10px;
-        }
-
-        /* Estilo do botão de adicionar item */
         .btn-height {
             height: 38px;
         }
 
-        /* Novo estilo para ajustar o padding em telas maiores */
-        @media (min-width: 992px) {
-            .container {
-                padding-left: 50px;
-                padding-right: 50px;
+        .table {
+            background-color: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            margin-bottom: 0;
+        }
+
+        .table thead th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .table td, .table th {
+            vertical-align: middle;
+            padding: 1rem;
+        }
+
+        .modal-content {
+            border-radius: var(--border-radius);
+            border: none;
+        }
+
+        .form-control {
+            border-radius: var(--border-radius);
+            padding: 0.75rem;
+            border: 1px solid #ced4da;
+            transition: border-color var(--transition-speed);
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+        .action-buttons {
+            white-space: nowrap;
+        }
+
+        .action-buttons form {
+            display: inline-block;
+            margin: 0 2px;
+        }
+
+        .btn-action {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            .stats-card {
+                margin-bottom: 1rem;
+            }
+
+            .table-responsive {
+                border-radius: var(--border-radius);
+            }
+
+            .action-buttons form {
+                margin: 0 1px;
+            }
+
+            .btn-action {
+                padding: 0.25rem 0.5rem;
             }
         }
     </style>
 </head>
 <body>
     {% include 'navbar.html' %}
-    
-    <div class="container-fluid mt-2 mb-5 pb-4">
-        <div class="card bg-light bg-opacity-75 p-4">
-            <h2 class="mt-2 text-center text-dark">Diário de Despesas</h2>
-            
-            <div class="row mt-2">
+
+    <div class="container mt-4 mb-5">
+        <div class="card p-4">
+            <h2 class="text-center mb-4">Diário de Despesas</h2>
+
+            <div class="row">
                 <div class="col-md-4 mb-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <h4 class="card-title">Despesas não Processadas</h4>
-                            <p class="card-text">R$ {{ '{:.2f}'.format(gastos_nao_processados) }}</p>
-                        </div>
+                    <div class="stats-card">
+                        <h4 class="card-title">Despesas não Processadas</h4>
+                        <p>R$ {{ '{:.2f}'.format(gastos_nao_processados) }}</p>
                     </div>
                 </div>
                 <div class="col-md-4 mb-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <h4 class="card-title">Saldo Atualizado</h4>
-                            <p class="card-text">R$ {{ '{:.2f}'.format(saldo_atualizado) }}</p>
-                        </div>
+                    <div class="stats-card">
+                        <h4 class="card-title">Saldo Atualizado</h4>
+                        <p>R$ {{ '{:.2f}'.format(saldo_atualizado) }}</p>
                     </div>
                 </div>
                 <div class="col-md-4 mb-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <h4 class="card-title">Limite Diário</h4>
-                            <p class="card-text">R$ {{ '{:.2f}'.format(por_dia) }}</p>
-                        </div>
+                    <div class="stats-card">
+                        <h4 class="card-title">Limite Diário</h4>
+                        <p>R$ {{ '{:.2f}'.format(por_dia) }}</p>
                     </div>
                 </div>
             </div>
 
-            <div class="col-12">
-                <hr class="border border-dark">
-            </div>
-
-            <div class="d-flex justify-content-center mb-2 text-center mt-2">
-                <button title="Adicionar Item" type="button" class="btn btn-primary btn-height mr-2" data-toggle="modal" data-target="#addGastoModal">
-                    <i class="fa-solid fa-plus"></i>
+            <div class="d-flex justify-content-center mt-4 mb-4">
+                <button type="button" class="btn btn-primary btn-height" data-toggle="modal" data-target="#addGastoModal">
+                    <i class="fa-solid fa-plus mr-2"></i>Adicionar Gasto
                 </button>
             </div>
-            
+
             <div class="table-responsive">
-                <table class="table table-bordered text-center">
-                    <thead class="table-light">
+                <table class="table">
+                    <thead>
                         <tr>
                             <th>Descrição</th>
                             <th>Valor</th>
                             <th>Data</th>
-                            <th>Ações</th>
+                            <th class="text-center">Ações</th>
                         </tr>
                     </thead>
-                    <tbody class="table-body">
+                    <tbody>
                         {% for gasto in gastos %}
                         <tr>
                             <td>{{ gasto.name }}</td>
                             <td>R$ {{ '{:.2f}'.format(gasto.value) }}</td>
                             <td>{{ gasto.date.strftime('%d/%m/%Y') }}</td>
-                            <td>
-                                <form action="{{ url_for('excluir_gasto', id=gasto.id) }}" method="post" style="display:inline;">
-                                    <button type="submit" class="btn btn-danger btn-sm mr-1 mb-2" title="Excluir"><i class="fa-solid fa-xmark"></i></button>
+                            <td class="text-center action-buttons">
+                                <form action="{{ url_for('excluir_gasto', id=gasto.id) }}" method="post" style="display: inline-block;">
+                                    <button type="submit" class="btn btn-danger btn-sm btn-action" title="Excluir">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
                                 </form>
-                                <button type="button" class="btn btn-secondary btn-sm mr-1 mb-2" data-toggle="modal" title="Editar" data-target="#editGastoModal{{ gasto.id }}">
+                                <button type="button" class="btn btn-secondary btn-sm btn-action" data-toggle="modal"
+                                        data-target="#editGastoModal{{ gasto.id }}" title="Editar">
                                     <i class="fa-solid fa-pen"></i>
                                 </button>
-                                <form action="{{ url_for('computar_gasto', id=gasto.id) }}" method="post" style="display:inline;">
-                                    <button type="submit" class="btn btn-success btn-sm mr-1 mb-2" title="Computar"><i class="fa-regular fa-circle-check"></i></button>
+                                <form action="{{ url_for('computar_gasto', id=gasto.id) }}" method="post" style="display: inline-block;">
+                                    <button type="submit" class="btn btn-success btn-sm btn-action" title="Computar">
+                                        <i class="fa-regular fa-circle-check"></i>
+                                    </button>
                                 </form>
                             </td>
                         </tr>
 
-                        <!-- Modal para editar gasto -->
-                        <div class="modal fade" id="editGastoModal{{ gasto.id }}" tabindex="-1" role="dialog" aria-labelledby="editGastoModalLabel{{ gasto.id }}" aria-hidden="true">
-                            <div class="modal-dialog" role="document">
+                        <!-- Modal de edição -->
+                        <div class="modal fade" id="editGastoModal{{ gasto.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title" id="editGastoModalLabel{{ gasto.id }}">Editar Gasto</h5>
+                                        <h5 class="modal-title">Editar Gasto</h5>
                                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                             <span aria-hidden="true">&times;</span>
                                         </button>
@@ -182,18 +238,21 @@
                                     <div class="modal-body">
                                         <form action="{{ url_for('editar_gasto', id=gasto.id) }}" method="post">
                                             <div class="form-group">
-                                                <label for="descricao">Descrição</label>
-                                                <input type="text" class="form-control" id="descricao" name="descricao" value="{{ gasto.name }}" required>
+                                                <label for="descricao{{ gasto.id }}">Descrição</label>
+                                                <input type="text" class="form-control" id="descricao{{ gasto.id }}"
+                                                       name="descricao" value="{{ gasto.name }}" required>
                                             </div>
                                             <div class="form-group">
-                                                <label for="valor">Valor</label>
-                                                <input type="number" step="0.01" class="form-control" id="valor" name="valor" value="{{ gasto.value }}" required>
+                                                <label for="valor{{ gasto.id }}">Valor</label>
+                                                <input type="number" step="0.01" class="form-control" id="valor{{ gasto.id }}"
+                                                       name="valor" value="{{ gasto.value }}" required>
                                             </div>
                                             <div class="form-group">
-                                                <label for="data_gasto">Data</label>
-                                                <input type="date" class="form-control" id="data_gasto" name="data_gasto" value="{{ gasto.date.strftime('%Y-%m-%d') }}" required>
+                                                <label for="data_gasto{{ gasto.id }}">Data</label>
+                                                <input type="date" class="form-control" id="data_gasto{{ gasto.id }}"
+                                                       name="data_gasto" value="{{ gasto.date.strftime('%Y-%m-%d') }}" required>
                                             </div>
-                                            <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                                            <button type="submit" class="btn btn-primary w-100">Salvar Alterações</button>
                                         </form>
                                     </div>
                                 </div>
@@ -206,12 +265,12 @@
         </div>
     </div>
 
-    <!-- Modal para adicionar novo gasto -->
-    <div class="modal fade" id="addGastoModal" tabindex="-1" role="dialog" aria-labelledby="addGastoModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
+    <!-- Modal de adicionar gasto -->
+    <div class="modal fade" id="addGastoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addGastoModalLabel">Adicionar Gasto</h5>
+                    <h5 class="modal-title">Adicionar Gasto</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -219,25 +278,26 @@
                 <div class="modal-body">
                     <form action="{{ url_for('add_daily') }}" method="post">
                         <div class="form-group">
-                            <label for="descricao">Descrição</label>
-                            <input type="text" class="form-control" id="descricao" name="descricao" required>
+                            <label for="descricao_novo">Descrição</label>
+                            <input type="text" class="form-control" id="descricao_novo" name="descricao" required>
                         </div>
                         <div class="form-group">
-                            <label for="valor">Valor</label>
-                            <input type="number" step="0.01" class="form-control" id="valor" name="valor" required>
+                            <label for="valor_novo">Valor</label>
+                            <input type="number" step="0.01" class="form-control" id="valor_novo" name="valor" required>
                         </div>
                         <div class="form-group">
-                            <label for="data_gasto">Data</label>
-                            <input type="date" class="form-control" id="data_gasto" name="data_gasto" required>
+                            <label for="data_gasto_novo">Data</label>
+                            <input type="date" class="form-control" id="data_gasto_novo" name="data_gasto" required>
                         </div>
-                        <button type="submit" class="btn btn-primary">Adicionar Gasto</button>
+                        <button type="submit" class="btn btn-primary w-100">Adicionar Gasto</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Incluindo ícones da FontAwesome -->
-    <script src="{{url_for('static', filename='fonts/js/all.js')}}" crossorigin="anonymous"></script>
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    <script src="{{ url_for('static', filename='fonts/js/all.js') }}" crossorigin="anonymous"></script>
 </body>
 </html>
