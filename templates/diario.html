@@ -31,7 +31,7 @@
         }
 
         body {
-            background: linear-gradient(135deg, #f3f4f7, #e8ecf1);
+            background: linear-gradient(to bottom right, #c5cae9, #e2e7f1); /* Gradiente mais escuro */
             color: #333;
             font-family: 'Roboto', sans-serif;
             min-height: 100vh;
@@ -160,27 +160,27 @@
 <body>
     {% include 'navbar.html' %}
 
-    <div class="container mt-4 mb-5">
+    <div class="container mt-4 mb-5 pb-4">
         <div class="card p-4">
             <h2 class="text-center mb-4">Diário de Despesas</h2>
 
             <div class="row">
                 <div class="col-md-4 mb-3">
-                    <div class="stats-card">
-                        <h4 class="card-title">Despesas não Processadas</h4>
-                        <p>R$ {{ '{:.2f}'.format(gastos_nao_processados) }}</p>
+                    <div class="stats-card shadow">
+                        <h4 class="card-title text-center">Despesas não Processadas</h4>
+                        <p class="text-center text-dark">R$ {{ '{:.2f}'.format(gastos_nao_processados) }}</p>
                     </div>
                 </div>
                 <div class="col-md-4 mb-3">
-                    <div class="stats-card">
-                        <h4 class="card-title">Saldo Atualizado</h4>
-                        <p>R$ {{ '{:.2f}'.format(saldo_atualizado) }}</p>
+                    <div class="stats-card shadow">
+                        <h4 class="card-title text-center">Saldo Atualizado</h4>
+                        <p class="text-center text-dark">R$ {{ '{:.2f}'.format(saldo_atualizado) }}</p>
                     </div>
                 </div>
                 <div class="col-md-4 mb-3">
-                    <div class="stats-card">
-                        <h4 class="card-title">Limite Diário</h4>
-                        <p>R$ {{ '{:.2f}'.format(por_dia) }}</p>
+                    <div class="stats-card shadow">
+                        <h4 class="card-title text-center">Limite Diário</h4>
+                        <p class="text-center text-dark">R$ {{ '{:.2f}'.format(por_dia) }}</p>
                     </div>
                 </div>
             </div>
@@ -192,13 +192,13 @@
             </div>
 
             <div class="table-responsive">
-                <table class="table">
-                    <thead>
+                <table class="table table-striped-columns">
+                    <thead class="text-center">
                         <tr>
                             <th>Descrição</th>
                             <th>Valor</th>
                             <th>Data</th>
-                            <th class="text-center">Ações</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
