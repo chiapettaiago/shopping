@@ -16,8 +16,12 @@
     <script src="{{url_for('static', filename='js/theme.js')}}"></script>
     <style>
         body {
-            background: url("{{url_for('static', filename='images/foto.jpeg')}}") no-repeat center center fixed;
+            background: linear-gradient(to bottom right, #c5cae9, #e2e7f1); /* Gradiente mais escuro */
             background-size: cover;
+            background-repeat: no-repeat; /* Remove a repetição da imagem */
+            background-position: center; /* Centraliza a imagem no fundo */
+            margin: 0; /* Remove a margem padrão do body */
+            background-attachment: fixed; /* Fixa o fundo ao rolar */
         }
     </style>
 </head>
