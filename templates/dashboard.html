@@ -13,86 +13,135 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="{{url_for('static', filename='bootstrap/js/bootstrap.min.js')}}"></script>
     <script src="{{url_for('static', filename='js/theme.js')}}"></script>
+    
     <style>
         body {
-            background: linear-gradient(to bottom right, #c5cae9, #e2e7f1); /* Gradiente mais escuro */
+            background: linear-gradient(to bottom right, #6a11cb, #2575fc); /* Gradiente moderno e vibrante */
             background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            margin: 0;
+            background-attachment: fixed;
+            font-family: 'Roboto', sans-serif; /* Fonte mais moderna */
+            color: #333;
+        }
+
+        /* Estilizando o conteúdo principal */
+        .main-content {
+            margin-left: 250px; /* Quando a sidebar está visível */
+            transition: margin-left 0.3s;
+        }
+
+        /* Quando a sidebar está oculta, o conteúdo ocupa toda a tela */
+        .main-content.full-width {
+            margin-left: 0;
+        }
+
+        /* Estilizando o card */
+        .card {
+            border-radius: 12px; /* Bordas arredondadas */
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-right: 2rem; /* Adiciona espaço à direita */
+        }
+
+        .card:hover {
+            transform: translateY(-10px); /* Elevação ao passar o mouse */
+            box-shadow: 0 20px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Responsividade: em dispositivos móveis, o conteúdo ocupa toda a tela */
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0; /* A sidebar começa oculta no mobile */
+            }
         }
     </style>
+
     <title>Dashboard</title>
 </head>
 <body>
+    <!-- Incluindo a navbar.html que contém o botão e a sidebar -->
     {% include 'navbar.html' %}
-    <div class="container mt-3 rounded mb-5 pb-4">
-        <div class="card bg-light bg-opacity-75 shadow p-4">
-            <h1 class="text-center text-dark mt-3">Bem-vindo ao site Meu Tesouro, {{ username }}!</h1>
-            <h2 class="text-center text-dark mt-3">Aqui estão suas Informações financeiras desse mês</h2>
-            <div class="row text-center mt-2">
-                <div class="col-md-4 mb-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <h4 class="card-title text-success">Valor Total das Dívidas</h4>
-                            <p class="card-text">R$ {{ '{:.2f}'.format(total_price) }}</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <h4 class="card-title text-success">Saldo Atualizado</h4>
-                            <p class="card-text">R$ {{ '{:.2f}'.format(saldo_atualizado) }}</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <h4 class="card-title text-success">Limite diário recomendado</h4>
-                            <p class="card-text">R$ {{ '{:.2f}'.format(por_dia) }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <div class="col-12">
-                <hr class="border border-dark">
-            </div>
+    <!-- Conteúdo principal -->
+    <div class="main-content" id="mainContent">
+        <div class="container mt-5 mb-5">
+            <div class="card bg-light bg-opacity-75 shadow p-4">
+                <h1 class="text-center text-dark mt-3">Bem-vindo ao site Meu Tesouro, {{ username }}!</h1>
+                <h2 class="text-center text-dark mt-3">Aqui estão suas Informações financeiras desse mês</h2>
 
-            
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div id="chart1" class="py-3">
-                            {{ graph_html1|safe }}
+                <!-- Cartões com informações financeiras -->
+                <div class="row text-center mt-2">
+                    <div class="col-md-4 mb-3">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h4 class="card-title text-success">Valor Total das Dívidas</h4>
+                                <p class="card-text">R$ {{ '{:.2f}'.format(total_price) }}</p>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div id="chart2" class="py-3">
-                            {{ graph_html2|safe }}
+                    <div class="col-md-4 mb-3">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h4 class="card-title text-success">Saldo Atualizado</h4>
+                                <p class="card-text">R$ {{ '{:.2f}'.format(saldo_atualizado) }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h4 class="card-title text-success">Teto diário</h4>
+                                <p class="card-text">R$ {{ '{:.2f}'.format(por_dia) }}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="table-responsive mt-4">
-                {% if porcentagem_formatado %}
-                <table class="table table-bordered text-center">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Informação</th>
-                            <th>Valor</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Porcentagem do saldo na conta até o momento:</td>
-                            <td>{{ porcentagem_formatado }} %</td>
-                        </tr>
-                    </tbody>
-                </table>
-                {% endif %}
-            </div>
 
-            {% include 'buttons.html' %}
+                <!-- Divisória -->
+                <div class="col-12">
+                    <hr class="border border-dark">
+                </div>
+
+                <!-- Gráficos -->
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div id="chart1" class="py-3">
+                                {{ graph_html1|safe }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div id="chart2" class="py-3">
+                                {{ graph_html2|safe }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabela de informações -->
+                <div class="table-responsive mt-4">
+                    {% if porcentagem_formatado %}
+                    <table class="table table-bordered text-center">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Informação</th>
+                                <th>Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody class="table-body">
+                            <tr>
+                                <td>Porcentagem do saldo na conta até o momento:</td>
+                                <td>{{ porcentagem_formatado }} %</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    {% endif %}
+                </div>
+
+                {% include 'buttons.html' %}
+            </div>
         </div>
     </div>
 
@@ -108,28 +157,41 @@
             tableBody.classList.toggle('table-dark');
         });
 
-        themeSwitch.addEventListener('change', function() {
-            const newTheme = themeSwitch.checked ? 'dark' : 'light';
-            document.documentElement.setAttribute('data-bs-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-        });
+        // Função para alternar a sidebar
+        function toggleSidebar() {
+            const sidebar = document.getElementById("mySidebar");
+            const mainContent = document.getElementById("mainContent");
+
+            // Alterna a classe 'closed' para ocultar/exibir a sidebar
+            sidebar.classList.toggle("closed");
+
+            // Ajusta o conteúdo principal para ocupar toda a tela ou deixar espaço para a sidebar
+            if (sidebar.classList.contains("closed")) {
+                sidebar.style.width = "0";
+                mainContent.classList.add("full-width");
+            } else {
+                sidebar.style.width = "250px";
+                mainContent.classList.remove("full-width");
+            }
+        }
 
         // Função para definir o tema inicial
-    function setInitialTheme() {
-        const storedTheme = localStorage.getItem('theme'); // Obtém o tema armazenado no localStorage
-        const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)').matches; // Verifica se o sistema prefere o tema escuro
+        function setInitialTheme() {
+            const storedTheme = localStorage.getItem('theme'); // Obtém o tema armazenado no localStorage
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)').matches; // Verifica se o sistema prefere o tema escuro
 
-        // Aplica o tema armazenado ou o padrão do sistema
-        if (storedTheme) {
-            document.documentElement.setAttribute('data-bs-theme', storedTheme);
-        } else {
-            document.documentElement.setAttribute('data-bs-theme', prefersDarkScheme ? 'dark' : 'light');
+            // Aplica o tema armazenado ou o padrão do sistema
+            if (storedTheme) {
+                document.documentElement.setAttribute('data-bs-theme', storedTheme);
+            } else {
+                document.documentElement.setAttribute('data-bs-theme', prefersDarkScheme ? 'dark' : 'light');
+            }
         }
-    }
 
-    // Configurar o tema inicial ao carregar a página
-    setInitialTheme();
+        // Configurar o tema inicial ao carregar a página
+        setInitialTheme();
     </script>
+    
     <script src="{{url_for('static', filename='fonts/js/all.js')}}" crossorigin="anonymous"></script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>

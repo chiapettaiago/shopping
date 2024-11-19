@@ -16,62 +16,157 @@
     <script src="{{url_for('static', filename='bootstrap/js/bootstrap.min.js')}}"></script>
     <style>
         body {
-            background: linear-gradient(to bottom right, #c5cae9, #e2e7f1); /* Gradiente mais escuro */
+            background: linear-gradient(to bottom right, #6a11cb, #2575fc); /* Gradiente moderno e vibrante */
             background-size: cover;
-            background-repeat: no-repeat; /* Remove a repetição da imagem */
-            background-position: center; /* Centraliza a imagem no fundo */
-            margin: 0; /* Remove a margem padrão do body */
-            background-attachment: fixed; /* Fixa o fundo ao rolar */
+            background-repeat: no-repeat;
+            background-position: center;
+            margin: 0;
+            background-attachment: fixed;
+            font-family: 'Roboto', sans-serif; /* Fonte mais moderna */
+            color: #333;
+        }
+
+        /* Estilizando o card */
+        .card {
+            border-radius: 12px; /* Bordas arredondadas */
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-10px); /* Elevação ao passar o mouse */
+            box-shadow: 0 20px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Estilizando o conteúdo principal */
+        .main-content {
+            margin-left: 250px; /* Quando a sidebar está visível */
+            transition: margin-left 0.3s;
+        }
+
+        /* Quando a sidebar está oculta, o conteúdo ocupa toda a tela */
+        .main-content.full-width {
+            margin-left: 0;
+        }
+
+        /* Estilizando os botões */
+        .btn-primary {
+            background-color: #6a11cb;
+            border: none;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #2575fc; /* Efeito hover no botão */
+        }
+
+        /* Estilizando o switch de tema */
+        .form-check-input {
+            width: 50px;
+            height: 25px;
+            background-color: #ccc;
+            border-radius: 50px;
+            transition: background-color 0.3s ease;
+        }
+
+        .form-check-input:checked {
+            background-color: #6a11cb;
+        }
+
+        /* Estilizando o texto de alerta */
+        .alert {
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .card-body {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .btn {
+                width: 100%; /* Botões ocupam a largura total em telas menores */
+                margin-top: 15px;
+            }
         }
     </style>
 </head>
 <body>
     {% include 'navbar.html' %}
-    <div class="container mt-5 mb-5 pb-4">
-        <div class="card mt-3 bg-light text-dark shadow bg-opacity-75">
-            <div class="card-body">
-                <h1 class="text-center">Suas Informações</h1>
-                <h5 class="card-title">Nome Completo: {{ full_name }}</h5>
-                <h5 class="card-title">Nome de Usuário: {{ username }}</h5>
-                <h5 class="card-title">Email: {{ email }}</h5>
-                {% if status == 'active' %}
-                    <div class="alert alert-success text-center mt-3" role="alert">
-                        Você é um usuário Pro!
-                    </div>
-                {% else %}
-                    <div class="alert alert-info text-center mt-3" role="alert">
-                        Você está usando uma conta gratuita. <a href="/checkout">Tenha uma conta Pro</a>
-                    </div>
-                {% endif %}
+    <div class="main-content" id="mainContent">
+    <div class="container mt-5 mb-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 col-md-8 col-sm-12">
+                <div class="card bg-light text-dark shadow bg-opacity-75">
+                    <div class="card-body">
+                        <h1 class="text-center mb-4">Suas Informações</h1>
+                        <div class="mb-3">
+                            <h5 class="card-title">Nome Completo:</h5>
+                            <p>{{ full_name }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <h5 class="card-title">Nome de Usuário:</h5>
+                            <p>{{ username }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <h5 class="card-title">Email:</h5>
+                            <p>{{ email }}</p>
+                        </div>
 
-                <!-- Seção de Preferências -->
-                <hr>
-                <h5 class="mt-4">Preferências</h5>
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="themeSwitch">
-                    <label class="form-check-label" for="themeSwitch">Modo Escuro</label>
+                        {% if status == 'active' %}
+                            <div class="alert alert-success text-center mt-3" role="alert">
+                                Você é um usuário Pro!
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info text-center mt-3" role="alert">
+                                Você está usando uma conta gratuita. <a href="/checkout" class="text-decoration-none">Tenha uma conta Pro</a>
+                            </div>
+                        {% endif %}
+
+                        <!-- Formulário de Alteração de Senha -->
+                        <hr>
+                        <h5 class="mt-4">Alterar Senha</h5>
+                        <form method="POST" action="{{ url_for('account') }}">
+                            <div class="form-group">
+                                <label for="newPassword">Nova Senha</label>
+                                <input type="password" class="form-control" id="newPassword" name="newPassword" placeholder="Digite sua nova senha" required>
+                            </div>
+                            <div class="form-group mt-3">
+                                <label for="confirmPassword">Confirmar Nova Senha</label>
+                                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" placeholder="Confirme sua nova senha" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary mt-3">Alterar Senha</button>
+                        </form>
+                    </div>
                 </div>
-
-                <!-- Formulário de Alteração de Senha -->
-                <hr>
-                <h5 class="mt-4">Alterar Senha</h5>
-                <form method="POST" action="{{ url_for('account') }}">
-                    <div class="form-group">
-                        <label for="newPassword">Nova Senha</label>
-                        <input type="password" class="form-control" id="newPassword" name="newPassword" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="confirmPassword">Confirmar Nova Senha</label>
-                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary mt-3">Alterar Senha</button>
-                </form>
             </div>
         </div>
     </div>
+</div>
     {% include 'buttons.html' %}
 
     <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById("mySidebar");
+            const mainContent = document.getElementById("mainContent");
+
+            // Alterna a classe 'closed' para ocultar/exibir a sidebar
+            sidebar.classList.toggle("closed");
+
+            // Ajusta o conteúdo principal para ocupar toda a tela ou deixar espaço para a sidebar
+            if (sidebar.classList.contains("closed")) {
+                sidebar.style.width = "0";
+                mainContent.classList.add("full-width");
+            } else {
+                sidebar.style.width = "250px";
+                mainContent.classList.remove("full-width");
+            }
+        }
         // Função para definir o tema inicial
         function setInitialTheme() {
             const storedTheme = localStorage.getItem('theme');
@@ -104,6 +199,7 @@
             localStorage.setItem('theme', newTheme);
         });
     </script>
+
     <script src="{{url_for('static', filename='fonts/js/all.js')}}" crossorigin="anonymous"></script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>

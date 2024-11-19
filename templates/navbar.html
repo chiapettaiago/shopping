@@ -13,70 +13,123 @@
             border-radius: 7px; /* Cantos arredondados para efeito de flutuação */
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra para efeito de elevação */
         }
+
+        /* Estilo geral da sidebar */
+        .sidebar {
+            height: 100vh;
+            width: 250px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: #343a40;
+            overflow-x: hidden;
+            transition: 0.3s;
+            padding-top: 60px;
+        }
+
+        .sidebar a {
+            padding: 10px 15px;
+            text-decoration: none;
+            font-size: 18px;
+            color: #f8f9fa;
+            display: block;
+            transition: 0.3s;
+        }
+
+        .sidebar a:hover {
+            background-color: #495057;
+            color: white;
+        }
+
+        .sidebar .nav-item i {
+            margin-right: 10px;
+        }
+
+        /* Estilo para ocultar a sidebar em telas pequenas */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 0;
+                padding-top: 15px;
+            }
+            .sidebar a {
+                font-size: 16px;
+            }
+        }
+
+        /* Botão para abrir/fechar a sidebar */
+        .open-btn {
+            font-size: 30px;
+            cursor: pointer;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            color: white;
+            z-index: 1;
+        }
+
+        /* Estilo de transição suave */
+        .sidebar.active {
+            width: 250px;
+        }
+
+        /* Conteúdo principal da página */
+        .content {
+            margin-left: 250px;
+            transition: margin-left 0.3s;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                margin-left: 0;
+            }
+        }
+
+        /* Responsividade para o botão de abrir/fechar */
+        @media (max-width: 768px) {
+            .open-btn {
+                display: block;
+            }
+        }
+
+        .navbar-toggler {
+            color: white;
+        }
     </style>
 </head>
 <body>
     {% if current_user.is_authenticated %}
-    <!-- Navbar para telas grandes -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow d-none d-lg-flex" style="background-color: rgba(255, 255, 255, 0.9);">
-        <div class="container-fluid">
-            <a class="navbar-brand" title="Dashboard" href="/dashboard">
-                <i class="fa-solid fa-gauge-high fa-lg"></i>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" title="Pagamentos" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fa-solid fa-wallet fa-lg"></i>
-                        </a>
-                        <ul class="dropdown-menu" style="background-color: #f8f9fa;">
-                            <li><a class="dropdown-item" href="/debts"  style="color: black;">Pagamentos</a></li>
-                            <li><a class="dropdown-item" href="/debts_history" style="color: black;">Pagamentos realizados</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/balance" style="color: black;">Recebimentos</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" title="Gastos" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-money-bill-wave fa-lg"></i>
-                        </a>
-                        <ul class="dropdown-menu" style="background-color: #f8f9fa;">
-                            <li><a class="dropdown-item" href="/daily" style="color: black;">Despesas</a></li>
-                            <li><a class="dropdown-item" href="/daily_history" style="color: black;">Histórico</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" title="Compras" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-shopping-cart fa-lg"></i>
-                        </a>
-                        <ul class="dropdown-menu" style="background-color: #f8f9fa;">
-                            <li><a class="dropdown-item" href="/" style="color: black;">Lista</a></li>
-                            <li><a class="dropdown-item" href="/history" style="color: black;">Estoque</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" title="IA" href="/ia">
-                            <i class="fa-solid fa-message fa-lg"></i>
-                        </a>
-                    </li>
-                </ul>
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" title="Conta" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            {{ username }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" style="background-color: #f8f9fa;">
-                            <li><a class="dropdown-item" href="/account" style="color: black;">Minha Conta</a></li>
-                            <li><a class="dropdown-item" href="/logout" style="color: black;">Sair</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <!-- Botão para abrir a sidebar (visível em todas as telas) -->
+    <span class="open-btn" onclick="toggleSidebar()">
+        <!-- Ícone de hambúrguer com três barras horizontais -->
+        <i class="fa fa-bars"></i>
+    </span>
+    <!-- Sidebar -->
+    <div class="sidebar" id="mySidebar">
+        <a href="/dashboard" title="Dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+        <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown" title="Pagamentos"><i class="fa-solid fa-wallet"></i> Pagamentos</a>
+        <ul class="dropdown-menu" style="background-color: #343a40;">
+            <li><a class="dropdown-item" href="/debts" style="color: white;">Pagamentos</a></li>
+            <li><a class="dropdown-item" href="/debts_history" style="color: white;">Pagamentos Realizados</a></li>
+            <li><hr class="dropdown-divider" style="border-top: 1px solid #495057;"></li>
+            <li><a class="dropdown-item" href="/balance" style="color: white;">Recebimentos</a></li>
+        </ul>
+        <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown" title="Gastos"><i class="fas fa-money-bill-wave"></i> Gastos</a>
+        <ul class="dropdown-menu" style="background-color: #343a40;">
+            <li><a class="dropdown-item" href="/daily" style="color: white;">Despesas</a></li>
+            <li><a class="dropdown-item" href="/daily_history" style="color: white;">Histórico</a></li>
+        </ul>
+        <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown" title="Compras"><i class="fas fa-shopping-cart"></i> Compras</a>
+        <ul class="dropdown-menu" style="background-color: #343a40;">
+            <li><a class="dropdown-item" href="/" style="color: white;">Lista</a></li>
+            <li><a class="dropdown-item" href="/history" style="color: white;">Estoque</a></li>
+        </ul>
+        <a href="/ia" title="IA"><i class="fa-solid fa-message"></i> IA</a>
+        <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown" title="Conta"><i class="fa-solid fa-user-circle"></i> {{ username }}</a>
+        <ul class="dropdown-menu" style="background-color: #343a40;">
+            <li><a class="dropdown-item" href="/account" style="color: white;">Minha Conta</a></li>
+            <li><a class="dropdown-item" href="/logout" style="color: white;">Sair</a></li>
+        </ul>
+    </div>
     
     <!-- Navbar para dispositivos móveis -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-bottom d-lg-none">
@@ -127,10 +180,25 @@
         </div>
     </nav>
     {% endif %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+     <!-- Script para alternar a sidebar -->
+     <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById("mySidebar");
+            const content = document.querySelector(".content");
+            // Alternando a largura da sidebar
+            if (sidebar.style.width === "250px" || sidebar.style.width === "") {
+                sidebar.style.width = "0";
+                content.style.marginLeft = "0";
+            } else {
+                sidebar.style.width = "250px";
+                content.style.marginLeft = "250px";
+            }
+        }
 
     
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
-    <script>
+   
         function addClickEffect() {
             document.querySelectorAll('.navbar-brand').forEach(function(element) {
                 element.addEventListener('mousedown', function() {
