@@ -150,22 +150,7 @@
 </div>
 
     <script>
-        function toggleSidebar() {
-            const sidebar = document.getElementById("mySidebar");
-            const mainContent = document.getElementById("mainContent");
-
-            // Alterna a classe 'closed' para ocultar/exibir a sidebar
-            sidebar.classList.toggle("closed");
-
-            // Ajusta o conteúdo principal para ocupar toda a tela ou deixar espaço para a sidebar
-            if (sidebar.classList.contains("closed")) {
-                sidebar.style.width = "0";
-                mainContent.classList.add("full-width");
-            } else {
-                sidebar.style.width = "250px";
-                mainContent.classList.remove("full-width");
-            }
-        }
+        
         // Função para definir o tema inicial
         function setInitialTheme() {
             const storedTheme = localStorage.getItem('theme');

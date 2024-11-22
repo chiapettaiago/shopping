@@ -186,7 +186,7 @@
      <script>
         function toggleSidebar() {
             const sidebar = document.getElementById("mySidebar");
-            const content = document.querySelector(".content");
+            const content = document.querySelector(".main-content");
             // Alternando a largura da sidebar
             if (sidebar.style.width === "250px" || sidebar.style.width === "") {
                 sidebar.style.width = "0";
@@ -257,6 +257,14 @@
                 $('nav').removeClass('bg-opacity-75'); // Remove a opacidade em dispositivos móveis
             }
         });
+
+        window.onload = function() {
+            // Inicializa a sidebar fechada
+            const sidebar = document.getElementById("mySidebar");
+            const content = document.querySelector(".main-content");
+            sidebar.style.width = "0";
+            content.style.marginLeft = "0";
+        }
 
 
 

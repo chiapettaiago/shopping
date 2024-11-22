@@ -6,180 +6,262 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta http-equiv="refresh" content="300">
-    <link rel="apple-touch-icon" sizes="180x180" href={{ url_for('static', filename='images/apple-touch-icon.png') }}>
-    <link rel="icon" type="image/png" sizes="32x32" href={{ url_for('static', filename='images/favicon-32x32.png') }}>
-    <link rel="icon" type="image/png" sizes="16x16" href={{ url_for('static', filename='images/favicon-16x16.png') }}>
-    <link rel="manifest" href={{ url_for('static', filename='images/site.webmanifest') }}>
-    <link rel="stylesheet" href="{{url_for('static', filename='bootstrap/css/bootstrap.min.css')}}">
+    <!-- Ícones e favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='images/site.webmanifest') }}">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}">
+    <!-- Scripts externos -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="{{url_for('static', filename='bootstrap/js/bootstrap.min.js')}}"></script>
-    <script src="{{url_for('static', filename='js/theme.js')}}"></script>
+    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
     <style>
+        /* Corpo da página */
         body {
-            background: linear-gradient(to bottom right, #c5cae9, #e2e7f1); /* Gradiente mais escuro */
+            background: linear-gradient(to bottom right, #6a11cb, #2575fc); /* Gradiente vibrante */
             background-size: cover;
-            background-repeat: no-repeat; /* Remove a repetição da imagem */
-            background-position: center; /* Centraliza a imagem no fundo */
-            margin: 0; /* Remove a margem padrão do body */
-            background-attachment: fixed; /* Fixa o fundo ao rolar */
+            background-repeat: no-repeat;
+            background-position: center;
+            margin: 0;
+            background-attachment: fixed;
+            font-family: 'Roboto', sans-serif; /* Fonte moderna */
+            color: #333;
         }
+
+        main-content {
+            margin-left: 0; /* Iniciando sem margem */
+            transition: margin-left 0.3s;
+        }
+
+        /* Quando a sidebar estiver visível */
+        .main-content.sidebar-visible {
+            margin-left: 250px;
+        }
+
+        /* Estilo do chat */
         .chat-container {
             overflow-y: auto;
             display: flex;
             flex-direction: column;
         }
+
         .message {
             max-width: 80%;
             margin-bottom: 10px;
             padding: 10px;
             border-radius: 20px;
         }
+
         .user-message {
             align-self: flex-end;
             background-color: #007bff;
             color: white;
         }
+
         .ai-message {
             align-self: flex-start;
             background-color: #f8f9fa;
             color: #343a40;
         }
-        .card-clickable {
-            cursor: pointer;
-        }
+
+        /* Indicador de digitação */
         .typing-indicator::after {
             content: '▋';
             animation: blink 1s step-start infinite;
         }
+
         @keyframes blink {
-            50% { opacity: 0; }
+            50% {
+                opacity: 0;
+            }
+        }
+
+        /* Botões */
+        .btn-primary {
+            background-color: #6a11cb;
+            border-color: #6a11cb;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        .btn-primary:hover {
+            background-color: #2575fc;
+            transform: scale(1.05);
+        }
+
+        .btn-danger {
+            background-color: #ff5e57;
+            border-color: #ff5e57;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        .btn-danger:hover {
+            background-color: #e63946;
+            transform: scale(1.05);
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            body {
+                font-size: 14px;
+            }
         }
     </style>
 </head>
-
 <body>
     {% include 'navbar.html' %}
-    <div class="container mt-5 mb-5 pb-4">
-        <div class="card shadow bg-light bg-opacity-75 shadow-sm rounded">
-            <div class="card-body d-flex flex-column">
-                <h2 class="card-title text-center text-dark mb-4">Assistente de IA (Experimental)</h2>
-
-                <div id="chatContainer" class="chat-container mb-3">
+    <!-- Conteúdo principal -->
+    <div class="main-content" id="mainContent">
+        <div class="container mt-5 mb-5 pb-4">
+            <div class="card shadow bg-light bg-opacity-75 shadow-sm rounded">
+                <div class="card-body d-flex flex-column">
+                    <h2 class="card-title text-center text-dark mb-4">Assistente de IA (Experimental)</h2>
+                    <div id="chatContainer" class="chat-container mb-3">
+                        {% if chat_history %}
+                            {% for message in chat_history %}
+                                <div class="shadow message {% if message.type == 'user' %}user-message{% else %}ai-message{% endif %}">
+                                    {{ message.text }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
                     {% if chat_history %}
-                        {% for message in chat_history %}
-                            <div class=" shadow message {% if message.type == 'user' %}user-message{% else %}ai-message{% endif %}">
-                                {{ message.text }}
-                            </div>
-                        {% endfor %}
+                        <div class="text-center delete-history-btn">
+                            <form method="POST" action="{{ url_for('delete_chat_history') }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" title="Limpar Conversa" class="btn btn-danger">
+                                    <i class="fa-solid fa-eraser"></i>
+                                </button>
+                            </form>
+                        </div>
                     {% endif %}
-                </div>
-
-                {% if chat_history %}
-                <div class="text-center delete-history-btn">
-                    <form method="POST" action="{{ url_for('delete_chat_history') }}">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" title="Limpar Conversa" class="btn btn-danger">
-                            <i class="fa-solid fa-eraser"></i>
-                        </button>
-                    </form>
-                </div>
-                {% endif %}
-                {% if not chat_history %}
-                    <div id="recommendations" class="d-flex flex-column justify-content-center align-items-center h-100">
-                        <div class="row row-cols-1 row-cols-md-3 g-4 w-100">
-                            <div class="col d-flex align-items-stretch">
-                                <div class="card text-center w-100 h-100 card-clickable" onclick="fillInput('Qual o meu saldo no momento?')">
-                                    <div class="card-body d-flex flex-column">
-                                        <h5 class="card-title">Você pode perguntar:</h5>
-                                        <p class="card-text flex-grow-1">Qual o meu saldo no momento?</p>
+                    {% if not chat_history %}
+                        <div id="recommendations" class="d-flex flex-column justify-content-center align-items-center h-100">
+                            <div class="row row-cols-1 row-cols-md-3 g-4 w-100">
+                                <div class="col d-flex align-items-stretch">
+                                    <div class="card text-center w-100 h-100 card-clickable" onclick="fillInput('Qual o meu saldo no momento?')">
+                                        <div class="card-body d-flex flex-column">
+                                            <h5 class="card-title">Você pode perguntar:</h5>
+                                            <p class="card-text flex-grow-1">Qual o meu saldo no momento?</p>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col d-flex align-items-stretch">
-                                <div class="card text-center w-100 h-100 card-clickable" onclick="fillInput('Quanto posso gastar por dia?')">
-                                    <div class="card-body d-flex flex-column">
-                                        <h5 class="card-title">Você pode perguntar</h5>
-                                        <p class="card-text flex-grow-1">Quanto posso gastar por dia?</p>
+                                <div class="col d-flex align-items-stretch">
+                                    <div class="card text-center w-100 h-100 card-clickable" onclick="fillInput('Quanto posso gastar por dia?')">
+                                        <div class="card-body d-flex flex-column">
+                                            <h5 class="card-title">Você pode perguntar:</h5>
+                                            <p class="card-text flex-grow-1">Quanto posso gastar por dia?</p>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col d-flex align-items-stretch">
-                                <div class="card text-center w-100 h-100 card-clickable" onclick="fillInput('Qual o total dos meus gastos?')">
-                                    <div class="card-body d-flex flex-column">
-                                        <h5 class="card-title">Você pode perguntar:</h5>
-                                        <p class="card-text flex-grow-1">Qual o total dos meus gastos?</p>
+                                <div class="col d-flex align-items-stretch">
+                                    <div class="card text-center w-100 h-100 card-clickable" onclick="fillInput('Qual o total dos meus gastos?')">
+                                        <div class="card-body d-flex flex-column">
+                                            <h5 class="card-title">Você pode perguntar:</h5>
+                                            <p class="card-text flex-grow-1">Qual o total dos meus gastos?</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    {% endif %}
+                    <div class="chat-input mt-4">
+                        <form id="chatForm" method="POST" class="d-flex">
+                            <input id="userInput" type="text" name="user_input" class="form-control me-2" placeholder="Digite sua mensagem" required>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa-regular fa-paper-plane"></i>
+                            </button>
+                        </form>
                     </div>
-                {% endif %}
-
-                <div class="chat-input mt-4">
-                    <form id="chatForm" method="POST" class="d-flex">
-                        <input id="userInput" type="text" name="user_input" class="form-control me-2" placeholder="Digite sua mensagem" required>
-                        <button type="submit" class="btn btn-primary"><i class="fa-regular fa-paper-plane"></i></button>
-                    </form>
                 </div>
             </div>
         </div>
     </div>
-    {% include 'buttons.html' %}
+    <!-- Scripts -->
     <script>
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const mainContent = document.getElementById('mainContent');
+            const sidebar = document.querySelector('.sidebar'); // Assumindo que sua sidebar tem esta classe
+            
+            // Definindo estado inicial como fechado
+            if (sidebar) {
+                sidebar.style.transform = 'translateX(-100%)';
+                sidebar.style.display = 'none';
+            }
+            
+            // Função para alternar a sidebar
+            window.toggleSidebar = function() {
+                if (sidebar) {
+                    if (sidebar.style.display === 'none') {
+                        sidebar.style.display = 'block';
+                        setTimeout(() => {
+                            sidebar.style.transform = 'translateX(0)';
+                            mainContent.classList.add('sidebar-visible');
+                        }, 10);
+                    } else {
+                        sidebar.style.transform = 'translateX(-100%)';
+                        mainContent.classList.remove('sidebar-visible');
+                        setTimeout(() => {
+                            sidebar.style.display = 'none';
+                        }, 300);
+                    }
+                }
+            }
+        });
         function fillInput(text) {
             document.getElementById('userInput').value = text;
         }
 
-        document.getElementById('chatForm').addEventListener('submit', function(event) {
+        document.getElementById('chatForm').addEventListener('submit', function (event) {
             event.preventDefault();
-
             const userInput = document.getElementById('userInput').value;
             const chatContainer = document.getElementById('chatContainer');
             const recommendations = document.getElementById('recommendations');
-
-            // Remove as recomendações permanentemente
             if (recommendations) {
                 recommendations.remove();
             }
-
-            // Adiciona a mensagem do usuário
+            
+            // Adicionar mensagem do usuário ao chat
             const userMessageDiv = document.createElement('div');
             userMessageDiv.classList.add('message', 'user-message');
             userMessageDiv.innerText = userInput;
             chatContainer.appendChild(userMessageDiv);
 
-            // Adiciona o indicador de digitação
+            // Adicionar indicador de digitação
             const typingIndicator = document.createElement('div');
             typingIndicator.classList.add('message', 'ai-message', 'typing-indicator');
             typingIndicator.innerText = 'Escrevendo...';
             chatContainer.appendChild(typingIndicator);
 
-            // Rola para o final do chat
+            // Scroll até o fim do chat
             chatContainer.scrollTop = chatContainer.scrollHeight;
 
-            // Limpa o campo de entrada de texto
+            // Limpar o campo de entrada
             document.getElementById('userInput').value = '';
 
+            // Enviar a mensagem para o servidor
             fetch('{{ url_for("assistente_ia") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': '{{ csrf_token() }}'
                 },
-                body: JSON.stringify({user_input: userInput})
+                body: JSON.stringify({ user_input: userInput })
             })
             .then(response => response.json())
             .then(data => {
-                // Remove o indicador de digitação
+                // Remover o indicador de digitação
                 chatContainer.removeChild(typingIndicator);
-
-                // Adiciona a resposta da IA
+                
+                // Adicionar resposta da IA ao chat
                 const aiMessageDiv = document.createElement('div');
                 aiMessageDiv.classList.add('message', 'ai-message');
                 chatContainer.appendChild(aiMessageDiv);
 
-                // Simula a digitação da resposta
+                // Efeito de digitação
                 let i = 0;
                 const typingEffect = setInterval(() => {
                     if (i < data.response.length) {
@@ -194,25 +276,20 @@
             .catch(error => console.error('Erro:', error));
         });
 
+        // Carregar tema salvo no localStorage
         const storedTheme = localStorage.getItem('theme');
         if (storedTheme) {
             document.documentElement.setAttribute('data-bs-theme', storedTheme);
-            const tableBody = document.querySelector('.table-body');
-            if (storedTheme === 'dark') {
-                tableBody.classList.add('table-dark');
-            } else {
-                tableBody.classList.remove('table-dark');
-            }
         }
 
-        window.onload = function() {
+        // Função para exibir recomendações
+        window.onload = function () {
             const recommendations = document.getElementById('recommendations');
             if (recommendations) {
                 recommendations.style.display = 'block';
             }
-        }
+        };
     </script>
-    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}"></script>
-    <script src="{{url_for('static', filename='fonts/js/all.js')}}" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', filename='fonts/js/all.js') }}" crossorigin="anonymous"></script>
 </body>
 </html>
