@@ -99,36 +99,57 @@
 <body>
     {% if current_user.is_authenticated %}
     <!-- Botão para abrir a sidebar (visível em todas as telas) -->
-    <span class="open-btn" onclick="toggleSidebar()">
+    <span class="open-btn d-none d-md-block" onclick="toggleSidebar()">
         <!-- Ícone de hambúrguer com três barras horizontais -->
         <i class="fa fa-bars"></i>
     </span>
     <!-- Sidebar -->
-    <div class="sidebar" id="mySidebar">
-        <a href="/dashboard" title="Dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
-        <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown" title="Pagamentos"><i class="fa-solid fa-wallet"></i> Pagamentos</a>
-        <ul class="dropdown-menu" style="background-color: #343a40;">
-            <li><a class="dropdown-item" href="/debts" style="color: white;">Pagamentos</a></li>
-            <li><a class="dropdown-item" href="/debts_history" style="color: white;">Pagamentos Realizados</a></li>
-            <li><hr class="dropdown-divider" style="border-top: 1px solid #495057;"></li>
-            <li><a class="dropdown-item" href="/balance" style="color: white;">Recebimentos</a></li>
-        </ul>
-        <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown" title="Gastos"><i class="fas fa-money-bill-wave"></i> Gastos</a>
-        <ul class="dropdown-menu" style="background-color: #343a40;">
-            <li><a class="dropdown-item" href="/daily" style="color: white;">Despesas</a></li>
-            <li><a class="dropdown-item" href="/daily_history" style="color: white;">Histórico</a></li>
-        </ul>
-        <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown" title="Compras"><i class="fas fa-shopping-cart"></i> Compras</a>
-        <ul class="dropdown-menu" style="background-color: #343a40;">
-            <li><a class="dropdown-item" href="/" style="color: white;">Lista</a></li>
-            <li><a class="dropdown-item" href="/history" style="color: white;">Estoque</a></li>
-        </ul>
-        <a href="#" onclick="ia()" title="IA"><i class="fa-solid fa-message"></i> IA</a>
-        <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown" title="Conta"><i class="fa-solid fa-user-circle"></i> {{ username }}</a>
-        <ul class="dropdown-menu" style="background-color: #343a40;">
-            <li><a class="dropdown-item" href="/account" style="color: white;">Minha Conta</a></li>
-            <li><a class="dropdown-item" href="/logout" style="color: white;">Sair</a></li>
-        </ul>
+    <div class="sidebar bg-dark text-white d-none d-md-block" id="mySidebar">
+        <div class="sidebar-header text-center py-4">
+            <h4 class="fw-bold">Meu Tesouro</h4>
+        </div>
+    
+        <nav class="nav flex-column">
+            <a href="/dashboard" class="nav-link px-4 py-3 hover-effect">
+                Dashboard
+            </a>
+    
+            <div class="dropdown">
+                <a href="#" class="nav-link px-4 py-3 dropdown-toggle" data-bs-toggle="dropdown">
+                    Finanças
+                </a>
+                <ul class="dropdown-menu bg-dark">
+                    <li><a class="dropdown-item text-white" href="/debts">Pagamentos</a></li>
+                    <li><a class="dropdown-item text-white" href="/balance">Recebimentos</a></li>
+                </ul>
+            </div>
+    
+            <div class="dropdown">
+                <a href="#" class="nav-link px-4 py-3 dropdown-toggle" data-bs-toggle="dropdown">
+                    Despesas
+                </a>
+                <ul class="dropdown-menu bg-dark">
+                    <li><a class="dropdown-item text-white" href="/daily">Gastos</a></li>
+                    <li><a class="dropdown-item text-white" href="/daily_history">Histórico</a></li>
+                </ul>
+            </div>
+    
+            <div class="dropdown">
+                <a href="#" class="nav-link px-4 py-3 dropdown-toggle" data-bs-toggle="dropdown">
+                    Compras
+                </a>
+                <ul class="dropdown-menu bg-dark">
+                    <li><a class="dropdown-item text-white" href="/">Lista</a></li>
+                    <li><a class="dropdown-item text-white" href="/history">Histórico</a></li>
+                </ul>
+            </div>
+        </nav>
+    
+        <div class="sidebar-footer mt-auto p-4">
+            <a href="/account" class="btn btn-outline-light w-100">
+                Minha Conta
+            </a>
+        </div>
     </div>
     
     <!-- Navbar para dispositivos móveis -->
