@@ -3,56 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histórico de Pagamentos</title>
     <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
     <link rel="manifest" href="{{ url_for('static', filename='images/site.webmanifest') }}">
     <meta http-equiv="refresh" content="300">
-    <!-- Inclua os links para o Bootstrap CSS e JavaScript -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(to bottom right, #6a11cb, #2575fc);
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            margin: 0;
+            background-attachment: fixed;
+            font-family: 'Roboto', sans-serif;
+            color: #333;
+        }
+        .card {
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 30px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background-color: #6a11cb;
+            border: none;
+            transition: background-color 0.2s ease;
+        }
+        .btn-primary:hover {
+            background-color: #2575fc;
+        }
+        @media (max-width: 768px) {
+            .btn {
+                width: 100%;
+                margin-top: 15px;
+            }
+        }
+    </style>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script src="{{url_for('static', filename='js/theme.js')}}"></script>
-    <style>
-        body {
-            background: linear-gradient(to bottom right, #c5cae9, #e2e7f1); /* Gradiente mais escuro */
-            background-size: cover;
-            background-repeat: no-repeat; /* Remove a repetição da imagem */
-            background-position: center; /* Centraliza a imagem no fundo */
-            margin: 0; /* Remove a margem padrão do body */
-            background-attachment: fixed; /* Fixa o fundo ao rolar */
-        }
-        .divider {
-            border-bottom: 1px solid #000;
-            margin: 20px 0;
-        }
-    </style>
-    <title>Histórico de Pagamentos</title>
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 </head>
 <body>
     {% include 'navbar.html' %}
-    
+    <div class="main-content" id="mainContent">
     <div class="container mt-5 mb-5 pb-4">
         <div class="card shadow rounded bg-light bg-opacity-75 p-4">
             <h2 class="text-center text-dark mb-3">Pagamentos realizados</h2>
 
-            <!-- Exibição do Valor Total das Dívidas Quitadas e Saldo Atualizado em Cards -->
-            <div class="row text-center">
-                <div class="col-md-12 mb-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title text-success">Valor Total dos Pagamentos Realizados</h5>
-                            <p class="card-text">R$ {{ '{:.2f}'.format(total_value | default(0)) }}</p>
-                        </div>
+            <div class="text-center mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">Valor Total dos Pagamentos Realizados</h5>
+                        <p class="card-text">R$ {{ '{:.2f}'.format(total_value | default(0)) }}</p>
                     </div>
                 </div>
+            </div>
 
-                <div class="col-12">
-                    <hr class="border border-dark">
-                </div>
+            <hr class="border border-dark">
 
-            <!-- Tabela de Dívidas Quitadas -->
             <div class="table-responsive">
                 <table class="table table-bordered text-center">
                     <thead class="table-light">
@@ -67,7 +83,7 @@
                             <tr>
                                 <td>{{ item.name }}</td>
                                 <td>{{ item.maturity.strftime("%d/%m/%Y") }}</td>
-                                <td> R$ {{ '{:.2f}'.format(item.value) }}</td>
+                                <td>R$ {{ '{:.2f}'.format(item.value) }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -75,31 +91,18 @@
             </div>
         </div>
     </div>
+</div>
 
     {% include 'buttons.html' %}
             
     <script>
-        // Define o tema claro por padrão em dispositivos móveis
-        const isMobile = window.innerWidth <= 767;
-        if (isMobile) {
-            document.documentElement.setAttribute('data-bs-theme', 'light');
+        const storedTheme = localStorage.getItem('theme');
+        if (storedTheme) {
+            document.documentElement.setAttribute('data-bs-theme', storedTheme);
             const tableBody = document.querySelector('.table-body');
-            tableBody.classList.add('table-dark');
-
+            tableBody.classList.toggle('table-dark', storedTheme === 'dark');
         } else {
-            // Verifica se há um tema armazenado no armazenamento local para desktops
-            const storedTheme = localStorage.getItem('theme');
-            if (storedTheme) {
-                document.documentElement.setAttribute('data-bs-theme', storedTheme);
-                const tableBody = document.querySelector('.table-body');
-                if (storedTheme === 'dark') {
-                    tableBody.classList.add('table-dark');
-                } else {
-                    tableBody.classList.remove('table-dark');
-                }
-            } else {
-                document.documentElement.setAttribute('data-bs-theme', 'light');
-            }
+            document.documentElement.setAttribute('data-bs-theme', 'light');
         }
 
         document.getElementById('btnSwitch').addEventListener('click', () => {

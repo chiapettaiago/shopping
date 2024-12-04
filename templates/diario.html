@@ -10,160 +10,53 @@
     <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
     <link rel="manifest" href="{{ url_for('static', filename='images/site.webmanifest') }}">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(to bottom right, #6a11cb, #2575fc);
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            margin: 0;
+            background-attachment: fixed;
+            font-family: 'Roboto', sans-serif;
+            color: #333;
+        }
+        .card {
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 30px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background-color: #6a11cb;
+            border: none;
+            transition: background-color 0.2s ease;
+        }
+        .btn-primary:hover {
+            background-color: #2575fc;
+        }
+        @media (max-width: 768px) {
+            .btn {
+                width: 100%;
+                margin-top: 15px;
+            }
+        }
+    </style>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
-
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-
-    <style>
-        :root {
-            --primary-color: #007bff;
-            --primary-hover: #0056b3;
-            --success-color: #28a745;
-            --card-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            --border-radius: 8px;
-            --transition-speed: 0.3s;
-        }
-
-        body {
-            background: linear-gradient(to bottom right, #c5cae9, #e2e7f1); /* Gradiente mais escuro */
-            color: #333;
-            font-family: 'Roboto', sans-serif;
-            min-height: 100vh;
-        }
-
-        .card {
-            box-shadow: var(--card-shadow);
-            border-radius: var(--border-radius);
-            border: none;
-            transition: transform var(--transition-speed);
-        }
-
-        .stats-card {
-            background: white;
-            padding: 1.5rem;
-            height: 100%;
-        }
-
-        .stats-card .card-title {
-            color: var(--primary-color);
-            font-size: 1.2rem;
-            margin-bottom: 1rem;
-        }
-
-        .stats-card p {
-            font-size: 1.5rem;
-            font-weight: 500;
-            margin: 0;
-        }
-
-        .btn {
-            border-radius: var(--border-radius);
-            padding: 0.5rem 1rem;
-            font-weight: 500;
-            transition: all var(--transition-speed);
-        }
-
-        .btn-primary {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-
-        .btn-primary:hover {
-            background-color: var(--primary-hover);
-            border-color: var(--primary-hover);
-            transform: translateY(-2px);
-        }
-
-        .btn-success {
-            background-color: var(--success-color);
-        }
-
-        .btn-height {
-            height: 38px;
-        }
-
-        .table {
-            background-color: white;
-            border-radius: var(--border-radius);
-            overflow: hidden;
-            margin-bottom: 0;
-        }
-
-        .table thead th {
-            background-color: #f8f9fa;
-            border-bottom: 2px solid #dee2e6;
-            color: var(--primary-color);
-            font-weight: 500;
-        }
-
-        .table td, .table th {
-            vertical-align: middle;
-            padding: 1rem;
-        }
-
-        .modal-content {
-            border-radius: var(--border-radius);
-            border: none;
-        }
-
-        .form-control {
-            border-radius: var(--border-radius);
-            padding: 0.75rem;
-            border: 1px solid #ced4da;
-            transition: border-color var(--transition-speed);
-        }
-
-        .form-control:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-        }
-
-        .action-buttons {
-            white-space: nowrap;
-        }
-
-        .action-buttons form {
-            display: inline-block;
-            margin: 0 2px;
-        }
-
-        .btn-action {
-            padding: 0.375rem 0.75rem;
-            font-size: 0.875rem;
-        }
-
-        @media (max-width: 768px) {
-            .stats-card {
-                margin-bottom: 1rem;
-            }
-
-            .table-responsive {
-                border-radius: var(--border-radius);
-            }
-
-            .action-buttons form {
-                margin: 0 1px;
-            }
-
-            .btn-action {
-                padding: 0.25rem 0.5rem;
-            }
-        }
-    </style>
 </head>
 <body>
     {% include 'navbar.html' %}
-
+    <div class="main-content" id="mainContent">
     <div class="container mt-4 mb-5 pb-4">
         <div class="card bg-light mb-5 rounded shadow bg-opacity-75 p-4">
             <h2 class="text-center text-dark mb-4">Diário de Despesas</h2>
-
             <div class="row">
                 <div class="col-md-4 mb-3">
                     <div class="stats-card shadow">
@@ -184,13 +77,11 @@
                     </div>
                 </div>
             </div>
-
             <div class="d-flex justify-content-center mt-4 mb-4">
                 <button type="button" class="btn btn-primary btn-height" data-toggle="modal" data-target="#addGastoModal">
                     <i class="fa-solid fa-plus mr-2"></i>Adicionar Gasto
                 </button>
             </div>
-
             <div class="table-responsive">
                 <table class="table table-striped-columns">
                     <thead class="text-center">
@@ -213,8 +104,7 @@
                                         <i class="fa-solid fa-xmark"></i>
                                     </button>
                                 </form>
-                                <button type="button" class="btn btn-secondary btn-sm btn-action" data-toggle="modal"
-                                        data-target="#editGastoModal{{ gasto.id }}" title="Editar">
+                                <button type="button" class="btn btn-secondary btn-sm btn-action" data-toggle="modal" data-target="#editGastoModal{{ gasto.id }}" title="Editar">
                                     <i class="fa-solid fa-pen"></i>
                                 </button>
                                 <form action="{{ url_for('computar_gasto', id=gasto.id) }}" method="post" style="display: inline-block;">
@@ -224,7 +114,6 @@
                                 </form>
                             </td>
                         </tr>
-
                         <!-- Modal de edição -->
                         <div class="modal fade" id="editGastoModal{{ gasto.id }}" tabindex="-1" aria-hidden="true">
                             <div class="modal-dialog">
@@ -239,18 +128,15 @@
                                         <form action="{{ url_for('editar_gasto', id=gasto.id) }}" method="post">
                                             <div class="form-group">
                                                 <label for="descricao{{ gasto.id }}">Descrição</label>
-                                                <input type="text" class="form-control" id="descricao{{ gasto.id }}"
-                                                       name="descricao" value="{{ gasto.name }}" required>
+                                                <input type="text" class="form-control" id="descricao{{ gasto.id }}" name="descricao" value="{{ gasto.name }}" required>
                                             </div>
                                             <div class="form-group">
                                                 <label for="valor{{ gasto.id }}">Valor</label>
-                                                <input type="number" step="0.01" class="form-control" id="valor{{ gasto.id }}"
-                                                       name="valor" value="{{ gasto.value }}" required>
+                                                <input type="number" step="0.01" class="form-control" id="valor{{ gasto.id }}" name="valor" value="{{ gasto.value }}" required>
                                             </div>
                                             <div class="form-group">
                                                 <label for="data_gasto{{ gasto.id }}">Data</label>
-                                                <input type="date" class="form-control" id="data_gasto{{ gasto.id }}"
-                                                       name="data_gasto" value="{{ gasto.date.strftime('%Y-%m-%d') }}" required>
+                                                <input type="date" class="form-control" id="data_gasto{{ gasto.id }}" name="data_gasto" value="{{ gasto.date.strftime('%Y-%m-%d') }}" required>
                                             </div>
                                             <button type="submit" class="btn btn-primary w-100">Salvar Alterações</button>
                                         </form>
@@ -264,7 +150,7 @@
             </div>
         </div>
     </div>
-
+</div>
     <!-- Modal de adicionar gasto -->
     <div class="modal fade" id="addGastoModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
@@ -295,8 +181,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Scripts -->
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
     <script src="{{ url_for('static', filename='fonts/js/all.js') }}" crossorigin="anonymous"></script>
 </body>
