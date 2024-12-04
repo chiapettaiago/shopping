@@ -5,41 +5,64 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="refresh" content="300">
-    <link rel="apple-touch-icon" sizes="180x180" href={{ url_for('static', filename='images/apple-touch-icon.png') }}>
-    <link rel="icon" type="image/png" sizes="32x32" href={{ url_for('static', filename='images/favicon-32x32.png') }}>
-    <link rel="icon" type="image/png" sizes="16x16" href={{ url_for('static', filename='images/favicon-16x16.png') }}>
-    <link rel="manifest" href={{ url_for('static', filename='images/site.webmanifest') }}>
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='images/site.webmanifest') }}">
     <link rel="stylesheet" href="{{url_for('static', filename='bootstrap/css/bootstrap.min.css')}}">
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="{{url_for('static', filename='bootstrap/js/bootstrap.min.js')}}"></script>
-    <script src="{{url_for('static', filename='js/theme.js')}}"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body {
-            background: linear-gradient(to bottom right, #c5cae9, #e2e7f1); /* Gradiente mais escuro */
+            background: linear-gradient(to bottom right, #6a11cb, #2575fc);
             background-size: cover;
-            background-repeat: no-repeat; /* Remove a repetição da imagem */
-            background-position: center; /* Centraliza a imagem no fundo */
-            margin: 0; /* Remove a margem padrão do body */
-            background-attachment: fixed; /* Fixa o fundo ao rolar */
+            background-repeat: no-repeat;
+            background-position: center;
+            margin: 0;
+            background-attachment: fixed;
+            font-family: 'Roboto', sans-serif;
+            color: #333;
         }
-        .btn-height {
-            height: 38px; /* Ajuste conforme necessário */
+        .card {
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 30px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background-color: #6a11cb;
+            border: none;
+            transition: background-color 0.2s ease;
+        }
+        .btn-primary:hover {
+            background-color: #2575fc;
+        }
+        @media (max-width: 768px) {
+            .btn {
+                width: 100%;
+                margin-top: 15px;
+            }
         }
         .divider {
             border-bottom: 1px solid black;
             margin: 1.5rem 0;
         }
     </style>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="{{url_for('static', filename='bootstrap/js/bootstrap.min.js')}}"></script>
+    <script src="{{url_for('static', filename='js/theme.js')}}"></script>
 </head>
 <body>
     {% include 'navbar.html' %}
+    <div class="main-content" id="mainContent">
     <div class="container mt-5 mb-5 pb-4">
         <div class="card bg-light bg-opacity-75 p-4">
-            <h2 class="text-center text-dark">Carrinho de Compras</h2>
+            <h2 class="text-center text-dark mb-3">Carrinho de Compras</h2>
             <p class="text-center text-dark">Aviso: Os itens baixados nessa tela não alteram o saldo.</p>
 
-            <!-- Exibição do Valor Total da Compra em um Card -->
             <div class="card mb-3 mt-2">
                 <div class="card-body">
                     <h5 class="card-title text-center text-success">Valor Total da Compra</h5>
@@ -50,8 +73,7 @@
             <div class="col-12">
                 <hr class="border border-dark">
             </div>
-            
-            <!-- Botão para abrir o modal de adição -->
+
             <div class="d-flex justify-content-center mb-2 text-center mt-2">
                 <button title="Adicionar Item" type="button" class="btn btn-primary mr-2" data-toggle="modal" data-target="#addItemModal">
                     <i class="fa-solid fa-plus"></i>
@@ -69,161 +91,150 @@
             </div>
 
             {% set categories = ['Alimentos', 'Bebidas', 'Limpeza'] %}
-
             {% for category in categories %}
-                <h2 class="text-center text-dark">{{ category }}</h2>
-                <div class="table-responsive">
-                    <table class="table table-bordered text-center">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Desc.</th>
-                                <th>Quantidade</th>
-                                <th>Preço</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody class="table-body">
-                            {% for item in shopping_list %}
-                                {% if item.category == category %}
-                                    <tr>
-                                        <td>{{ item.name }}</td>
-                                        <td>{{ item.quantity }}</td>
-                                        <td> R$ {{ '{:.2f}'.format(item.price) }}</td>
-                                        <td>
-                                            <!-- Botões de Ação -->
-                                            <button type="button" class="btn btn-danger btn-sm mr-1 mb-2" data-toggle="modal" title="Excluir" data-target="#deleteItemModal{{ item.id }}">
-                                                <i class="fa-solid fa-xmark"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-secondary btn-sm mr-1 mb-2" data-toggle="modal" title="Editar" data-target="#editItemModal{{ item.id }}">
-                                                <i class="fa-solid fa-pen"></i>
-                                            </button>
-                                            <a href="{{ url_for('buy', id=item.id) }}" title="Comprar" class="btn btn-success btn-sm mr-1 mb-2"><i class="fa-regular fa-circle-check"></i></a>
-                                        </td>
-                                    </tr>
-                                {% endif %}
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Modal de Exclusão -->
-                {% for item in shopping_list %}
-                    {% if item.category == category %}
-                        <div class="modal fade" id="deleteItemModal{{ item.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteItemModalLabel{{ item.id }}" aria-hidden="true">
-                            <div class="modal-dialog" role="document">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="deleteItemModalLabel{{ item.id }}">Confirmar Exclusão</h5>
-                                        <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
-                                            <span aria-hidden="true">&times;</span>
-                                        </button>
-                                    </div>
-                                    <div class="modal-body">
-                                        Tem certeza de que deseja excluir o item "{{ item.name }}"?
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fa-solid fa-x"></i></button>
-                                        <a href="{{ url_for('delete', id=item.id) }}" class="btn btn-success"><i class="fa-solid fa-check"></i></a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    {% endif %}
-                {% endfor %}
-
-                <!-- Modal de Edição -->
-                {% for item in shopping_list %}
-                    {% if item.category == category %}
-                        <div class="modal fade" id="editItemModal{{ item.id }}" tabindex="-1" role="dialog" aria-labelledby="editItemModalLabel{{ item.id }}" aria-hidden="true">
-                            <div class="modal-dialog" role="document">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="editItemModalLabel{{ item.id }}">Editar Item</h5>
-                                        <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
-                                            <span aria-hidden="true">&times;</span>
-                                        </button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <!-- Formulário de Edição de Item -->
-                                        <form action="{{ url_for('edit', id=item.id) }}" method="POST">
-                                            <div class="form-group">
-                                                <label for="editName{{ item.id }}">Nome:</label>
-                                                <input type="text" class="form-control" id="editName{{ item.id }}" name="name" value="{{ item.name }}" required>
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="editQuantity{{ item.quantity }}">Quantidade:</label>
-                                                <input type="number" class="form-control" id="editQuantity{{ item.id }}" name="quantity" value="{{ item.quantity }}" required>
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="editCategory{{ item.id }}">Categoria:</label>
-                                                <select class="form-control" id="editCategory{{ item.id }}" name="category" required>
-                                                    <option value="Alimentos" {% if item.category == 'Alimentos' %} selected {% endif %}>Alimentos</option>
-                                                    <option value="Bebidas" {% if item.category == 'Bebidas' %} selected {% endif %}>Bebidas</option>
-                                                    <option value="Limpeza" {% if item.category == 'Limpeza' %} selected {% endif %}>Limpeza</option>
-                                                    <!-- Adicione outras categorias conforme necessário -->
-                                                </select>
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="editPrice{{ item.id }}">Preço:</label>
-                                                <input type="number" step="0.01" class="form-control" id="editPrice{{ item.id }}" name="price" value="{{ item.price }}" required>
-                                            </div>
-                                            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i></button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    {% endif %}
-                {% endfor %}
+            <h2 class="text-center text-dark">{{ category }}</h2>
+            <div class="table-responsive">
+                <table class="table table-bordered text-center">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Desc.</th>
+                            <th>Quantidade</th>
+                            <th>Preço</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-body">
+                        {% for item in shopping_list %}
+                        {% if item.category == category %}
+                        <tr>
+                            <td>{{ item.name }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>R$ {{ '{:.2f}'.format(item.price) }}</td>
+                            <td>
+                                <button type="button" class="btn btn-danger btn-sm mr-1 mb-2" data-toggle="modal" title="Excluir" data-target="#deleteItemModal{{ item.id }}">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-sm mr-1 mb-2" data-toggle="modal" title="Editar" data-target="#editItemModal{{ item.id }}">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <a href="{{ url_for('buy', id=item.id) }}" title="Comprar" class="btn btn-success btn-sm mr-1 mb-2">
+                                    <i class="fa-regular fa-circle-check"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
             {% endfor %}
 
-            <!-- Modal de Adição de Item -->
-            <div class="modal fade" id="addItemModal" tabindex="-1" role="dialog" aria-labelledby="addItemModalLabel" aria-hidden="true">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="addItemModalLabel">Adicionar Item</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            <!-- Formulário de Adição de Item -->
-                            <form action="{{ url_for('add') }}" method="POST">
-                                <div class="form-group">
-                                    <label for="name">Nome:</label>
-                                    <input type="text" class="form-control" id="name" name="name" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="quantity">Quantidade:</label>
-                                    <input type="number" class="form-control" id="quantity" name="quantity" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="price">Preço:</label>
-                                    <input type="number" step="0.01" class="form-control" id="price" name="price" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="category">Categoria:</label>
-                                    <select class="form-control" id="category" name="category" required>
-                                        <option value="Alimentos">Alimentos</option>
-                                        <option value="Bebidas">Bebidas</option>
-                                        <option value="Limpeza">Limpeza</option>
-                                        <!-- Adicione outras categorias conforme necessário -->
-                                    </select>
-                                </div>
-                                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-cart-plus"></i></button>
-                            </form>
-                        </div>
-                    </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Modals de Exclusão e Edição -->
+    {% for item in shopping_list %}
+    <div class="modal fade" id="deleteItemModal{{ item.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteItemModalLabel{{ item.id }}" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteItemModalLabel{{ item.id }}">Confirmar Exclusão</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Tem certeza de que deseja excluir o item "{{ item.name }}"?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fa-solid fa-x"></i></button>
+                    <a href="{{ url_for('delete', id=item.id) }}" class="btn btn-success"><i class="fa-solid fa-check"></i></a>
                 </div>
             </div>
-            {% include 'buttons.html' %}
+        </div>
+    </div>
+
+    <div class="modal fade" id="editItemModal{{ item.id }}" tabindex="-1" role="dialog" aria-labelledby="editItemModalLabel{{ item.id }}" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editItemModalLabel{{ item.id }}">Editar Item</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form action="{{ url_for('edit', id=item.id) }}" method="POST">
+                        <div class="form-group">
+                            <label for="editName{{ item.id }}">Nome:</label>
+                            <input type="text" class="form-control" id="editName{{ item.id }}" name="name" value="{{ item.name }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editQuantity{{ item.id }}">Quantidade:</label>
+                            <input type="number" class="form-control" id="editQuantity{{ item.id }}" name="quantity" value="{{ item.quantity }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editCategory{{ item.id }}">Categoria:</label>
+                            <select class="form-control" id="editCategory{{ item.id }}" name="category" required>
+                                <option value="Alimentos" {% if item.category == 'Alimentos' %} selected {% endif %}>Alimentos</option>
+                                <option value="Bebidas" {% if item.category == 'Bebidas' %} selected {% endif %}>Bebidas</option>
+                                <option value="Limpeza" {% if item.category == 'Limpeza' %} selected {% endif %}>Limpeza</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editPrice{{ item.id }}">Preço:</label>
+                            <input type="number" step="0.01" class="form-control" id="editPrice{{ item.id }}" name="price" value="{{ item.price }}" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Modal de Adição de Item -->
+    <div class="modal fade" id="addItemModal" tabindex="-1" role="dialog" aria-labelledby="addItemModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addItemModalLabel">Adicionar Item</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form action="{{ url_for('add') }}" method="POST">
+                        <div class="form-group">
+                            <label for="name">Nome:</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="quantity">Quantidade:</label>
+                            <input type="number" class="form-control" id="quantity" name="quantity" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="price">Preço:</label>
+                            <input type="number" step="0.01" class="form-control" id="price" name="price" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="category">Categoria:</label>
+                            <select class="form-control" id="category" name="category" required>
+                                <option value="Alimentos">Alimentos</option>
+                                <option value="Bebidas">Bebidas</option>
+                                <option value="Limpeza">Limpeza</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-cart-plus"></i></button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
         function downloadPDF() {
-            // Redireciona o usuário para a rota que gera o PDF
             window.location.href = "/export_pdf_list";
         }
 
@@ -237,16 +248,13 @@
             tableBody.classList.toggle('table-dark');
         });
 
-        // Verifica se há um tema armazenado no armazenamento local
         const storedTheme = localStorage.getItem('theme');
         if (storedTheme) {
             document.documentElement.setAttribute('data-bs-theme', storedTheme);
             const tableBody = document.querySelector('.table-body');
-            if (storedTheme === 'dark') {
-                tableBody.classList.add('table-dark');
-            } else {
-                tableBody.classList.remove('table-dark');
-            }
+            tableBody.classList.toggle('table-dark', storedTheme === 'dark');
+        } else {
+            document.documentElement.setAttribute('data-bs-theme', 'light');
         }
     </script>
     <script src="{{url_for('static', filename='fonts/js/all.js')}}" crossorigin="anonymous"></script>

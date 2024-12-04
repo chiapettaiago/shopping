@@ -9,24 +9,51 @@
     <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
     <link rel="manifest" href="{{ url_for('static', filename='images/site.webmanifest') }}">
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="{{url_for('static', filename='bootstrap/js/bootstrap.min.js')}}"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}">
-    <script src="{{url_for('static', filename='js/theme.js')}}"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body {
-            background: linear-gradient(to bottom right, #c5cae9, #e2e7f1); /* Gradiente mais escuro */
+            background: linear-gradient(to bottom right, #6a11cb, #2575fc);
             background-size: cover;
-            background-repeat: no-repeat; /* Remove a repetição da imagem */
-            background-position: center; /* Centraliza a imagem no fundo */
-            margin: 0; /* Remove a margem padrão do body */
-            background-attachment: fixed; /* Fixa o fundo ao rolar */
+            background-repeat: no-repeat;
+            background-position: center;
+            margin: 0;
+            background-attachment: fixed;
+            font-family: 'Roboto', sans-serif;
+            color: #333;
+        }
+        .card {
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 30px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background-color: #6a11cb;
+            border: none;
+            transition: background-color 0.2s ease;
+        }
+        .btn-primary:hover {
+            background-color: #2575fc;
+        }
+        @media (max-width: 768px) {
+            .btn {
+                width: 100%;
+                margin-top: 15px;
+            }
         }
     </style>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 </head>
 <body>
     {% include 'navbar.html' %}
+    <div class="main-content" id="mainContent">
     <div class="container mt-5">
         <div class="card rounded shadow bg-light bg-opacity-75 p-4">
             <h2 class="text-center text-dark">Link para Compartilhar sua Lista de Compras</h2>
@@ -41,22 +68,15 @@
             </div>
         </div>
     </div>
-    {% include 'buttons.html'%}
+</div>
     <script>
         function copyLink() {
-            // Cria um elemento de input temporário
             const tempInput = document.createElement('input');
-            // Define o valor do input como o link que você deseja copiar
             tempInput.value = "{{ link }}";
-            // Adiciona o input ao corpo do documento
             document.body.appendChild(tempInput);
-            // Seleciona o texto do input
             tempInput.select();
-            // Copia o texto selecionado
             document.execCommand('copy');
-            // Remove o input temporário
             document.body.removeChild(tempInput);
-            // Alerta de confirmação
             alert('Link copiado para a área de transferência!');
         }
 
@@ -70,18 +90,15 @@
             tableBody.classList.toggle('table-dark');
         });
 
-        // Verifica se há um tema armazenado no armazenamento local
         const storedTheme = localStorage.getItem('theme');
         if (storedTheme) {
             document.documentElement.setAttribute('data-bs-theme', storedTheme);
             const tableBody = document.querySelector('.table-body');
-            if (storedTheme === 'dark') {
-                tableBody.classList.add('table-dark');
-            } else {
-                tableBody.classList.remove('table-dark');
-            }
+            tableBody.classList.toggle('table-dark', storedTheme === 'dark');
+        } else {
+            document.documentElement.setAttribute('data-bs-theme', 'light');
         }
     </script>
-    <script src="{{url_for('static', filename='fonts/js/all.js')}}" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', filename='fonts/js/all.js') }}" crossorigin="anonymous"></script>
 </body>
 </html>
