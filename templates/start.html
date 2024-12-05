@@ -71,11 +71,14 @@
         .main-content.full-width {
             margin-left: 0;
         }
+
+        .sidebar {
+            width: 0px;
+        }
     </style>
 </head>
 <body>
     {% include 'navbar.html' %}
-
     <div class="main-content" id="mainContent">
         <div class="container mt-5 pb-5">
             <div class="card bg-light shadow rounded-lg p-4">
@@ -119,7 +122,13 @@
         </div>
     </div>
     <script>
-        
+        window.onload = function() {
+            // Inicializa a sidebar fechada
+            const sidebar = document.getElementById("mySidebar");
+            const content = document.querySelector(".main-content");
+            sidebar.style.width = "0";
+            content.style.marginLeft = "0";
+        }
     </script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="{{ url_for('static', filename='fonts/js/all.js') }}" crossorigin="anonymous"></script>
