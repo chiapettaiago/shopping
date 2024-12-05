@@ -195,8 +195,6 @@
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                     <li><a class="dropdown-item" href="/account">Minha Conta</a></li>
-                    <li><a class="dropdown-item" onclick="ia()" href="#">Assistente</a></li>
-                    <li><a class="dropdown-item" href="/logout">Sair</a></li>
                     <li><a class="dropdown-item" href="/logout">Sair</a></li>
                 </ul>
             </div>
@@ -252,24 +250,6 @@
                 removeOutline();
             }
         }
-
-        window.addEventListener('load', applyMobileClickEffect);
-        window.addEventListener('resize', applyMobileClickEffect);
-
-        $(window).on('scroll resize', function() {
-            // Verifica se a largura da tela é maior que 767px
-            if (window.matchMedia("(min-width: 768px)").matches) {
-                if ($(this).scrollTop() > 0) {
-                    $('nav').addClass('bg-light bg-opacity-75');
-                } else {
-                    $('nav').removeClass('bg-light bg-opacity-75');
-                }
-            } else {
-                // Em dispositivos móveis, a navbar não deve ter opacidade
-                $('nav').addClass('bg-light');
-                $('nav').removeClass('bg-opacity-75'); // Remove a opacidade
-            }
-        });
 
         // Inicializa a navbar de acordo com o tamanho da tela quando a página é carregada
         $(document).ready(function() {
