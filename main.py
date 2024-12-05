@@ -619,6 +619,37 @@ def assistente_ia():
                            username=current_user.full_name)
     
 
+@app.route('/start')
+def start():
+    current_month = datetime.now().date().replace(day=1)
+    # Obter o número total de dias no mês atual
+    ano_atual = time.localtime().tm_year
+    mes_atual = time.localtime().tm_mon
+    dias_no_mes = calendar.monthrange(ano_atual, mes_atual)[1]
+
+    # Calcular quantos dias faltam até o final do mês
+    dias_faltando = dias_no_mes - time.localtime().tm_mday + 1
+    gastos = Diario.query.filter_by(status=0, username=current_user.username).filter(Diario.date >= current_month).order_by(Diario.value.desc()).all()
+    debts_list = debts.query.filter_by(status=0, username=current_user.username).filter(debts.maturity >= current_month).order_by(debts.value.desc()).all()
+    balance_list = Balance.query.filter_by(status=0, username=current_user.username).filter(Balance.date >= current_month).all()
+    debts_1 = debts.query.filter_by(status=1, username=current_user.username).filter(debts.date >= current_month).all()
+    gastos_processado = Diario.query.filter_by(status=1, username=current_user.username).filter(Diario.date >= current_month).order_by(Diario.value.desc()).all()
+    gastos_total = sum(item.value for item in gastos_processado)
+    gastos_nao_processados = sum(item.value for item in gastos)
+    gastos_formatado = round(gastos_total, 2)
+    balance_total = sum(item.value for item in balance_list)
+    debts_total = sum(item.value for item in debts_1)
+    balance_total_formatado = round(balance_total, 2)
+    debts_1_formatado = round(debts_total, 2)
+    total_price = sum(item.value for item in debts_list)
+    total_price_formatado = round(total_price, 2)
+    saldo_atualizado_formatado = calcular_saldo(balance_total_formatado, debts_1_formatado, gastos_formatado)
+    por_dia = saldo_atualizado_formatado / dias_faltando if dias_faltando > 0 else 0
+    por_dia_atualizado = round(por_dia, 2)
+    return render_template('start.html', saldo_atual=saldo_atualizado_formatado, por_dia_atualizado=por_dia_atualizado, username=current_user.username)
+    
+    
+
 @app.route('/add_balance', methods=['POST'])
 @cache_route(timeout=300)
 @login_required
