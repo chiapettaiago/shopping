@@ -19,117 +19,105 @@
             background-attachment: fixed;
             font-family: 'Roboto', sans-serif;
             color: #333;
+            margin: 0;
         }
         .content {
-            transition: margin-left 0.3s ease;
-        }
-        .content.shifted {
-            margin-left: 250px;
+            padding: 20px;
+
         }
         .card {
             border-radius: 12px;
             overflow: hidden;
             background-color: rgba(255, 255, 255, 0.9);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 20px;
         }
         .card:hover {
             transform: translateY(-10px);
             box-shadow: 0 20px 30px rgba(0, 0, 0, 0.1);
-        }
-        .btn-primary {
-            background-color: #6a11cb;
-            border: none;
-            transition: background-color 0.2s ease;
-        }
-        .btn-primary:hover {
-            background-color: #2575fc;
-        }
-        .btn-large {
-            padding: 1rem 2rem;
-            font-size: 1.2rem;
         }
         .cards-section {
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
             justify-content: center;
-            margin-bottom: 20px;
         }
         .inner-card {
-            flex: 1;
+            flex: 1 1 100%; /* Ocupa toda a largura em dispositivos móveis */
             max-width: 300px;
             padding: 20px;
             text-align: center;
         }
-         /* Estilizando o conteúdo principal */
-         .main-content {
-            margin-left: 250px; /* Quando a sidebar está visível */
-            transition: margin-left 0.3s;
-        }
-
-        /* Quando a sidebar está oculta, o conteúdo ocupa toda a tela */
-        .main-content.full-width {
-            margin-left: 0;
-        }
-
-        .sidebar {
-            width: 0px;
+        @media (min-width: 768px) {
+            .inner-card {
+                flex: 1 1 45%; /* Alinha lado a lado em telas maiores */
+            }
+            .content {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+            }
+            .main-card {
+                max-width: 800px;
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
     {% include 'navbar.html' %}
-    <div class="main-content" id="mainContent">
-        <div class="container mt-5 pb-5">
-            <div class="card bg-light shadow rounded-lg p-4">
-                <div class="card-body text-center">
-                    <h1 class="card-title mb-4">Bem-vindo, {{ username }}</h1>
+    <div class="content pb-5">
+        <div class="card bg-light shadow rounded-lg p-4  main-card">
+            <div class="card-body text-center">
+                <h1 class="card-title mb-4">Bem-vindo, {{ username }}</h1>
 
-                    <div class="cards-section">
-                        <div class="card inner-card">
-                            <h4 class="text-dark">Saldo Disponível</h4>
-                            <p class="text-success display-4">R$ {{ '{:.2f}'.format(saldo_atual) }}</p>
-                        </div>
-                        <div class="card inner-card">
-                            <h4 class="text-dark">Valor Diário</h4>
-                            <p class="text-primary display-4">R$ {{ '{:.2f}'.format(por_dia_atualizado) }}</p>
-                        </div>
+                <!-- Seção com dois cards -->
+                <div class="cards-section">
+                    <div class="card inner-card">
+                        <h4 class="text-dark">Saldo Disponível</h4>
+                        <p class="text-success display-5">R$ {{ '{:.2f}'.format(saldo_atual) }}</p>
                     </div>
-
-                    <p class="card-text mb-4">
-                        Explore os recursos abaixo para uma melhor organização de suas finanças.
-                    </p>
-
-                    <div class="d-flex flex-wrap justify-content-center">
-                        <a href="{{ url_for('listar_gastos') }}" class="btn btn-primary btn-large m-2">
-                            <i class="fa-solid fa-book"></i> Registrar Despesas
-                        </a>
-                        <a href="{{ url_for('history') }}" class="btn btn-primary btn-large m-2">
-                            <i class="fa-solid fa-clock"></i> Histórico de Transações
-                        </a>
-                        <a href="{{ url_for('index') }}" class="btn btn-primary btn-large m-2">
-                            <i class="fa-solid fa-cart-shopping"></i> Lista de Compras
-                        </a>
-                        <a href="{{ url_for('balance') }}" class="btn btn-primary btn-large m-2">
-                            <i class="fa-solid fa-money-bill-wave"></i> Recebimentos
-                        </a>
-                        <a href="{{ url_for('debitos') }}" class="btn btn-primary btn-large m-2">
-                            <i class="fa-solid fa-money-check"></i> Pagamentos
-                        </a>
+                    <div class="card inner-card">
+                        <h4 class="text-dark">Limite Diário</h4>
+                        <p class="text-primary display-5">R$ {{ '{:.2f}'.format(por_dia_atualizado) }}</p>
                     </div>
+                </div>
+
+                <p class="card-text mb-4">
+                    Explore os recursos abaixo para uma melhor organização de suas finanças.
+                </p>
+
+                <div class="d-flex flex-wrap justify-content-center">
+                    <a href="{{ url_for('listar_gastos') }}" class="btn btn-primary btn-large m-2">
+                        <i class="fa-solid fa-book"></i> Registrar Despesas
+                    </a>
+                    <a href="{{ url_for('history') }}" class="btn btn-primary btn-large m-2">
+                        <i class="fa-solid fa-clock"></i> Histórico de Transações
+                    </a>
+                    <a href="{{ url_for('index') }}" class="btn btn-primary btn-large m-2">
+                        <i class="fa-solid fa-cart-shopping"></i> Lista de Compras
+                    </a>
+                    <a href="{{ url_for('balance') }}" class="btn btn-primary btn-large m-2">
+                        <i class="fa-solid fa-money-bill-wave"></i> Recebimentos
+                    </a>
+                    <a href="{{ url_for('debitos') }}" class="btn btn-primary btn-large m-2">
+                        <i class="fa-solid fa-money-check"></i> Pagamentos
+                    </a>
                 </div>
             </div>
         </div>
     </div>
     <script>
-        window.onload = function() {
-            // Inicializa a sidebar fechada
-            const sidebar = document.getElementById("mySidebar");
-            const content = document.querySelector(".main-content");
-            sidebar.style.width = "0";
-            content.style.marginLeft = "0";
-        }
-    </script>
+    window.onload = function() {
+        // Inicializa a sidebar fechada
+        const sidebar = document.getElementById("mySidebar");
+        const content = document.querySelector(".content");
+        sidebar.style.width = "0";
+        content.style.marginLeft = "0";
+    }
+</script>
+
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="{{ url_for('static', filename='fonts/js/all.js') }}" crossorigin="anonymous"></script>
 </body>
