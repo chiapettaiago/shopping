@@ -25,16 +25,13 @@
         .card {
             border-radius: 12px;
             overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         .card:hover {
-            transform: translateY(-10px);
             box-shadow: 0 20px 30px rgba(0, 0, 0, 0.1);
         }
         .btn-primary {
             background-color: #6a11cb;
             border: none;
-            transition: background-color 0.2s ease;
         }
         .btn-primary:hover {
             background-color: #2575fc;
@@ -59,19 +56,19 @@
             <h2 class="text-center text-dark mb-4">Diário de Despesas</h2>
             <div class="row">
                 <div class="col-md-4 mb-3">
-                    <div class="stats-card shadow">
-                        <h4 class="card-title text-center">Despesas não Processadas</h4>
+                    <div class="stats-card bg-white shadow">
+                        <h4 class="card-title  text-center">Despesas não Processadas</h4>
                         <p class="text-center text-dark">R$ {{ '{:.2f}'.format(gastos_nao_processados) }}</p>
                     </div>
                 </div>
                 <div class="col-md-4 mb-3">
-                    <div class="stats-card shadow">
-                        <h4 class="card-title text-center">Saldo Atualizado</h4>
+                    <div class="stats-card bg-white  shadow">
+                        <h4 class="card-title   text-center">Saldo Atualizado</h4>
                         <p class="text-center text-dark">R$ {{ '{:.2f}'.format(saldo_atualizado) }}</p>
                     </div>
                 </div>
                 <div class="col-md-4 mb-3">
-                    <div class="stats-card shadow">
+                    <div class="stats-card bg-white  shadow">
                         <h4 class="card-title text-center">Limite Diário</h4>
                         <p class="text-center text-dark">R$ {{ '{:.2f}'.format(por_dia) }}</p>
                     </div>
@@ -104,7 +101,7 @@
                                         <i class="fa-solid fa-xmark"></i>
                                     </button>
                                 </form>
-                                <button type="button" class="btn btn-secondary btn-sm btn-action" data-toggle="modal" data-target="#editGastoModal{{ gasto.id }}" title="Editar">
+                                <button type="submit" class="btn btn-secondary btn-sm btn-action" data-toggle="modal" data-target="#editGastoModal{{ gasto.id }}" title="Editar">
                                     <i class="fa-solid fa-pen"></i>
                                 </button>
                                 <form action="{{ url_for('computar_gasto', id=gasto.id) }}" method="post" style="display: inline-block;">
