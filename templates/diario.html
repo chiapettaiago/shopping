@@ -52,24 +52,24 @@
     {% include 'navbar.html' %}
     <div class="main-content" id="mainContent">
     <div class="container mt-4 mb-5 pb-4">
-        <div class="card bg-light mb-5 rounded shadow bg-opacity-75 p-4">
+        <div class="card bg-light bg-opacity-75  rounded shadow  p-4">
             <h2 class="text-center text-dark mb-4">Diário de Despesas</h2>
             <div class="row">
                 <div class="col-md-4 mb-3">
-                    <div class="stats-card bg-white shadow">
-                        <h4 class="card-title  text-center">Despesas não Processadas</h4>
+                    <div class="card-body bg-light rounded shadow">
+                        <h4 class="card-title text-success text-center">Despesas não Processadas</h4>
                         <p class="text-center text-dark">R$ {{ '{:.2f}'.format(gastos_nao_processados) }}</p>
                     </div>
                 </div>
                 <div class="col-md-4 mb-3">
-                    <div class="stats-card bg-white  shadow">
-                        <h4 class="card-title   text-center">Saldo Atualizado</h4>
+                    <div class="card-body bg-light rounded  shadow">
+                        <h4 class="card-title text-success text-center">Saldo Atualizado</h4>
                         <p class="text-center text-dark">R$ {{ '{:.2f}'.format(saldo_atualizado) }}</p>
                     </div>
                 </div>
                 <div class="col-md-4 mb-3">
-                    <div class="stats-card bg-white  shadow">
-                        <h4 class="card-title text-center">Limite Diário</h4>
+                    <div class="card-body bg-light rounded shadow">
+                        <h4 class="card-title text-success text-center">Limite Diário</h4>
                         <p class="text-center text-dark">R$ {{ '{:.2f}'.format(por_dia) }}</p>
                     </div>
                 </div>

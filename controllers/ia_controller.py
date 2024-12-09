@@ -27,6 +27,9 @@ def get_gemini_response(user_input, context):
         "inputs": {
             "question": user_input,
             "context": context
+        },
+        "parameters": {
+            "max_new_tokens": 512  # Define o número máximo de novos tokens gerados na resposta
         }
     }
     response = query(payload)
