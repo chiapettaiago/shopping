@@ -94,28 +94,6 @@
         </div>
     </div>
 </div>
-
-
-    <script>
-        const storedTheme = localStorage.getItem('theme');
-        if (storedTheme) {
-            document.documentElement.setAttribute('data-bs-theme', storedTheme);
-            const tableBody = document.querySelector('.table-body');
-            tableBody.classList.toggle('table-dark', storedTheme === 'dark');
-        } else {
-            document.documentElement.setAttribute('data-bs-theme', 'light');
-        }
-
-        document.getElementById('btnSwitch').addEventListener('click', () => {
-            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-bs-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-
-            const tableBody = document.querySelector('.table-body');
-            tableBody.classList.toggle('table-dark');
-        });
-    </script>
     <script src="{{ url_for('static', filename='fonts/js/all.js') }}" crossorigin="anonymous"></script>
 </body>
 </html>

@@ -149,41 +149,6 @@
     </div>
 </div>
 
-    <script>
-        
-        // Função para definir o tema inicial
-        function setInitialTheme() {
-            const storedTheme = localStorage.getItem('theme');
-            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-            if (storedTheme) {
-                document.documentElement.setAttribute('data-bs-theme', storedTheme);
-            } else {
-                document.documentElement.setAttribute('data-bs-theme', prefersDarkScheme ? 'dark' : 'light');
-            }
-        }
-
-        // Configurar tema inicial ao carregar a página
-        setInitialTheme();
-
-        // Lógica do Switch de Tema
-        const themeSwitch = document.getElementById('themeSwitch');
-        
-        // Sincroniza o estado do interruptor com o tema atual
-        function syncSwitchWithTheme() {
-            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
-            themeSwitch.checked = currentTheme === 'dark';
-        }
-
-        syncSwitchWithTheme();
-
-        themeSwitch.addEventListener('change', function() {
-            const newTheme = themeSwitch.checked ? 'dark' : 'light';
-            document.documentElement.setAttribute('data-bs-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-        });
-    </script>
-
     <script src="{{url_for('static', filename='fonts/js/all.js')}}" crossorigin="anonymous"></script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>

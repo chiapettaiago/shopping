@@ -109,36 +109,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Script para alternar entre os modos claro e escuro -->
-    <script>
-        document.getElementById('btnSwitch').addEventListener('click', () => {
-            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-bs-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-
-            const tableBody = document.querySelector('.table-body');
-            tableBody.classList.toggle('table-dark');
-        });
-
-        // Função para definir o tema inicial
-        function setInitialTheme() {
-            const storedTheme = localStorage.getItem('theme'); // Obtém o tema armazenado no localStorage
-            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)').matches; // Verifica se o sistema prefere o tema escuro
-
-            // Aplica o tema armazenado ou o padrão do sistema
-            if (storedTheme) {
-                document.documentElement.setAttribute('data-bs-theme', storedTheme);
-            } else {
-                document.documentElement.setAttribute('data-bs-theme', prefersDarkScheme ? 'dark' : 'light');
-            }
-        }
-
-        // Configurar o tema inicial ao carregar a página
-        setInitialTheme();
-    </script>
-    
     <script src="{{url_for('static', filename='fonts/js/all.js')}}" crossorigin="anonymous"></script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
