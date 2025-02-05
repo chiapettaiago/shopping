@@ -120,6 +120,12 @@
                 <input class="form-control" type="password" name="password" placeholder="Senha" required>
             </div>
             <button type="submit">Entrar</button>
+            <div class="text-center mt-3">
+                <a href="#" class="text-muted" data-bs-toggle="modal" data-bs-target="#resetModal">
+                    Esqueceu a senha?
+                </a>
+            </div>
+            
             {% if login_error %}
                 <p class="text-danger text-center mt-3">{{ login_error }}</p>
             {% endif %}
@@ -169,6 +175,58 @@
     </div>
 </div>
 
+<!-- Modal de Solicitação de Redefinição -->
+<div class="modal fade" id="resetModal" tabindex="-1" aria-labelledby="resetModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="resetModalLabel">Redefinir Senha</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="resetRequestForm" onsubmit="submitResetRequest(event)">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="resetEmail" class="form-label">E-mail cadastrado</label>
+                        <input type="email" class="form-control" id="resetEmail" name="email" required>
+                    </div>
+                    <div id="resetMessage" class="alert d-none"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="submit" class="btn btn-primary">Enviar Link</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Nova Senha -->
+<div class="modal fade" id="newPasswordModal" tabindex="-1" aria-labelledby="newPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newPasswordModalLabel">Definir Nova Senha</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="resetPasswordForm" onsubmit="submitNewPassword(event)">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="newPassword" class="form-label">Nova Senha</label>
+                        <input type="password" class="form-control" id="newPassword" name="new_password" required>
+                    </div>
+                    <div id="passwordMessage" class="alert d-none"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="submit" class="btn btn-primary">Atualizar Senha</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const termsCheckbox = document.getElementById('termsCheckbox');
@@ -179,6 +237,61 @@
             registerButton.disabled = !this.checked;
         });
     });
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        
+        if(token) {
+            const newPasswordModal = new bootstrap.Modal(document.getElementById('newPasswordModal'));
+            newPasswordModal.show();
+        }
+    });
+
+    async function submitResetRequest(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const response = await fetch('/reset_password', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        const messageEl = document.getElementById('resetMessage');
+        
+        messageEl.classList.remove('d-none', 'alert-success', 'alert-danger');
+        messageEl.classList.add(result.success ? 'alert-success' : 'alert-danger');
+        messageEl.textContent = result.message;
+        
+        if(result.success) {
+            e.target.reset();
+            setTimeout(() => bootstrap.Modal.getInstance(document.getElementById('resetModal')).hide(), 2000);
+        }
+    }
+
+    async function submitNewPassword(e) {
+        e.preventDefault();
+        const token = new URLSearchParams(window.location.search).get('token');
+        const formData = new FormData(e.target);
+        
+        const response = await fetch(`/reset_password/${token}`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        const messageEl = document.getElementById('passwordMessage');
+        
+        messageEl.classList.remove('d-none', 'alert-success', 'alert-danger');
+        messageEl.classList.add(result.success ? 'alert-success' : 'alert-danger');
+        messageEl.textContent = result.message;
+        
+        if(result.success) {
+            setTimeout(() => {
+                bootstrap.Modal.getInstance(document.getElementById('newPasswordModal')).hide();
+                window.location.href = '/auth';
+            }, 2000);
+        }
+    }
 </script>
 
     <script src="{{ url_for('static', filename='fonts/js/all.js') }}" crossorigin="anonymous"></script>

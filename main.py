@@ -13,6 +13,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from itsdangerous import URLSafeTimedSerializer
 import io
 import os
 import calendar
@@ -24,6 +25,13 @@ import uuid
 import redis
 import json
 import hashlib
+import smtplib
+import ssl
+
+context = ssl.create_default_context()
+context.check_hostname = False
+context.verify_mode = ssl.CERT_NONE
+
 
 def load_env():
     """Carregar variáveis de ambiente do arquivo .env."""
@@ -82,6 +90,10 @@ db.init_app(app)
 migrate = Migrate(app, db)
 login_manager = LoginManager(app)
 login_manager.login_view = 'auth'  # Define a rota para redirecionamento quando o usuário não estiver logado
+
+# Configuração para redefinição de senha
+serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -185,6 +197,115 @@ def before_request():
 def calcular_saldo(balance_total, debts_total, gastos_total):
     saldo_atualizado = balance_total - debts_total - gastos_total
     return round(saldo_atualizado, 2)
+
+def send_password_reset_email(email, reset_url):
+    import smtplib
+    import certifi
+    from email.mime.text import MIMEText
+    import ssl
+
+    msg = MIMEText(f'''Redefinição de Senha - Meu Tesouro\n\n
+    Clique no link: {reset_url}\n\nLink válido por 1 hora.''')
+    
+    msg['Subject'] = 'Redefinição de Senha'
+    msg['From'] = os.getenv('EMAIL_USER')
+    msg['To'] = email
+
+    context = ssl.create_default_context(cafile=certifi.where())
+    context.check_hostname = False  # Apenas para testes com certificados autoassinados
+    context.verify_mode = ssl.CERT_REQUIRED
+
+    try:
+        with smtplib.SMTP_SSL(
+            host=os.getenv('SMTP_SERVER'),
+            port=int(os.getenv('SMTP_PORT')),
+            context=context
+        ) as server:
+            server.login(os.getenv('EMAIL_USER'), os.getenv('EMAIL_PASSWORD'))
+            server.send_message(msg)
+            app.logger.info(f'E-mail enviado para {email}')
+            
+    except Exception as e:
+        app.logger.error(f'Erro SMTP: {str(e)}')
+        raise
+
+@app.route('/reset_password', methods=['POST'])
+def reset_password_request():
+    try:
+        email = request.form.get('email')
+        user = User.query.filter_by(email=email).first()
+        
+        if user:
+            token = serializer.dumps(user.email, salt='password-reset-salt')
+            reset_url = url_for('reset_password_token', token=token, _external=True)
+            
+            # Envio do e-mail
+            send_password_reset_email(user.email, reset_url)
+            
+            return jsonify({'success': True, 'message': 'Verifique seu e-mail para as instruções'})
+        
+        return jsonify({'success': False, 'message': 'E-mail não cadastrado'}), 404
+    
+    except Exception as e:
+        app.logger.error(f'Erro no reset_password_request: {str(e)}')
+        return jsonify({'success': False, 'message': 'Erro interno no servidor'}), 500
+
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password_token(token):
+    try:
+        email = serializer.loads(token, salt='password-reset-salt', max_age=3600)
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            flash('Usuário não encontrado', 'danger')
+            return redirect(url_for('auth'))
+        if request.method == 'POST':
+            new_password = request.form.get('new_password')
+            confirm_password = request.form.get('confirm_password')
+            if not new_password or not confirm_password:
+                flash('Todos os campos são obrigatórios.', 'danger')
+                return redirect(url_for('reset_password_token', token=token))
+            if new_password != confirm_password:
+                flash('As senhas não coincidem.', 'danger')
+                return redirect(url_for('reset_password_token', token=token))
+            user.password = generate_password_hash(new_password)
+            db.session.commit()
+            flash('Senha alterada com sucesso!', 'success')
+            return redirect(url_for('auth'))
+        return render_template('reset_password.html', token=token)
+    except Exception as e:
+        app.logger.error(f'Erro no reset_password_token: {str(e)}')
+        flash('Token inválido ou expirado', 'danger')
+        return redirect(url_for('auth'))
+
+        
+@app.route('/test_smtp_connection')
+def test_smtp():
+    try:
+        port = int(os.getenv('SMTP_PORT'))
+        context = ssl.create_default_context()
+        
+        if port == 465:
+            with smtplib.SMTP_SSL(
+                os.getenv('SMTP_SERVER'),
+                port,
+                context=context
+            ) as server:
+                server.login(os.getenv('EMAIL_USER'), os.getenv('EMAIL_PASSWORD'))
+                return "Conexão SSL bem-sucedida!", 200
+                
+        elif port == 587:
+            with smtplib.SMTP(
+                os.getenv('SMTP_SERVER'),
+                port
+            ) as server:
+                server.starttls(context=context)
+                server.login(os.getenv('EMAIL_USER'), os.getenv('EMAIL_PASSWORD'))
+                return "Conexão STARTTLS bem-sucedida!", 200
+                
+    except Exception as e:
+        return f"Falha na conexão: {str(e)}", 500
+
+
 
 @app.route('/delete_history', methods=['POST'])
 @login_required
@@ -298,6 +419,10 @@ def handle_checkout_session(session):
 
 @app.route('/auth', methods=['GET', 'POST'])
 def auth():
+    # Redirecionamento para solicitação de redefinição de senha
+    if request.args.get('reset'):
+        return redirect(url_for('reset_password_request'))
+    
     if request.method == 'POST':
         action = request.form.get('action')
         full_name = request.form.get('full_name')
