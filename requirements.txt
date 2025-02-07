@@ -7,3 +7,6 @@ google-generativeai
 reportlab
 plotly
 stripe
+flask-wtf
+flask-mail
+redis
