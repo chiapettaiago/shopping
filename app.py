@@ -57,8 +57,11 @@ db_name = os.getenv('DB_NAME')
 
 # Monta a URI do banco de dados com as variáveis de ambiente
 app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+mysqlconnector://{db_username}:{db_password}@{db_host}/{db_name}'
-app.config['SQLALCHEMY_POOL_TIMEOUT'] = 20
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Desativar o rastreamento de modificações para evitar avisos
+app.config['SQLALCHEMY_POOL_SIZE'] = 5  # Reduzir o tamanho do pool
+app.config['SQLALCHEMY_MAX_OVERFLOW'] = 10  # Limitar conexões extras
+app.config['SQLALCHEMY_POOL_TIMEOUT'] = 30  # Timeout mais curto
+app.config['SQLALCHEMY_POOL_RECYCLE'] = 1800  # Reciclar conexões a cada 30 minutos
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'homium-001'  # Defina uma chave secreta única e segura
 
 redis_cache = redis.StrictRedis(
@@ -66,7 +69,11 @@ redis_cache = redis.StrictRedis(
     port=int(os.getenv('REDIS_PORT', 6379)),
     password=os.getenv('REDIS_PASSWORD'),
     db=int(os.getenv('REDIS_DB', 0)),
-    decode_responses=True
+    decode_responses=True,
+    socket_timeout=5,
+    socket_connect_timeout=5,
+    retry_on_timeout=True,
+    max_connections=10
 )
 
 csrf = CSRFProtect(app)
@@ -83,8 +90,12 @@ engine = create_engine(
     execution_options={'autoflush': False, 'expire_on_commit': False}
 )
 
-# Configure a sessão permanente com tempo limite de 10 minutos
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
+# Configure a sessão permanente com tempo limite de 5 minutos
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
+app.config['SESSION_TYPE'] = 'redis'
+app.config['SESSION_REDIS'] = redis_cache
+app.config['SESSION_USE_SIGNER'] = True
+app.config['SESSION_KEY_PREFIX'] = 'session:'
 
 db.init_app(app)
 migrate = Migrate(app, db)
@@ -158,7 +169,6 @@ def cache_route(timeout=300):
             cached_response = redis_cache.get(cache_key)
             
             if cached_response:
-                print(f"Retornando resposta do cache para {cache_key}")
                 return Response(cached_response, mimetype='text/html')
             
             # Caso não haja cache, chamar a função original
@@ -168,15 +178,11 @@ def cache_route(timeout=300):
             if isinstance(response, str):
                 response = Response(response, mimetype='text/html')
             
-            # Gerar um hash do conteúdo da resposta
-            content_hash = hashlib.md5(response.data).hexdigest()
-            
-            # Armazenar no cache se for uma resposta HTML bem-sucedida
-            if response.status_code == 200 and response.mimetype == 'text/html':
-                # Adicionar o hash ao cache para verificação futura
-                redis_cache.setex(f"{cache_key}:hash", timeout, content_hash)
+            # Armazenar no cache apenas se for uma resposta HTML bem-sucedida e menor que 1MB
+            if (response.status_code == 200 and 
+                response.mimetype == 'text/html' and 
+                len(response.data) < 1024 * 1024):  # 1MB
                 redis_cache.setex(cache_key, timeout, response.data)
-                print(f"Armazenando resposta em cache para {cache_key}")
             
             return response
         return wrapped
@@ -1215,15 +1221,25 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
         
-        users = User.query.all()  # Recuperar todos os usuários
+        users = User.query.all()
     
         for user in users:
-            # Verifica se a senha já está criptografada (opcional, depende de como foram armazenadas inicialmente)
             if not user.password.startswith('pbkdf2:sha256'):
-                # Criptografa a senha
                 hashed_password = generate_password_hash(user.password, method='pbkdf2:sha256')
                 user.password = hashed_password
         
-        # Confirmar as alterações no banco de dados
         db.session.commit()
-    app.run(debug=True, host='0.0.0.0', port=3000)
+    
+    # Configurações para otimização de memória
+    app.config['JSON_SORT_KEYS'] = False
+    app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31536000  # 1 ano em segundos
+    
+    # Configurar o servidor para usar menos recursos
+    app.run(
+        debug=False,  # Desativar debug em produção
+        host='0.0.0.0',
+        port=3000,
+        threaded=True,
+        processes=1  # Usar apenas 1 processo
+    )

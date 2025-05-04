@@ -1,65 +1,80 @@
 import google.generativeai as genai
 from datetime import datetime
+import os
+from functools import lru_cache
 
 def obter_data_atual():
-    # Obtendo a data atual
-    data_atual = datetime.now()
+    return datetime.now().strftime("%d/%m/%Y")
 
-    # Formatando a data no formato brasileiro
-    data_formatada = data_atual.strftime("%d/%m/%Y")
+# Configuração do Gemini usando variável de ambiente
+genai.configure(api_key=os.getenv('AIzaSyAY4OKe9VNjUgNHgchSA7Um5c7vqR2dxSY'))
 
-    return data_formatada
-
-# Configuração do Gemini
-genai.configure(api_key='AIzaSyBPtPO8xwVaiHlWN1ad7O1KI-k5qlHix3Q')
-
+# Configuração otimizada do modelo
 generation_config = {
-    "temperature": 1,
-    "top_p": 0.95,
-    "top_k": 64,
-    "max_output_tokens": 8192
+    "temperature": 0.7,  # Reduzido para respostas mais consistentes
+    "top_p": 0.8,
+    "top_k": 40,
+    "max_output_tokens": 2048,  # Reduzido para melhor performance
+    "candidate_count": 1
 }
 
-model = genai.GenerativeModel(
-    model_name="gemini-1.5-flash",
-    generation_config=generation_config,
-)
+# Cache do modelo para evitar recriação
+@lru_cache(maxsize=1)
+def get_model():
+    return genai.GenerativeModel(
+        model_name="gemma-3-27b-it",  # Modelo mais estável
+        generation_config=generation_config
+    )
 
-chat_session = model.start_chat(history=[])
-
-def get_gemini_response(user_input):
+def get_gemini_response(user_input, context_info):
     try:
-        response = chat_session.send_message(user_input)
-        return response.text  # Retorna a resposta da IA
+        model = get_model()
+        # Inicia uma nova sessão a cada chamada para evitar problemas de contexto
+        chat = model.start_chat(history=[])
+        
+        # Combina o contexto com a entrada do usuário
+        full_prompt = f"{context_info}\n\nUsuário: {user_input}"
+        
+        response = chat.send_message(full_prompt)
+        return response.text.strip()
     except Exception as e:
-        # Captura a mensagem de erro e exibe para depuração
-        return f"Desculpe, houve um erro ao processar sua solicitação: {str(e)}"
-
+        return f"Desculpe, ocorreu um erro ao processar sua solicitação. Por favor, tente novamente mais tarde."
 
 def process_user_input(user_input, saldo, gastos, por_dia, usuario, balance, dividas, gastos_nao_processados, debts_list, debts_values):
+    if not user_input or not isinstance(user_input, str):
+        return "Por favor, forneça uma entrada válida."
+
     user_input = user_input.lower().strip()
 
-    # Cria um contexto mais estruturado e informativo
-    context_info = f"""
-    Informações financeiras atuais:
-    - Saldo: R$ {saldo:.2f}
-    - Gastos totais no mês: R$ {gastos:.2f}
-    - Gasto médio por dia restante no mês: R$ {por_dia:.2f}
-    - Data atual:", {obter_data_atual()}
-    - Você é um assistente pessoal financeiro amigável e companheiro, que faz parte do sistema de gerenciamento de finanças Meu Tesouro.
-    - O nome de quem está utilizando você é: {usuario}.
-    - O valor total recebido esse mês é: R${balance}.
-    - O total de dividas ainda não pagas é: R$ {dividas}.
-    - O valor que o usuário já gastou hoje até esse momento é: R$ {gastos_nao_processados}
-    - Não repita o nome do usuário a cada interação.
-    - Seu nome é J.A.R.V.I.S.
-    - Não adicione valores fictícios ou de exemplos nos cálculos que o usuário pedir.
-    - Lista de contas a serem pagas: {debts_list}
-    - E o valor de cada conta a ser paga respectivamente é: {debts_values}
-    - Não use asterísticos antes e depois dos valores para que pareça mais natural.
-    """
+    # Formatação dos valores monetários
+    saldo_fmt = f"R$ {saldo:.2f}"
+    gastos_fmt = f"R$ {gastos:.2f}"
+    por_dia_fmt = f"R$ {por_dia:.2f}"
+    balance_fmt = f"R$ {balance:.2f}"
+    dividas_fmt = f"R$ {dividas:.2f}"
+    gastos_nao_processados_fmt = f"R$ {gastos_nao_processados:.2f}"
 
-    # Adiciona o contexto à mensagem do usuário
-    full_input = f"{user_input}\n\n{context_info}"
+    # Criação do contexto de forma mais estruturada
+    context_info = f"""Você é J.A.R.V.I.S., um assistente financeiro pessoal do sistema Meu Tesouro.
 
-    return get_gemini_response(full_input)
+Informações financeiras atuais:
+- Saldo disponível: {saldo_fmt}
+- Gastos totais do mês: {gastos_fmt}
+- Gasto médio por dia restante: {por_dia_fmt}
+- Data atual: {obter_data_atual()}
+- Total recebido este mês: {balance_fmt}
+- Total de dívidas pendentes: {dividas_fmt}
+- Gastos não processados hoje: {gastos_nao_processados_fmt}
+
+Contas a pagar:
+{chr(10).join(f"- {nome}: {valor}" for nome, valor in zip(debts_list, debts_values))}
+
+Instruções:
+1. Responda de forma clara e objetiva
+2. Use os valores exatos fornecidos
+3. Não adicione valores fictícios
+4. Mantenha um tom profissional e amigável
+5. Não repita o nome do usuário ({usuario}) em cada resposta
+6. Forneça sugestões práticas quando apropriado"""
+
+    return get_gemini_response(user_input, context_info)
