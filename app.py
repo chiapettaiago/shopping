@@ -27,6 +27,7 @@ import json
 import hashlib
 import smtplib
 import ssl
+from urllib.parse import urlparse
 
 context = ssl.create_default_context()
 context.check_hostname = False
@@ -36,6 +37,9 @@ context.verify_mode = ssl.CERT_NONE
 def load_env():
     """Carregar variáveis de ambiente do arquivo .env."""
     env_path = '.env'
+    if not os.path.exists(env_path):
+        return
+
     with open(env_path) as f:
         for line in f:
             if line.strip() and not line.startswith('#'):
@@ -49,32 +53,65 @@ stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 
 app = Flask(__name__)
 
+# Ajusta a chave secreta com prioridade para variáveis de ambiente
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'homium-001')
+
 # Obtém as variáveis de ambiente para construir a URI do banco de dados
 db_username = os.getenv('DB_USERNAME')
 db_password = os.getenv('DB_PASSWORD')
 db_host = os.getenv('DB_HOST')
 db_name = os.getenv('DB_NAME')
+database_url = os.getenv('DATABASE_URL') or os.getenv('CLEARDB_DATABASE_URL') or os.getenv('SQLALCHEMY_DATABASE_URI')
 
-# Monta a URI do banco de dados com as variáveis de ambiente
-app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+mysqlconnector://{db_username}:{db_password}@{db_host}/{db_name}'
+if database_url:
+    if database_url.startswith('mysql://'):
+        parsed_db_url = urlparse(database_url)
+        db_username = parsed_db_url.username
+        db_password = parsed_db_url.password or ''
+        db_host = parsed_db_url.hostname
+        db_name = parsed_db_url.path.lstrip('/')
+        app.config['SQLALCHEMY_DATABASE_URI'] = (
+            f'mysql+mysqlconnector://{db_username}:{db_password}@{db_host}/{db_name}'
+        )
+    elif database_url.startswith(('postgres://', 'postgresql://')):
+        normalized_url = database_url.replace('postgres://', 'postgresql://', 1)
+        app.config['SQLALCHEMY_DATABASE_URI'] = normalized_url
+    else:
+        app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+elif all([db_username, db_password, db_host, db_name]):
+    app.config['SQLALCHEMY_DATABASE_URI'] = (
+        f'mysql+mysqlconnector://{db_username}:{db_password}@{db_host}/{db_name}'
+    )
+else:
+    raise RuntimeError('Database configuration is missing. Check environment variables.')
 app.config['SQLALCHEMY_POOL_SIZE'] = 5  # Reduzir o tamanho do pool
 app.config['SQLALCHEMY_MAX_OVERFLOW'] = 10  # Limitar conexões extras
 app.config['SQLALCHEMY_POOL_TIMEOUT'] = 30  # Timeout mais curto
 app.config['SQLALCHEMY_POOL_RECYCLE'] = 1800  # Reciclar conexões a cada 30 minutos
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'homium-001'  # Defina uma chave secreta única e segura
 
-redis_cache = redis.StrictRedis(
-    host=os.getenv('REDIS_HOST'),
-    port=int(os.getenv('REDIS_PORT', 6379)),
-    password=os.getenv('REDIS_PASSWORD'),
-    db=int(os.getenv('REDIS_DB', 0)),
-    decode_responses=True,
-    socket_timeout=5,
-    socket_connect_timeout=5,
-    retry_on_timeout=True,
-    max_connections=10
-)
+redis_url = os.getenv('REDIS_URL')
+if redis_url:
+    redis_cache = redis.StrictRedis.from_url(
+        redis_url,
+        decode_responses=True,
+        socket_timeout=5,
+        socket_connect_timeout=5,
+        retry_on_timeout=True,
+        max_connections=10
+    )
+else:
+    redis_cache = redis.StrictRedis(
+        host=os.getenv('REDIS_HOST', 'localhost'),
+        port=int(os.getenv('REDIS_PORT', 6379)),
+        password=os.getenv('REDIS_PASSWORD'),
+        db=int(os.getenv('REDIS_DB', 0)),
+        decode_responses=True,
+        socket_timeout=5,
+        socket_connect_timeout=5,
+        retry_on_timeout=True,
+        max_connections=10
+    )
 
 csrf = CSRFProtect(app)
 csrf.init_app(app)

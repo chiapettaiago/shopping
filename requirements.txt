@@ -10,3 +10,5 @@ stripe
 flask-wtf
 flask-mail
 redis
+gunicorn
+psycopg2-binary
