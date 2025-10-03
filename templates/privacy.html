@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="300">
+    <title>Política de Privacidade - ME Finanças</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='images/site.webmanifest') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(to bottom right, #6a11cb, #2575fc);
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            margin: 0;
+            background-attachment: fixed;
+            font-family: 'Roboto', sans-serif;
+            color: #212529;
+        }
+        .content-wrapper {
+            max-width: 960px;
+            margin: 4rem auto;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+            padding: 3rem;
+            color: #212529;
+        }
+        .content-wrapper h1,
+        .content-wrapper h2 {
+            color: #1f3d7a;
+        }
+        .content-wrapper p,
+        .content-wrapper li {
+            line-height: 1.6;
+        }
+        .content-wrapper ul {
+            padding-left: 1.25rem;
+        }
+        .content-wrapper a {
+            color: #0d6efd;
+            text-decoration: underline;
+        }
+        .content-wrapper .lead,
+        .content-wrapper p,
+        .content-wrapper li,
+        .content-wrapper .text-end {
+            color: #212529;
+        }
+        .back-action {
+            display: flex;
+            justify-content: flex-end;
+        }
+        [data-bs-theme='dark'] body {
+            background: linear-gradient(to bottom right, #0f172a, #1e3a8a);
+            color: #f8f9fa;
+        }
+        [data-bs-theme='dark'] .content-wrapper {
+            background-color: rgba(15, 23, 42, 0.92);
+            color: #f8f9fa;
+        }
+        [data-bs-theme='dark'] .content-wrapper h1,
+        [data-bs-theme='dark'] .content-wrapper h2 {
+            color: #bfdbfe;
+        }
+        [data-bs-theme='dark'] .content-wrapper a {
+            color: #93c5fd;
+        }
+        [data-bs-theme='dark'] .content-wrapper .lead,
+        [data-bs-theme='dark'] .content-wrapper p,
+        [data-bs-theme='dark'] .content-wrapper li,
+        [data-bs-theme='dark'] .content-wrapper .text-end {
+            color: #f8f9fa;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+</head>
+<body>
+    {% include 'navbar.html' %}
+    <div class="main-content" id="mainContent">
+        <div class="container">
+            <div class="content-wrapper">
+                <h1 class="mb-3 text-center">Política de Privacidade</h1>
+                <p class="lead text-center mb-4">Valorizamos a sua privacidade. Esta política descreve como o ME Finanças coleta, utiliza e protege suas informações pessoais.</p>
+
+                <h2 class="h4 mt-4">1. Informações que Coletamos</h2>
+                <p>Coletamos dados fornecidos diretamente por você ao criar uma conta, como nome, endereço de e-mail e nome de usuário. Também podemos registrar informações de uso para melhorar os recursos da plataforma.</p>
+
+                <h2 class="h4 mt-4">2. Uso das Informações</h2>
+                <p>Utilizamos seus dados para:</p>
+                <ul>
+                    <li>Fornecer acesso aos recursos da plataforma;</li>
+                    <li>Enviar comunicações importantes sobre sua conta;</li>
+                    <li>Personalizar sua experiência e melhorar nossos serviços;</li>
+                    <li>Cumprir obrigações legais e garantir a segurança do sistema.</li>
+                </ul>
+
+                <h2 class="h4 mt-4">3. Compartilhamento de Dados</h2>
+                <p>Não vendemos suas informações pessoais. Podemos compartilhar dados com provedores de serviço confiáveis para enviar e-mails, armazenar dados com segurança ou cumprir requisitos legais.</p>
+
+                <h2 class="h4 mt-4">4. Segurança</h2>
+                <p>Adotamos medidas administrativas, técnicas e físicas para proteger suas informações contra acesso não autorizado, alteração ou divulgação.</p>
+
+                <h2 class="h4 mt-4">5. Seus Direitos</h2>
+                <p>Você pode atualizar ou solicitar a exclusão dos seus dados entrando em contato com nossa equipe de suporte pelo e-mail <a href="mailto:suporte@mefinancas.com">suporte@mefinancas.com</a>.</p>
+
+                <h2 class="h4 mt-4">6. Cookies e Tecnologias Semelhantes</h2>
+                <p>Utilizamos cookies para lembrar suas preferências e melhorar a experiência de navegação. Você pode controlar o uso de cookies diretamente nas configurações do seu navegador.</p>
+
+                <h2 class="h4 mt-4">7. Alterações nesta Política</h2>
+                <p>Podemos atualizar esta política de tempos em tempos. Caso isso ocorra, notificaremos você pelos canais apropriados.</p>
+
+                <p class="mt-5 mb-4 text-end">Última atualização: 01/10/2024</p>
+
+                <div class="back-action">
+                    <a class="btn btn-primary" href="{{ url_for('auth') }}">Voltar para o login</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='fonts/js/all.js') }}" crossorigin="anonymous"></script>
+</body>
+</html>

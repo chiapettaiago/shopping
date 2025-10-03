@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="300">
+    <title>Termos de Uso - ME Finanças</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='images/site.webmanifest') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(to bottom right, #6a11cb, #2575fc);
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            margin: 0;
+            background-attachment: fixed;
+            font-family: 'Roboto', sans-serif;
+            color: #212529;
+        }
+        .content-wrapper {
+            max-width: 960px;
+            margin: 4rem auto;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+            padding: 3rem;
+            color: #212529;
+        }
+        .content-wrapper h1,
+        .content-wrapper h2 {
+            color: #143d79;
+        }
+        .content-wrapper p,
+        .content-wrapper li {
+            line-height: 1.6;
+        }
+        .content-wrapper a {
+            color: #0d6efd;
+            text-decoration: underline;
+        }
+        .content-wrapper .lead,
+        .content-wrapper p,
+        .content-wrapper li,
+        .content-wrapper .text-end {
+            color: #212529;
+        }
+        .back-action {
+            display: flex;
+            justify-content: flex-end;
+        }
+        [data-bs-theme='dark'] body {
+            background: linear-gradient(to bottom right, #0f172a, #1e3a8a);
+            color: #f8f9fa;
+        }
+        [data-bs-theme='dark'] .content-wrapper {
+            background-color: rgba(15, 23, 42, 0.92);
+            color: #f8f9fa;
+        }
+        [data-bs-theme='dark'] .content-wrapper h1,
+        [data-bs-theme='dark'] .content-wrapper h2 {
+            color: #bfdbfe;
+        }
+        [data-bs-theme='dark'] .content-wrapper a {
+            color: #93c5fd;
+        }
+        [data-bs-theme='dark'] .content-wrapper .lead,
+        [data-bs-theme='dark'] .content-wrapper p,
+        [data-bs-theme='dark'] .content-wrapper li,
+        [data-bs-theme='dark'] .content-wrapper .text-end {
+            color: #f8f9fa;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+</head>
+<body>
+    {% include 'navbar.html' %}
+    <div class="main-content" id="mainContent">
+        <div class="container">
+            <div class="content-wrapper">
+                <h1 class="mb-3 text-center">Termos de Uso</h1>
+                <p class="lead text-center mb-4">Ao utilizar o ME Finanças você concorda com os termos descritos abaixo. Leia atentamente cada seção.</p>
+
+                <h2 class="h4 mt-4">1. Aceitação dos Termos</h2>
+                <p>Ao criar uma conta, você confirma que possui capacidade legal para celebrar contratos e que as informações fornecidas são verdadeiras e completas.</p>
+
+                <h2 class="h4 mt-4">2. Uso da Plataforma</h2>
+                <p>Você se compromete a utilizar o ME Finanças apenas para fins pessoais e lícitos. É proibido tentar acessar dados de outros usuários, interferir nos serviços ou utilizá-los de maneira abusiva.</p>
+
+                <h2 class="h4 mt-4">3. Contas e Segurança</h2>
+                <p>Você é responsável por manter a confidencialidade das credenciais de acesso e por todas as atividades realizadas na sua conta.</p>
+
+                <h2 class="h4 mt-4">4. Conteúdo Inserido pelos Usuários</h2>
+                <p>Os dados que você registra permanecem sob sua responsabilidade. Nós apenas armazenamos as informações para oferecer os serviços contratados.</p>
+
+                <h2 class="h4 mt-4">5. Serviços e Disponibilidade</h2>
+                <p>Nos esforçamos para manter o ME Finanças disponível continuamente, mas não garantimos a ausência de interrupções causadas por manutenção, falhas ou eventos externos.</p>
+
+                <h2 class="h4 mt-4">6. Limitação de Responsabilidade</h2>
+                <p>O uso do ME Finanças é oferecido "como está". Não nos responsabilizamos por perdas ou danos indiretos decorrentes do uso da plataforma.</p>
+
+                <h2 class="h4 mt-4">7. Cancelamento</h2>
+                <p>Você pode encerrar sua conta a qualquer momento. Reservamo-nos o direito de suspender ou encerrar contas que violem estes termos.</p>
+
+                <h2 class="h4 mt-4">8. Alterações dos Termos</h2>
+                <p>Eventuais alterações serão comunicadas e entrarão em vigor a partir da data indicada. O uso contínuo do serviço representa aceitação das mudanças.</p>
+
+                <p class="mt-5 mb-4 text-end">Última atualização: 01/10/2024</p>
+
+                <div class="back-action">
+                    <a class="btn btn-primary" href="{{ url_for('auth') }}">Voltar para o login</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='fonts/js/all.js') }}" crossorigin="anonymous"></script>
+</body>
+</html>

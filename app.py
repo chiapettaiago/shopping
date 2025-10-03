@@ -21,7 +21,6 @@ from pathlib import Path
 import calendar
 import time
 import plotly.graph_objs as go
-import stripe
 from functools import wraps
 import uuid
 import redis
@@ -181,7 +180,6 @@ def determine_database_uri():
     return str(fallback_url), False, None
 
 
-stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 
 app = Flask(__name__)
 
@@ -498,9 +496,6 @@ def check_session_timeout():
 def subscription_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if current_user.subscription_status != 'active':
-            flash('You need an active subscription to access this page.', 'warning')
-            return redirect(url_for('checkout'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -727,66 +722,6 @@ def view_list(list_id):
     total_price = sum(item.price * item.quantity for item in shopping_list)
     return render_template('index.html', shopping_list=shopping_list, total_price=total_price)
 
-@app.route('/checkout')
-@login_required
-def checkout():
-    session = stripe.checkout.Session.create(
-        payment_method_types=['card'],
-        line_items=[{
-            'price': 'price_1POhzU2MGdLJSgZSMeaSsWH8',  # Use the price ID from your Stripe Dashboard
-            'quantity': 1,
-        }],
-        mode='subscription',
-        success_url=url_for('subscription_success', _external=True),
-        cancel_url=url_for('subscription_cancel', _external=True),
-    )
-    return render_template('checkout.html', session_id=session.id, stripe_public_key=os.getenv('STRIPE_PUBLIC_KEY'))
-
-@app.route('/subscription_success')
-@login_required
-def subscription_success():
-    user = current_user
-    user.subscription_status = 'active'
-    db.session.commit()
-    flash('Subscription successful!', 'success')
-    return redirect(url_for('dashboard'))
-
-@app.route('/subscription_cancel')
-@login_required
-def subscription_cancel():
-    flash('Subscription cancelled or failed.', 'danger')
-    return redirect(url_for('dashboard'))
-
-@app.route('/webhook', methods=['POST'])
-def stripe_webhook():
-    payload = request.get_data(as_text=True)
-    sig_header = request.headers.get('Stripe-Signature')
-
-    try:
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, 'your_webhook_secret'
-        )
-    except ValueError as e:
-        # Invalid payload
-        return 'Invalid payload', 400
-    except stripe.error.SignatureVerificationError as e:
-        # Invalid signature
-        return 'Invalid signature', 400
-
-    # Handle the event
-    if event['type'] == 'checkout.session.completed':
-        session = event['data']['object']
-        handle_checkout_session(session)
-
-    return 'Success', 200
-
-def handle_checkout_session(session):
-    customer_email = session['customer_email']
-    user = User.query.filter_by(email=customer_email).first()
-    if user:
-        user.subscription_status = 'active'
-        db.session.commit()
-
 
 @app.route('/auth', methods=['GET', 'POST'])
 def auth():
@@ -820,6 +755,16 @@ def auth():
             return redirect(url_for('auth', login_error='Usuário registrado com sucesso. Faça login.'))
 
     return render_template('auth.html')
+
+
+@app.route('/politica-de-privacidade')
+def privacy_policy():
+    return render_template('privacy.html')
+
+
+@app.route('/termos-de-uso')
+def terms_of_use():
+    return render_template('terms.html')
 
 @app.route('/logout')
 @login_required
