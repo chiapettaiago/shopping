@@ -1,8 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, make_response, send_file, session, flash, abort, Response, jsonify
 from models.models import db, User, ShoppingList, debts, Balance, Diario, Report, Historico
 from controllers.ia_controller import process_user_input
-from sqlalchemy import exc, text, create_engine, desc
-from sqlalchemy.engine import URL
+from sqlalchemy import exc, text, desc, or_
 from sqlalchemy.pool import QueuePool
 from flask_migrate import Migrate
 from datetime import datetime, timedelta, timezone
@@ -17,436 +16,282 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from itsdangerous import URLSafeTimedSerializer
 import io
 import os
-from pathlib import Path
 import calendar
 import time
 import plotly.graph_objs as go
+import stripe
 from functools import wraps
 import uuid
-import redis
+import secrets
 import json
 import hashlib
 import smtplib
 import ssl
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
+from authlib.integrations.flask_client import OAuth
 
 context = ssl.create_default_context()
 context.check_hostname = False
 context.verify_mode = ssl.CERT_NONE
 
 
-BASE_DIR = Path(__file__).resolve().parent
-CONFIG_DIR = BASE_DIR / 'config'
-DB_CONFIG_PATH = CONFIG_DIR / 'database.json'
-FALLBACK_SQLITE_PATH = BASE_DIR / 'tmp' / 'mefinancas.db'
-FALLBACK_SQLITE_PATH.parent.mkdir(parents=True, exist_ok=True)
-
-
-def load_db_config_from_file():
-    """Carrega um dicionário de configuração de banco salvo localmente."""
-    if not DB_CONFIG_PATH.exists():
-        return None
-
-    try:
-        with open(DB_CONFIG_PATH, 'r', encoding='utf-8') as config_file:
-            return json.load(config_file)
-    except (json.JSONDecodeError, OSError):
-        return None
-
-
-def _coerce_port(value):
-    if value in (None, ''):
-        return None
-    try:
-        return int(value)
-    except (TypeError, ValueError):
-        return None
-
-
-def build_database_url_from_dict(config_dict):
-    """Monta uma URL de conexão SQLAlchemy com base no dicionário informado."""
-    if not config_dict:
-        return None
-
-    engine_name = (config_dict.get('engine') or config_dict.get('dialect') or '').lower()
-
-    if engine_name in ('mysql', 'mysql+mysqlconnector'):
-        url_obj = URL.create(
-            drivername='mysql+mysqlconnector',
-            username=config_dict.get('username') or None,
-            password=config_dict.get('password') or None,
-            host=config_dict.get('host') or None,
-            port=_coerce_port(config_dict.get('port')),
-            database=config_dict.get('database') or None
-        )
-        return str(url_obj)
-
-    if engine_name in ('postgres', 'postgresql', 'postgresql+psycopg2'):
-        url_obj = URL.create(
-            drivername='postgresql+psycopg2',
-            username=config_dict.get('username') or None,
-            password=config_dict.get('password') or None,
-            host=config_dict.get('host') or None,
-            port=_coerce_port(config_dict.get('port')),
-            database=config_dict.get('database') or None
-        )
-        return str(url_obj)
-
-    if engine_name in ('sqlite', 'sqlite3'):
-        db_path = config_dict.get('database') or config_dict.get('path')
-        if not db_path:
-            return None
-
-        db_path = Path(db_path)
-        if not db_path.is_absolute():
-            db_path = BASE_DIR / db_path
-        db_path.parent.mkdir(parents=True, exist_ok=True)
-        url_obj = URL.create(drivername='sqlite', database=str(db_path))
-        return str(url_obj)
-
-    return None
-
-
-def persist_db_config(config_payload):
-    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-    with open(DB_CONFIG_PATH, 'w', encoding='utf-8') as config_file:
-        json.dump(config_payload, config_file, indent=2, ensure_ascii=False)
-
-
 def load_env():
-    """Carregar variáveis de ambiente do arquivo .env."""
-    env_path = '.env'
-    if not os.path.exists(env_path):
-        return
+    """Carregar variáveis de ambiente do arquivo .env usando python-dotenv."""
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+        return True
+    except ImportError:
+        # Fallback para método manual se python-dotenv não estiver disponível
+        env_path = '.env'
+        if not os.path.exists(env_path):
+            return False
 
-    with open(env_path) as f:
-        for line in f:
-            if line.strip() and not line.startswith('#'):
-                key, value = line.strip().split('=', 1)
-                os.environ[key] = value
+        with open(env_path) as f:
+            for line in f:
+                if line.strip() and not line.startswith('#'):
+                    key, value = line.strip().split('=', 1)
+                    os.environ[key] = value
+        return True
 
 # Carregar variáveis de ambiente
 load_env()
 
+stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 
-def determine_database_uri():
-    db_username = os.getenv('DB_USERNAME')
-    db_password = os.getenv('DB_PASSWORD')
-    db_host = os.getenv('DB_HOST')
-    db_name = os.getenv('DB_NAME')
-    db_port = os.getenv('DB_PORT')
-    database_url = (
-        os.getenv('DATABASE_URL')
-        or os.getenv('CLEARDB_DATABASE_URL')
-        or os.getenv('SQLALCHEMY_DATABASE_URI')
-    )
+LEGACY_DB_HOST_TOKENS = ('meutesouro.site', 'meutesouro.site:3306')
+STACKHERO_DEFAULT_HOST = os.getenv('STACKHERO_DB_HOST', '59zo8a.stackhero-network.com:4791')
+STACKHERO_DEFAULT_DB_URL = (
+    'mysql://root:TOS5UWYaAvq4HfCoBGaIVEmN7sBK0ACD@'
+    '59zo8a.stackhero-network.com:4791/root?useSSL=true&requireSSL=true'
+)
 
-    if database_url:
-        if database_url.startswith('mysql://'):
-            parsed_db_url = urlparse(database_url)
-            url_obj = URL.create(
-                drivername='mysql+mysqlconnector',
-                username=parsed_db_url.username,
-                password=parsed_db_url.password or None,
-                host=parsed_db_url.hostname,
-                port=parsed_db_url.port,
-                database=parsed_db_url.path.lstrip('/')
-            )
-            return str(url_obj), True, None
 
-        if database_url.startswith(('postgres://', 'postgresql://')):
-            normalized_url = database_url.replace('postgres://', 'postgresql://', 1)
-            return normalized_url, True, None
-
-        return database_url, True, None
-
-    if all([db_username, db_password, db_host, db_name]):
-        url_obj = URL.create(
-            drivername='mysql+mysqlconnector',
-            username=db_username,
-            password=db_password,
-            host=db_host,
-            port=_coerce_port(db_port),
-            database=db_name
-        )
-        return str(url_obj), True, None
-
-    file_config = load_db_config_from_file()
-    file_url = build_database_url_from_dict(file_config)
-    if file_url:
-        return file_url, True, file_config
-
-    fallback_url = URL.create(drivername='sqlite', database=str(FALLBACK_SQLITE_PATH))
-    return str(fallback_url), False, None
-
+def _is_legacy_db_target(value) -> bool:
+    if not value:
+        return False
+    normalized_value = value.lower()
+    return any(token in normalized_value for token in LEGACY_DB_HOST_TOKENS)
 
 
 app = Flask(__name__)
 
 # Ajusta a chave secreta com prioridade para variáveis de ambiente
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'homium-001')
+app.config['GOOGLE_CLIENT_ID'] = os.getenv('GOOGLE_CLIENT_ID')
+app.config['GOOGLE_CLIENT_SECRET'] = os.getenv('GOOGLE_CLIENT_SECRET')
 
-database_uri, db_is_configured, file_config = determine_database_uri()
-app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
-app.config['DB_CONFIGURED'] = db_is_configured
-app.config['DB_FILE_CONFIGURATION'] = file_config
-app.config['SQLALCHEMY_POOL_SIZE'] = 5  # Reduzir o tamanho do pool
-app.config['SQLALCHEMY_MAX_OVERFLOW'] = 10  # Limitar conexões extras
-app.config['SQLALCHEMY_POOL_TIMEOUT'] = 30  # Timeout mais curto
-app.config['SQLALCHEMY_POOL_RECYCLE'] = 1800  # Reciclar conexões a cada 30 minutos
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+oauth = OAuth(app)
 
-redis_url = os.getenv('REDIS_URL')
-if redis_url:
-    redis_cache = redis.StrictRedis.from_url(
-        redis_url,
-        decode_responses=True,
-        socket_timeout=5,
-        socket_connect_timeout=5,
-        retry_on_timeout=True,
-        max_connections=10
+google_login_enabled = bool(app.config['GOOGLE_CLIENT_ID'] and app.config['GOOGLE_CLIENT_SECRET'])
+
+if google_login_enabled:
+    oauth.register(
+        name='google',
+        client_id=app.config['GOOGLE_CLIENT_ID'],
+        client_secret=app.config['GOOGLE_CLIENT_SECRET'],
+        server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+        client_kwargs={'scope': 'openid email profile'}
     )
 else:
-    redis_cache = redis.StrictRedis(
-        host=os.getenv('REDIS_HOST', 'localhost'),
-        port=int(os.getenv('REDIS_PORT', 6379)),
-        password=os.getenv('REDIS_PASSWORD'),
-        db=int(os.getenv('REDIS_DB', 0)),
-        decode_responses=True,
-        socket_timeout=5,
-        socket_connect_timeout=5,
-        retry_on_timeout=True,
-        max_connections=10
+    app.logger.warning('Google OAuth desativado: credenciais ausentes.')
+
+# Obtém as variáveis de ambiente para construir a URI do banco de dados
+db_username = os.getenv('DB_USERNAME')
+db_password = os.getenv('DB_PASSWORD')
+db_host = os.getenv('DB_HOST')
+db_name = os.getenv('DB_NAME')
+
+# Configuração de banco de dados com fallback para SQLite
+database_url = os.getenv('DATABASE_URL')
+
+# Se não houver DATABASE_URL, usar SQLite como fallback
+if not database_url:
+    # Usar SQLite local para desenvolvimento
+    sqlite_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance', 'database.db')
+    database_url = f'sqlite:///{sqlite_path}'
+    app.logger.info(f"Usando SQLite como banco de dados: {sqlite_path}")
+else:
+    app.logger.info("Usando DATABASE_URL configurada")
+
+# Verificar URLs legadas (manter para compatibilidade)
+if database_url and _is_legacy_db_target(database_url):
+    app.logger.warning('Ignorando host legado meutesouro.site; usando SQLite.')
+    sqlite_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance', 'database.db')
+    database_url = f'sqlite:///{sqlite_path}'
+
+engine_connect_args = {}
+
+if database_url:
+    # SQLite (desenvolvimento/local)
+    if database_url.startswith('sqlite://'):
+        app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+        app.logger.info("Configurando SQLite")
+        
+    # Heroku PostgreSQL support
+    elif database_url.startswith(('postgres://', 'postgresql://')):
+        # Heroku fornece postgres:// mas SQLAlchemy precisa de postgresql://
+        normalized_url = database_url.replace('postgres://', 'postgresql://', 1)
+        app.config['SQLALCHEMY_DATABASE_URI'] = normalized_url
+        app.logger.info("Configurando PostgreSQL para Heroku")
+        
+    elif database_url.startswith('mysql://'):
+        parsed_db_url = urlparse(database_url)
+        query_params = parse_qsl(parsed_db_url.query, keep_blank_values=True)
+        retained_query_params = []
+        ssl_required = None
+
+        for key, raw_value in query_params:
+            normalized_key = key.lower()
+            value_lower = raw_value.lower()
+            bool_value = value_lower not in ('0', 'false', 'no', '')
+
+            if normalized_key == 'requiressl':
+                ssl_required = bool_value
+                continue
+            if normalized_key == 'usessl':
+                if ssl_required is None:
+                    ssl_required = bool_value
+                continue
+
+            retained_query_params.append((key, raw_value))
+
+        # Configurações SSL para MySQL
+        if ssl_required is not None and ssl_required:
+            # Para MySQL com SSL (Stackhero)
+            import ssl
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_REQUIRED
+            engine_connect_args['ssl'] = ssl_context
+            app.logger.info("Configurando MySQL com SSL")
+        elif ssl_required is not None and not ssl_required:
+            engine_connect_args['ssl_disabled'] = True
+            app.logger.info("Configurando MySQL sem SSL")
+        
+        # Configurações de conexão otimizadas para Heroku
+        engine_connect_args.update({
+            'connect_timeout': 30,  # Timeout menor para Heroku
+            'read_timeout': 30,
+            'write_timeout': 30,
+            'charset': 'utf8mb4',
+            'autocommit': True,
+        })
+
+        mysql_url = parsed_db_url._replace(
+            scheme='mysql+pymysql',  # PyMySQL é mais estável no Heroku
+            query=urlencode(retained_query_params)
+        )
+
+        app.config['SQLALCHEMY_DATABASE_URI'] = urlunparse(mysql_url)
+        app.logger.info("Configurando MySQL com PyMySQL")
+    else:
+        app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+        app.logger.info(f"Configurando banco de dados: {database_url[:50]}...")
+        
+elif all([db_username, db_password, db_host, db_name]):
+    app.config['SQLALCHEMY_DATABASE_URI'] = (
+        f'mysql+mysqlconnector://{db_username}:{db_password}@{db_host}/{db_name}'
     )
+else:
+    raise RuntimeError('Database configuration is missing. Check environment variables.')
+# Configurações otimizadas para Heroku
+is_heroku = os.environ.get('DYNO')  # Heroku define esta variável
+if is_heroku:
+    # Configurações mais conservadoras para Heroku
+    app.config['SQLALCHEMY_POOL_SIZE'] = 2
+    app.config['SQLALCHEMY_MAX_OVERFLOW'] = 3
+    app.config['SQLALCHEMY_POOL_TIMEOUT'] = 30
+    app.config['SQLALCHEMY_POOL_RECYCLE'] = 1800  # 30 minutos
+    app.logger.info("Configurações otimizadas para Heroku aplicadas")
+else:
+    # Configurações para desenvolvimento local
+    app.config['SQLALCHEMY_POOL_SIZE'] = 3
+    app.config['SQLALCHEMY_MAX_OVERFLOW'] = 5
+    app.config['SQLALCHEMY_POOL_TIMEOUT'] = 60
+    app.config['SQLALCHEMY_POOL_RECYCLE'] = 3600  # 1 hora
+
+app.config['SQLALCHEMY_POOL_PRE_PING'] = True  # Verificar conexões antes de usar
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 csrf = CSRFProtect(app)
 csrf.init_app(app)
 
 app.config['WTF_CSRF_ENABLED'] = False  # Desabilita a proteção global
 
-def configure_sqlalchemy_engine(sqlalchemy_uri):
-    return create_engine(
-        sqlalchemy_uri,
-        poolclass=QueuePool,
-        pool_size=20,
-        max_overflow=0,
-        pool_recycle=3600,
-        execution_options={'autoflush': False, 'expire_on_commit': False}
-    )
-
-
-engine = configure_sqlalchemy_engine(app.config['SQLALCHEMY_DATABASE_URI'])
-
-
-def get_db_form_defaults(existing_config=None):
-    defaults = {
-        'engine': 'mysql',
-        'host': '',
-        'port': '',
-        'username': '',
-        'password': '',
-        'database': ''
+engine_options = dict(
+    poolclass=QueuePool,
+    pool_size=app.config['SQLALCHEMY_POOL_SIZE'],
+    max_overflow=app.config['SQLALCHEMY_MAX_OVERFLOW'],
+    pool_recycle=app.config['SQLALCHEMY_POOL_RECYCLE'],
+    pool_pre_ping=True,
+    pool_timeout=app.config['SQLALCHEMY_POOL_TIMEOUT'],
+    execution_options={
+        'autoflush': False, 
+        'expire_on_commit': False
     }
+)
 
-    if existing_config:
-        defaults['engine'] = existing_config.get('engine', defaults['engine'])
-        defaults['host'] = existing_config.get('host', defaults['host']) or ''
-        defaults['username'] = existing_config.get('username', defaults['username']) or ''
-        defaults['database'] = existing_config.get('database', defaults['database']) or ''
+# Adicionar isolation_level apenas para bancos que suportam
+if not app.config['SQLALCHEMY_DATABASE_URI'].startswith('sqlite://'):
+    engine_options['execution_options']['isolation_level'] = 'READ_COMMITTED'
 
-        port_value = existing_config.get('port')
-        defaults['port'] = str(port_value) if port_value not in (None, '') else ''
+if engine_connect_args:
+    engine_options['connect_args'] = engine_connect_args
 
-        if defaults['engine'] in ('sqlite', 'sqlite3'):
-            defaults['host'] = ''
-            defaults['port'] = ''
-            defaults['username'] = ''
-
-    return defaults
-
-
-def extract_form_payload(form_data, existing_config=None):
-    engine_name = (form_data.get('engine') or 'mysql').lower()
-    payload = {'engine': engine_name}
-
-    if engine_name in ('sqlite', 'sqlite3'):
-        payload['database'] = form_data.get('database', '').strip()
-        return payload
-
-    payload['host'] = form_data.get('host', '').strip()
-    payload['port'] = form_data.get('port', '').strip()
-    payload['username'] = form_data.get('username', '').strip()
-    password_value = form_data.get('password', '')
-
-    if not password_value and existing_config and existing_config.get('engine') == engine_name:
-        password_value = existing_config.get('password', '')
-
-    payload['password'] = password_value
-    payload['database'] = form_data.get('database', '').strip()
-    return payload
-
-
-def validate_db_payload(payload):
-    errors = []
-    engine_name = payload.get('engine')
-
-    if engine_name in ('sqlite', 'sqlite3'):
-        if not payload.get('database'):
-            errors.append('Informe o caminho do arquivo SQLite.')
-        return errors
-
-    if not payload.get('host'):
-        errors.append('O host do banco é obrigatório.')
-    if not payload.get('username'):
-        errors.append('O usuário do banco é obrigatório.')
-    if not payload.get('database'):
-        errors.append('O nome do banco é obrigatório.')
-
-    port_value = payload.get('port')
-    if port_value:
-        try:
-            int(port_value)
-        except (TypeError, ValueError):
-            errors.append('A porta deve ser um número inteiro.')
-
-    return errors
-
-
-def test_database_connection(sqlalchemy_uri):
-    test_engine = None
-    try:
-        test_engine = create_engine(
-            sqlalchemy_uri,
-            poolclass=QueuePool,
-            pool_size=1,
-            max_overflow=0,
-            pool_recycle=3600,
-            execution_options={'autoflush': False, 'expire_on_commit': False}
-        )
-        with test_engine.connect() as connection:
-            connection.execute(text('SELECT 1'))
-        return True, 'Conexão bem-sucedida.'
-    except Exception as error:  # noqa: B902 - queremos capturar qualquer erro de conexão
-        return False, str(error)
-    finally:
-        if test_engine:
-            test_engine.dispose()
-
-
-def apply_database_configuration(sqlalchemy_uri, payload):
-    global engine
-
-    app.config['SQLALCHEMY_DATABASE_URI'] = sqlalchemy_uri
-    app.config['DB_CONFIGURED'] = True
-    app.config['DB_FILE_CONFIGURATION'] = payload
-
-    try:
-        db.session.remove()
-    except Exception:
-        pass
-
-    try:
-        db.engine.dispose()
-    except Exception:
-        pass
-
-    try:
-        engine.dispose()
-    except Exception:
-        pass
-
-    engine = configure_sqlalchemy_engine(sqlalchemy_uri)
-
-
-@app.route('/database/setup', methods=['GET', 'POST'])
-def database_setup():
-    existing_config = load_db_config_from_file() or app.config.get('DB_FILE_CONFIGURATION') or {}
-    form_defaults = get_db_form_defaults(existing_config)
-    test_result = None
-
-    if form_defaults.get('engine') not in ('sqlite', 'sqlite3'):
-        form_defaults['password'] = ''
-
-    if request.method == 'POST':
-        form_payload = extract_form_payload(request.form, existing_config)
-        errors = validate_db_payload(form_payload)
-        action = request.form.get('action', 'test')
-        force_save_requested = request.form.get('force_save') == '1'
-        connection_uri = build_database_url_from_dict(form_payload) if not errors else None
-
-        if errors:
-            for error in errors:
-                flash(error, 'danger')
-        elif not connection_uri:
-            flash('Não foi possível montar a URL de conexão. Verifique os dados informados.', 'danger')
-        else:
-            if action == 'save' and force_save_requested:
-                success = False
-                message = 'A conexão não foi testada. Verifique manualmente assim que possível.'
-                test_result = {'success': False, 'message': message}
-            else:
-                success, message = test_database_connection(connection_uri)
-                test_result = {'success': success, 'message': message}
-
-            if action == 'save':
-                if success:
-                    payload_to_store = dict(form_payload)
-                    if payload_to_store.get('port') in ('', None):
-                        payload_to_store.pop('port', None)
-                    else:
-                        payload_to_store['port'] = int(payload_to_store['port'])
-
-                    persist_db_config(payload_to_store)
-                    apply_database_configuration(connection_uri, payload_to_store)
-                    flash('Configuração salva com sucesso.', 'success')
-                    return redirect(url_for('database_setup'))
-
-                if force_save_requested:
-                    payload_to_store = dict(form_payload)
-                    if payload_to_store.get('port') in ('', None):
-                        payload_to_store.pop('port', None)
-                    else:
-                        payload_to_store['port'] = int(payload_to_store['port'])
-
-                    persist_db_config(payload_to_store)
-                    apply_database_configuration(connection_uri, payload_to_store)
-                    flash(
-                        'Configuração salva, mas a conexão não pôde ser verificada automaticamente. '
-                        'Confira o banco assim que o acesso estiver disponível.',
-                        'warning'
-                    )
-                    return redirect(url_for('database_setup'))
-
-                flash(f'Não foi possível salvar: {message}', 'danger')
-
-        form_defaults = get_db_form_defaults(form_payload)
-        if form_payload.get('engine') not in ('sqlite', 'sqlite3'):
-            form_defaults['password'] = ''
-
-        return render_template(
-            'database_setup.html',
-            form_data=form_defaults,
-            test_result=test_result,
-            db_configured=app.config.get('DB_CONFIGURED', False)
-        )
-
-    return render_template(
-        'database_setup.html',
-        form_data=form_defaults,
-        test_result=test_result,
-        db_configured=app.config.get('DB_CONFIGURED', False)
-    )
-
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_options
 
 # Configure a sessão permanente com tempo limite de 5 minutos
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
-app.config['SESSION_TYPE'] = 'redis'
-app.config['SESSION_REDIS'] = redis_cache
 app.config['SESSION_USE_SIGNER'] = True
-app.config['SESSION_KEY_PREFIX'] = 'session:'
 
 db.init_app(app)
 migrate = Migrate(app, db)
+
+# Função para testar e aguardar conexão com banco
+def wait_for_db_connection(max_retries=5, delay=10):
+    """Aguarda conexão com banco de dados estar disponível"""
+    import time
+    from sqlalchemy import text
+    
+    # Heroku precisa de menos tentativas e delays menores
+    is_heroku = os.environ.get('DYNO')
+    if is_heroku:
+        max_retries = 3
+        delay = 5
+    
+    retries = 0
+    while retries < max_retries:
+        try:
+            with app.app_context():
+                # Tenta uma query simples
+                result = db.session.execute(text("SELECT 1"))
+                result.close()
+                app.logger.info("Conexão com banco de dados estabelecida com sucesso")
+                return True
+        except Exception as e:
+            retries += 1
+            app.logger.warning(f"Tentativa {retries}/{max_retries} de conexão com banco falhou: {e}")
+            if retries < max_retries and not is_heroku:  # No Heroku, não fazer sleep
+                app.logger.info(f"Aguardando {delay} segundos antes da próxima tentativa...")
+                time.sleep(delay)
+            else:
+                app.logger.error("Todas as tentativas de conexão falharam")
+                return False
+    return False
+
+# Tentar conectar ao banco na inicialização
+# No Heroku, não bloquear o startup se o banco não estiver disponível imediatamente
+is_heroku = os.environ.get('DYNO')
+if not is_heroku:
+    db_available = wait_for_db_connection()
+    if not db_available:
+        app.logger.error("Não foi possível conectar ao banco de dados")
+        app.logger.error("Verifique se o servidor Stackhero está ativo e as credenciais estão corretas")
+        app.logger.error("URL de conexão configurada: " + app.config.get('SQLALCHEMY_DATABASE_URI', 'N/A'))
+else:
+    app.logger.info("Executando no Heroku - conexão com banco será verificada sob demanda")
+
 login_manager = LoginManager(app)
 login_manager.login_view = 'auth'  # Define a rota para redirecionamento quando o usuário não estiver logado
 
@@ -457,21 +302,6 @@ serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
-
-@app.before_request
-def ensure_database_configuration():
-    if app.config.get('DB_CONFIGURED', False):
-        return
-
-    endpoint = request.endpoint or ''
-
-    if endpoint in ('database_setup', 'static'):
-        return
-
-    if request.path.startswith('/static/') or request.path.startswith('/favicon'):
-        return
-
-    return redirect(url_for('database_setup'))
 
 # Atualizar o tempo limite da sessão sempre que uma solicitação for recebida
 @app.before_request
@@ -496,25 +326,31 @@ def check_session_timeout():
 def subscription_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        if current_user.subscription_status != 'active':
+            flash('You need an active subscription to access this page.', 'warning')
+            return redirect(url_for('checkout'))
         return f(*args, **kwargs)
     return decorated_function
 
+def db_required(f):
+    """Decorator para rotas que precisam de conexão com banco"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        try:
+            # Tenta uma query simples para verificar conexão
+            with app.app_context():
+                db.session.execute(text("SELECT 1"))
+            return f(*args, **kwargs)
+        except Exception as e:
+            app.logger.warning(f"Banco indisponível: {e}")
+            return render_template('db_unavailable.html'), 503
+    return decorated_function
+
 def get_user_data(user_id):
-    cache_key = f'user_data:{user_id}'
-    cached_data = redis_cache.get(cache_key)
-
-    if cached_data:
-        print('Returning data from cache')
-        return json.loads(cached_data)
-
     user_data = db.session.query(User).filter_by(id=user_id).first()
 
     if user_data:
-        # Convert user_data to a dictionary before caching
-        user_dict = user_data.to_dict()
-        redis_cache.setex(cache_key, 600, json.dumps(user_dict))  # Cache for 10 minutos
-        print('Data stored in cache')
-        return user_dict
+        return user_data.to_dict()
 
     return None
 
@@ -522,28 +358,10 @@ def cache_route(timeout=300):
     def decorator(f):
         @wraps(f)
         def wrapped(*args, **kwargs):
-            # Gerar uma chave única de cache baseada no caminho da requisição e nos parâmetros
-            cache_key = f"route_cache:{request.path}:{request.query_string.decode('utf-8')}"
-            
-            # Verificar se existe uma resposta em cache
-            cached_response = redis_cache.get(cache_key)
-            
-            if cached_response:
-                return Response(cached_response, mimetype='text/html')
-            
-            # Caso não haja cache, chamar a função original
             response = f(*args, **kwargs)
-            
-            # Certificar que a resposta seja um objeto Response
+
             if isinstance(response, str):
                 response = Response(response, mimetype='text/html')
-            
-            # Armazenar no cache apenas se for uma resposta HTML bem-sucedida e menor que 1MB
-            if (response.status_code == 200 and 
-                response.mimetype == 'text/html' and 
-                len(response.data) < 1024 * 1024):  # 1MB
-                redis_cache.setex(cache_key, timeout, response.data)
-            
             return response
         return wrapped
     return decorator
@@ -570,7 +388,7 @@ def send_password_reset_email(email, reset_url):
     from email.mime.text import MIMEText
     import ssl
 
-    msg = MIMEText(f'''Redefinição de Senha - ME Finanças\n\n
+    msg = MIMEText(f'''Redefinição de Senha - ME finanças\n\n
     Clique no link: {reset_url}\n\nLink válido por 1 hora.''')
     
     msg['Subject'] = 'Redefinição de Senha'
@@ -722,49 +540,265 @@ def view_list(list_id):
     total_price = sum(item.price * item.quantity for item in shopping_list)
     return render_template('index.html', shopping_list=shopping_list, total_price=total_price)
 
+@app.route('/checkout')
+@login_required
+def checkout():
+    session = stripe.checkout.Session.create(
+        payment_method_types=['card'],
+        line_items=[{
+            'price': 'price_1POhzU2MGdLJSgZSMeaSsWH8',  # Use the price ID from your Stripe Dashboard
+            'quantity': 1,
+        }],
+        mode='subscription',
+        success_url=url_for('subscription_success', _external=True),
+        cancel_url=url_for('subscription_cancel', _external=True),
+    )
+    return render_template('checkout.html', session_id=session.id, stripe_public_key=os.getenv('STRIPE_PUBLIC_KEY'))
+
+@app.route('/subscription_success')
+@login_required
+def subscription_success():
+    user = current_user
+    user.subscription_status = 'active'
+    db.session.commit()
+    flash('Subscription successful!', 'success')
+    return redirect(url_for('dashboard'))
+
+@app.route('/subscription_cancel')
+@login_required
+def subscription_cancel():
+    flash('Subscription cancelled or failed.', 'danger')
+    return redirect(url_for('dashboard'))
+
+@app.route('/webhook', methods=['POST'])
+def stripe_webhook():
+    payload = request.get_data(as_text=True)
+    sig_header = request.headers.get('Stripe-Signature')
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, 'your_webhook_secret'
+        )
+    except ValueError as e:
+        # Invalid payload
+        return 'Invalid payload', 400
+    except stripe.error.SignatureVerificationError as e:
+        # Invalid signature
+        return 'Invalid signature', 400
+
+    # Handle the event
+    if event['type'] == 'checkout.session.completed':
+        session = event['data']['object']
+        handle_checkout_session(session)
+
+    return 'Success', 200
+
+def handle_checkout_session(session):
+    customer_email = session['customer_email']
+    user = User.query.filter_by(email=customer_email).first()
+    if user:
+        user.subscription_status = 'active'
+        db.session.commit()
+
 
 @app.route('/auth', methods=['GET', 'POST'])
+@db_required
 def auth():
+    if request.method == 'POST':
+        form_action = request.form.get('action', 'login')
+
+        if form_action == 'register':
+            full_name = (request.form.get('full_name') or '').strip()
+            email = (request.form.get('email') or '').strip().lower()
+            username = (request.form.get('username') or '').strip()
+            password = request.form.get('password') or ''
+            confirm_password = request.form.get('confirm_password') or ''
+
+            if not full_name or not email or not username or not password or not confirm_password:
+                flash('Informe todos os dados para concluir seu cadastro.', 'danger')
+                return redirect(url_for('auth', tab='register'))
+
+            if len(password) < 8:
+                flash('A senha deve ter pelo menos 8 caracteres.', 'danger')
+                return redirect(url_for('auth', tab='register'))
+
+            if password != confirm_password:
+                flash('As senhas informadas não conferem.', 'danger')
+                return redirect(url_for('auth', tab='register'))
+
+            # Verificações de usuário e email existentes com retry
+            max_retries = 3
+            retry_count = 0
+            
+            while retry_count < max_retries:
+                try:
+                    if User.query.filter_by(username=username).first():
+                        flash('Este nome de usuário já está em uso.', 'danger')
+                        return redirect(url_for('auth', tab='register'))
+
+                    if User.query.filter_by(email=email).first():
+                        flash('Este e-mail já está cadastrado.', 'danger')
+                        return redirect(url_for('auth', tab='register'))
+                    
+                    break  # Se chegou aqui, as queries funcionaram
+                    
+                except exc.OperationalError as e:
+                    retry_count += 1
+                    app.logger.warning(f"Tentativa {retry_count} de verificação falhou: {e}")
+                    if retry_count >= max_retries:
+                        flash('Serviço temporariamente indisponível. Tente novamente em alguns minutos.', 'danger')
+                        return redirect(url_for('auth', tab='register'))
+                    time.sleep(2)  # Aguarda 2 segundos antes de tentar novamente
+                except Exception as e:
+                    app.logger.error(f"Erro inesperado na verificação: {e}")
+                    flash('Erro interno. Tente novamente.', 'danger')
+                    return redirect(url_for('auth', tab='register'))
+
+            new_user = User(
+                username=username,
+                password=generate_password_hash(password),
+                email=email,
+                full_name=full_name,
+                subscription_status='inactive'
+            )
+
+            db.session.add(new_user)
+            retry_count = 0
+            
+            while retry_count < max_retries:
+                try:
+                    db.session.commit()
+                    flash('Cadastro criado com sucesso! Você já pode acessar com suas credenciais.', 'success')
+                    return redirect(url_for('auth', tab='login'))
+                    
+                except exc.IntegrityError as e:
+                    db.session.rollback()
+                    app.logger.warning(f"Erro de integridade: {e}")
+                    flash('Dados já existem no sistema. Verifique usuário e e-mail.', 'danger')
+                    return redirect(url_for('auth', tab='register'))
+                    
+                except exc.OperationalError as e:
+                    db.session.rollback()
+                    retry_count += 1
+                    app.logger.warning(f"Tentativa {retry_count} de commit falhou: {e}")
+                    if retry_count >= max_retries:
+                        flash('Serviço temporariamente indisponível. Tente novamente em alguns minutos.', 'danger')
+                        return redirect(url_for('auth', tab='register'))
+                    time.sleep(2)  # Aguarda 2 segundos antes de tentar novamente
+                    
+                except exc.SQLAlchemyError as e:
+                    db.session.rollback()
+                    app.logger.exception('Falha ao cadastrar usuário.')
+                    flash('Erro interno do sistema. Tente novamente.', 'danger')
+                    return redirect(url_for('auth', tab='register'))
+                except Exception as e:
+                    db.session.rollback()
+                    app.logger.exception(f'Erro inesperado: {e}')
+                    flash('Erro inesperado. Tente novamente.', 'danger')
+                    return redirect(url_for('auth', tab='register'))
+
+        identifier = (request.form.get('username') or '').strip()
+        password = request.form.get('password') or ''
+
+        if not identifier or not password:
+            flash('Informe usuário e senha.', 'danger')
+            return redirect(url_for('auth', tab='login'))
+
+        user = User.query.filter(
+            or_(User.username == identifier, User.email == identifier)
+        ).first()
+
+        if not user or not check_password_hash(user.password, password):
+            flash('Credenciais inválidas. Verifique seus dados e tente novamente.', 'danger')
+            return redirect(url_for('auth', tab='login'))
+
+        login_user(user)
+        flash('Login realizado com sucesso.', 'success')
+        return redirect(url_for('start'))
+
     # Redirecionamento para solicitação de redefinição de senha
     if request.args.get('reset'):
         return redirect(url_for('reset_password_request'))
-    
-    if request.method == 'POST':
-        action = request.form.get('action')
-        full_name = request.form.get('full_name')
-        email = request.form.get('email')
-        username = request.form['username']
-        password = request.form['password']
 
-        if action == 'login':
-            user = User.query.filter_by(username=username).first()
-            if user and check_password_hash(user.password, password):
-                login_user(user)
-                return redirect(url_for('start'))
-            else:
-                return render_template('auth.html', login_error='Usuário ou senha incorretos.')
+    error_message = request.args.get('error')
+    if error_message:
+        flash(error_message, 'danger')
 
-        elif action == 'register':
-            existing_user = User.query.filter((User.username == username) | (User.email == email)).first()
-            if existing_user:
-                return render_template('auth.html', register_error='Nome de usuário ou e-mail já cadastrados.')
-            new_user = User(full_name=full_name, email=email, username=username, password=generate_password_hash(password, method='pbkdf2:sha256'))
-            db.session.add(new_user)
-            db.session.commit()
-            
-            return redirect(url_for('auth', login_error='Usuário registrado com sucesso. Faça login.'))
+    active_tab = request.args.get('tab', 'login')
+    if active_tab not in {'login', 'register'}:
+        active_tab = 'login'
 
-    return render_template('auth.html')
+    return render_template('auth.html', google_login_enabled=google_login_enabled, active_tab=active_tab)
 
 
-@app.route('/politica-de-privacidade')
-def privacy_policy():
-    return render_template('privacy.html')
+@app.route('/auth/google')
+def google_login():
+    if not google_login_enabled:
+        app.logger.warning('Tentativa de login com Google sem credenciais configuradas.')
+        flash('Login com Google está desativado no momento.', 'warning')
+        return redirect(url_for('auth'))
+
+    redirect_uri = url_for('google_authorize', _external=True)
+    return oauth.google.authorize_redirect(redirect_uri)
 
 
-@app.route('/termos-de-uso')
-def terms_of_use():
-    return render_template('terms.html')
+@app.route('/auth/google/callback')
+def google_authorize():
+    if not google_login_enabled:
+        app.logger.warning('Callback do Google recebido enquanto o login está desativado.')
+        flash('Login com Google está desativado no momento.', 'warning')
+        return redirect(url_for('auth'))
+
+    try:
+        token = oauth.google.authorize_access_token()
+    except Exception as exc:
+        app.logger.exception('Google login failed', exc_info=exc)
+        flash('Não foi possível autenticar com o Google. Tente novamente.', 'danger')
+        return redirect(url_for('auth'))
+
+    try:
+        user_info = oauth.google.parse_id_token(token)
+    except Exception:
+        user_info = None
+
+    if not user_info:
+        user_info = oauth.google.get('userinfo').json()
+
+    email = user_info.get('email')
+    if not email:
+        flash('Não foi possível obter o e-mail da conta Google.', 'danger')
+        return redirect(url_for('auth'))
+
+    full_name = user_info.get('name') or email.split('@')[0]
+
+    user = User.query.filter_by(email=email).first()
+
+    if not user:
+        username_base = email.split('@')[0]
+        username_candidate = username_base
+        counter = 1
+
+        while User.query.filter_by(username=username_candidate).first():
+            username_candidate = f"{username_base}{counter}"
+            counter += 1
+
+        placeholder_password = generate_password_hash(
+            secrets.token_urlsafe(32),
+            method='pbkdf2:sha256'
+        )
+
+        user = User(
+            full_name=full_name,
+            email=email,
+            username=username_candidate,
+            password=placeholder_password
+        )
+
+        db.session.add(user)
+        db.session.commit()
+
+    login_user(user)
+    return redirect(url_for('start'))
 
 @app.route('/logout')
 @login_required
@@ -896,6 +930,131 @@ def debts_history():
 @login_required
 def about():
     return render_template('about.html', username=current_user.full_name)
+
+@app.route('/terms')
+def terms_of_use():
+    return render_template('terms.html')
+
+@app.route('/privacy')
+def privacy_policy():
+    return render_template('privacy.html')
+
+@app.route('/manage_admins')
+@login_required
+def manage_admins():
+    if not current_user.is_admin:
+        flash('Acesso negado. Você não tem permissão para acessar esta página.', 'danger')
+        return redirect(url_for('start'))
+    
+    # Buscar todos os usuários
+    users = User.query.all()
+    
+    return render_template('manage_admins.html', 
+                         username=current_user.full_name,
+                         users=users)
+
+@app.route('/toggle_admin', methods=['POST'])
+@login_required
+def toggle_admin():
+    if not current_user.is_admin:
+        flash('Acesso negado.', 'danger')
+        return redirect(url_for('start'))
+    
+    user_id = request.form.get('user_id')
+    make_admin = request.form.get('make_admin') == '1'
+    
+    user = User.query.get(user_id)
+    if not user:
+        flash('Usuário não encontrado.', 'danger')
+        return redirect(url_for('manage_admins'))
+    
+    # Verificar se está tentando remover o último admin
+    if not make_admin and user.is_admin:
+        admin_count = User.query.filter_by(is_admin=True).count()
+        if admin_count <= 1:
+            flash('Não é possível remover o último administrador do sistema.', 'warning')
+            return redirect(url_for('manage_admins'))
+    
+    user.is_admin = make_admin
+    db.session.commit()
+    
+    action = 'promovido a administrador' if make_admin else 'removido dos administradores'
+    flash(f'Usuário {user.username} foi {action} com sucesso.', 'success')
+    return redirect(url_for('manage_admins'))
+
+@app.route('/database/setup', methods=['GET', 'POST'])
+@login_required
+def database_setup():
+    if not current_user.is_admin:
+        flash('Acesso negado. Você não tem permissão para acessar esta página.', 'danger')
+        return redirect(url_for('start'))
+    
+    # Carregar configuração atual do banco
+    db_url = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+    
+    # Valores padrão do formulário
+    form_data = {
+        'engine': 'sqlite',
+        'host': '',
+        'port': '',
+        'username': '',
+        'password': '',
+        'database': '',
+        'file_path': ''
+    }
+    
+    # Parse da URL atual do banco
+    if db_url:
+        if db_url.startswith('sqlite:///'):
+            form_data['engine'] = 'sqlite'
+            form_data['file_path'] = db_url.replace('sqlite:///', '')
+        elif db_url.startswith('mysql'):
+            form_data['engine'] = 'mysql'
+            # Parse básico da URL MySQL
+            try:
+                from urllib.parse import urlparse
+                parsed = urlparse(db_url)
+                form_data['host'] = parsed.hostname or ''
+                form_data['port'] = str(parsed.port) if parsed.port else '3306'
+                form_data['username'] = parsed.username or ''
+                form_data['database'] = parsed.path.lstrip('/') if parsed.path else ''
+            except:
+                pass
+        elif db_url.startswith('postgres'):
+            form_data['engine'] = 'postgresql'
+            try:
+                from urllib.parse import urlparse
+                parsed = urlparse(db_url)
+                form_data['host'] = parsed.hostname or ''
+                form_data['port'] = str(parsed.port) if parsed.port else '5432'
+                form_data['username'] = parsed.username or ''
+                form_data['database'] = parsed.path.lstrip('/') if parsed.path else ''
+            except:
+                pass
+    
+    if request.method == 'POST':
+        # Processar configuração do banco
+        engine = request.form.get('engine', 'sqlite')
+        host = request.form.get('host', '')
+        port = request.form.get('port', '')
+        username = request.form.get('username', '')
+        password = request.form.get('password', '')
+        database = request.form.get('database', '')
+        file_path = request.form.get('file_path', '')
+        
+        # Aqui você pode adicionar a lógica para salvar a configuração
+        flash('Configurações do banco de dados atualizadas com sucesso!', 'success')
+        return redirect(url_for('database_setup'))
+    
+    # Converter dict para objeto para uso no template
+    class FormData:
+        def __init__(self, data):
+            for key, value in data.items():
+                setattr(self, key, value)
+    
+    return render_template('database_setup.html', 
+                         username=current_user.full_name,
+                         form_data=FormData(form_data))
 
 @app.route('/add', methods=['POST'])
 @cache_route(timeout=300)

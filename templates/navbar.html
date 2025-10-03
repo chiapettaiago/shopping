@@ -1,288 +1,432 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="refresh" content="300">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha384-k6RqeWeci5ZR/Lv4MR0sA0FfDOM5M4spZ7H6sw8Hkn3z9ZV2Q6m5gTOJ42f3+v9N" crossorigin="anonymous">
-    <title>Document</title>
-    <style>
-        .floating-navbar {
-            margin: 7px 1rem; /* Ajuste a margem conforme necessário */
-            border-radius: 7px; /* Cantos arredondados para efeito de flutuação */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra para efeito de elevação */
-        }
+{% if current_user.is_authenticated %}
+<link rel="stylesheet" href="{{ url_for('static', filename='fonts/css/all.min.css') }}">
+<style>
+    .floating-navbar {
+        margin: 7px 1rem;
+        border-radius: 7px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
 
-        /* Estilo geral da sidebar */
+    .sidebar {
+        height: 100vh;
+        width: 250px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        background-color: #343a40;
+        overflow-x: hidden;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        padding-top: 60px;
+    }
+
+    .sidebar a {
+        padding: 10px 15px;
+        text-decoration: none;
+        font-size: 18px;
+        color: #f8f9fa;
+        display: block;
+        transition: 0.3s;
+    }
+
+    .sidebar a:hover {
+        background-color: #495057;
+        color: white;
+    }
+
+    .sidebar .nav-item i {
+        margin-right: 10px;
+    }
+
+    .sidebar .dropdown {
+        position: relative;
+    }
+
+    .sidebar .dropdown-menu {
+        position: static;
+        float: none;
+        width: auto;
+        margin: 0;
+        background-color: #495057;
+        border: none;
+        box-shadow: none;
+        display: none;
+        padding-left: 20px;
+    }
+
+    .sidebar .dropdown-menu .dropdown-item {
+        color: #f8f9fa;
+        padding: 8px 15px;
+        border: none;
+        background: none;
+    }
+
+    .sidebar .dropdown-menu .dropdown-item:hover {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .sidebar .dropdown-toggle::after {
+        margin-left: auto;
+        float: right;
+        margin-top: 8px;
+    }
+
+    @media (max-width: 768px) {
         .sidebar {
-            height: 100vh;
-            width: 250px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            background-color: #343a40;
-            overflow-x: hidden;
-            transition: 0.3s;
-            padding-top: 60px;
+            padding-top: 15px;
         }
-
         .sidebar a {
-            padding: 10px 15px;
-            text-decoration: none;
-            font-size: 18px;
-            color: #f8f9fa;
-            display: block;
-            transition: 0.3s;
+            font-size: 16px;
         }
+    }
 
-        .sidebar a:hover {
-            background-color: #495057;
-            color: white;
-        }
+    .open-btn {
+        font-size: 30px;
+        cursor: pointer;
+        position: fixed;
+        top: 15px;
+        left: 15px;
+        color: white;
+        z-index: 2000;
+        background: transparent;
+        border: none;
+        padding: 0;
+        line-height: 1;
+    }
 
-        .sidebar .nav-item i {
-            margin-right: 10px;
-        }
+    .open-btn span {
+        display: inline-block;
+        font-size: 28px;
+        line-height: 1;
+    }
 
-        /* Estilo para ocultar a sidebar em telas pequenas */
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 0;
-                padding-top: 15px;
-            }
-            .sidebar a {
-                font-size: 16px;
-            }
-        }
+    .sidebar.active {
+        transform: translateX(0);
+    }
 
-        /* Botão para abrir/fechar a sidebar */
+    .content {
+        transition: margin-left 0.3s;
+    }
+
+    @media (max-width: 768px) {
         .open-btn {
-            font-size: 30px;
-            cursor: pointer;
-            position: fixed;
-            top: 15px;
-            left: 15px;
-            color: white;
-            z-index: 1;
+            display: block;
         }
+    }
 
-        /* Estilo de transição suave */
-        .sidebar.active {
-            width: 250px;
-        }
+    .navbar-toggler {
+        color: white;
+    }
+</style>
 
-        /* Conteúdo principal da página */
-        .content {
-            margin-left: 250px;
-            transition: margin-left 0.3s;
-        }
+<button class="open-btn" id="sidebarToggleButton" type="button" aria-label="Alternar menu lateral" aria-expanded="false">
+    <span aria-hidden="true">&#9776;</span>
+</button>
 
-        @media (max-width: 768px) {
-            .content {
-                margin-left: 0;
-            }
-        }
+<div class="sidebar bg-dark text-white d-none d-md-block" id="mySidebar">
+    <div class="sidebar-header text-center py-4">
+        <a href="/ia" title="Inteligência artificial do ME Finanças"><h4 class="fw-bold">ME Finanças</h4></a>
+    </div>
 
-        /* Responsividade para o botão de abrir/fechar */
-        @media (max-width: 768px) {
-            .open-btn {
-                display: block;
-            }
-        }
+    <nav class="nav flex-column">
+        <a href="/start" class="nav-link px-4 py-3 hover-effect">
+            Inicio
+        </a>
 
-        .navbar-toggler {
-            color: white;
-        }
-    </style>
-</head>
-<body>
-    {% if current_user.is_authenticated %}
-    <!-- Botão para abrir a sidebar (visível em todas as telas) -->
-    <span class="open-btn d-none d-md-block" onclick="toggleSidebar()">
-        <!-- Ícone de hambúrguer com três barras horizontais -->
-        <i class="fa fa-bars"></i>
-    </span>
-    <!-- Sidebar -->
-    <div class="sidebar bg-dark text-white d-none d-md-block" id="mySidebar">
-        <div class="sidebar-header text-center py-4">
-            <a href="/ia" title="Inteligência artificial do ME Finanças"><h4 class="fw-bold">ME Finanças</h4></a>
+        <div class="dropdown">
+            <a href="#" class="nav-link px-4 py-3 dropdown-toggle" data-toggle="dropdown">
+                Finanças
+            </a>
+            <ul class="dropdown-menu bg-dark">
+                <li><a class="dropdown-item text-white" href="/debts">Pagamentos</a></li>
+                <li><a class="dropdown-item text-white" href="/debts_history">Pagamentos Realizados</a></li>
+                <li><a class="dropdown-item text-white" href="/balance">Recebimentos</a></li>
+            </ul>
         </div>
-    
-        <nav class="nav flex-column">
-            <a href="/start" class="nav-link px-4 py-3 hover-effect">
-                Inicio
+
+        <div class="dropdown">
+            <a href="#" class="nav-link px-4 py-3 dropdown-toggle" data-toggle="dropdown">
+                Despesas
             </a>
-    
-            <div class="dropdown">
-                <a href="#" class="nav-link px-4 py-3 dropdown-toggle" data-bs-toggle="dropdown">
-                    Finanças
-                </a>
-                <ul class="dropdown-menu bg-dark">
-                    <li><a class="dropdown-item text-white" href="/debts">Pagamentos</a></li>
-                    <li><a class="dropdown-item text-white" href="/debts_history">Pagamentos Realizados</a></li>
-                    <li><a class="dropdown-item text-white" href="/balance">Recebimentos</a></li>
-                </ul>
-            </div>
-    
-            <div class="dropdown">
-                <a href="#" class="nav-link px-4 py-3 dropdown-toggle" data-bs-toggle="dropdown">
-                    Despesas
-                </a>
-                <ul class="dropdown-menu bg-dark">
-                    <li><a class="dropdown-item text-white" href="/daily">Gastos</a></li>
-                    <li><a class="dropdown-item text-white" href="/daily_history">Histórico</a></li>
-                </ul>
-            </div>
-    
-            <div class="dropdown">
-                <a href="#" class="nav-link px-4 py-3 dropdown-toggle" data-bs-toggle="dropdown">
-                    Compras
-                </a>
-                <ul class="dropdown-menu bg-dark">
-                    <li><a class="dropdown-item text-white" href="/">Lista</a></li>
-                    <li><a class="dropdown-item text-white" href="/history">Histórico</a></li>
-                </ul>
-            </div>
-            <a href="/dashboard" class="nav-link px-4 py-3 hover-effect">
-                Dashboard
+            <ul class="dropdown-menu bg-dark">
+                <li><a class="dropdown-item text-white" href="/daily">Gastos</a></li>
+                <li><a class="dropdown-item text-white" href="/daily_history">Histórico</a></li>
+            </ul>
+        </div>
+
+        <div class="dropdown">
+            <a href="#" class="nav-link px-4 py-3 dropdown-toggle" data-toggle="dropdown">
+                Compras
             </a>
+            <ul class="dropdown-menu bg-dark">
+                <li><a class="dropdown-item text-white" href="/">Lista</a></li>
+                <li><a class="dropdown-item text-white" href="/history">Histórico</a></li>
+            </ul>
+        </div>
+        <a href="/dashboard" class="nav-link px-4 py-3 hover-effect">
+            Dashboard
+        </a>
+        {% if current_user.is_authenticated and current_user.is_admin %}
             <a href="/database/setup" class="nav-link px-4 py-3 hover-effect">
                 Banco de Dados
             </a>
-        </nav>
-    
-        <div class="sidebar-footer mt-auto p-4">
-            <a href="/account" class="btn btn-outline-light w-100">
-                Minha Conta
+            <a href="{{ url_for('manage_admins') }}" class="nav-link px-4 py-3 hover-effect">
+                Usuários
             </a>
+        {% endif %}
+    </nav>
+
+    <div class="sidebar-footer mt-auto p-4">
+        <a href="/account" class="btn btn-outline-light w-100">
+            Minha Conta
+        </a>
+    </div>
+</div>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light fixed-bottom d-lg-none">
+    <div class="container-fluid justify-content-around">
+        <div class="dropup">
+            <a class="navbar-brand" href="/dashboard"><i class="fa-solid fa-gauge-high fa-lg"></i></a>
+        </div>
+        <div class="dropup">
+            <a class="navbar-brand" href="#" id="financeDropdown" role="button" data-toggle="dropdown" aria-expanded="false">
+                <i class="fa-solid fa-wallet fa-lg"></i>
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="financeDropdown">
+                        <li><a class="dropdown-item" href="/debts">Pagamentos</a></li>
+                        <li><a class="dropdown-item" href="/debts_history">Pagamentos realizados</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/balance">Recebimentos</a></li>
+            </ul>
+        </div>
+        <div class="dropup">
+            <a class="navbar-brand" href="#" id="expensesDropdown" role="button" data-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-money-bill-wave fa-lg"></i>
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="expensesDropdown">
+                <li><a class="dropdown-item" href="/daily">Despesas</a></li>
+                <li><a class="dropdown-item" href="/daily_history">Históricos de Despesas</a></li>
+            </ul>
+        </div>
+        <div class="dropup">
+            <a class="navbar-brand" href="#" id="purchasesDropdown" role="button" data-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-shopping-cart fa-lg"></i>
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="purchasesDropdown">
+                <li><a class="dropdown-item" href="/">Lista</a></li>
+                <li><a class="dropdown-item" href="/history">Estoque</a></li>
+            </ul>
+        </div>
+        <div class="dropup">
+            <a class="navbar-brand" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-user fa-lg"></i>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                <li><a class="dropdown-item" href="/account">Minha Conta</a></li>
+                {% if current_user.is_authenticated and current_user.is_admin %}
+                    <li><a class="dropdown-item" href="/database/setup">Banco de Dados</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('manage_admins') }}">Usuários</a></li>
+                {% endif %}
+                <li><a class="dropdown-item" href="/ia">Inteligência Artificial</a></li>
+                <li><a class="dropdown-item" href="/logout">Sair</a></li>
+            </ul>
         </div>
     </div>
-    
-    <!-- Navbar para dispositivos móveis -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-bottom d-lg-none">
-        <div class="container-fluid justify-content-around">
-            <div class="dropup">
-                <a class="navbar-brand" href="/dashboard"><i class="fa-solid fa-gauge-high fa-lg"></i></a>
-            </div>
-            <div class="dropup">
-                <a class="navbar-brand" href="#" id="financeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fa-solid fa-wallet fa-lg"></i>
-                </a>
-                <ul class="dropdown-menu" aria-labelledby="financeDropdown">
-                            <li><a class="dropdown-item" href="/debts">Pagamentos</a></li>
-                            <li><a class="dropdown-item" href="/debts_history">Pagamentos realizados</a></li>
-                            <!--<li><a class="dropdown-item" href="#">Cartão</a></li> -->
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/balance">Recebimentos</a></li>
-                </ul>
-            </div>
-            <div class="dropup">
-                <a class="navbar-brand" href="#" id="financeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-money-bill-wave fa-lg"></i>
-                </a>
-                <ul class="dropdown-menu" aria-labelledby="financeDropdown">
-                    <li><a class="dropdown-item" href="/daily">Despesas</a></li>
-                    <li><a class="dropdown-item" href="/daily_history">Históricos de Despesas</a></li>
-                </ul>
-            </div>
-            <div class="dropup">
-                <a class="navbar-brand" href="#" id="purchasesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-shopping-cart fa-lg"></i>
-                </a>
-                <ul class="dropdown-menu" aria-labelledby="purchasesDropdown">
-                    <li><a class="dropdown-item" href="/">Lista</a></li>
-                    <li><a class="dropdown-item" href="/history">Estoque</a></li>
-                </ul>
-            </div>
-            <div class="dropup">
-                <a class="navbar-brand" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-user fa-lg"></i>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                    <li><a class="dropdown-item" href="/account">Minha Conta</a></li>
-                    <li><a class="dropdown-item" href="/database/setup">Banco de Dados</a></li>
-                    <li><a class="dropdown-item" href="/ia">Inteligência Artificial</a></li>
-                    <li><a class="dropdown-item" href="/logout">Sair</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-    {% endif %}
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+</nav>
 
-     <!-- Script para alternar a sidebar -->
-     <script>
-        function toggleSidebar() {
-            const sidebar = document.getElementById("mySidebar");
-            const content = document.querySelector(".main-content");
-            // Alternando a largura da sidebar
-            if (sidebar.style.width === "250px" || sidebar.style.width === "") {
-                sidebar.style.width = "0";
-                content.style.marginLeft = "0";
-            } else {
-                sidebar.style.width = "250px";
-                content.style.marginLeft = "250px";
-            }
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+<script>
+    function toggleSidebar() {
+        const sidebar = document.getElementById("mySidebar");
+        const content = document.getElementById("mainContent") || document.querySelector(".main-content");
+        const toggleButton = document.getElementById("sidebarToggleButton");
+        if (!sidebar) {
+            return;
         }
 
-        function ia() {
-            alert("O nosso modelo de inteligência artificial estará disponível em breve.")
+        const isOpen = sidebar.classList.toggle("active");
+        document.body.classList.toggle("sidebar-open", isOpen);
+        if (toggleButton) {
+            toggleButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
         }
 
-    
-   
-        function addClickEffect() {
-            document.querySelectorAll('.navbar-brand').forEach(function(element) {
-                element.addEventListener('mousedown', function() {
-                    this.querySelector('i').classList.add('btn btn-dark');
-                });
-                element.addEventListener('mouseup', function() {
-                    this.querySelector('i').classList.remove('btn btn-dark');
-                });
-                element.addEventListener('mouseleave', function() {
-                    this.querySelector('i').classList.remove('btn btn-dark');
-                });
-            });
+        if (isOpen) {
+            sidebar.classList.remove("d-none");
+        } else if (window.innerWidth < 768) {
+            sidebar.classList.add("d-none");
         }
 
-        function removeOutline() {
-            document.querySelectorAll('.navbar-brand').forEach(function(element) {
-                element.style.outline = 'none';
-            });
+        if (content) {
+            content.classList.toggle("sidebar-active", isOpen);
+            content.style.marginLeft = isOpen ? "250px" : "0";
+        }
+    }
+
+    window.toggleSidebar = toggleSidebar;
+
+    function closeSidebar() {
+        const sidebar = document.getElementById("mySidebar");
+        const content = document.getElementById("mainContent") || document.querySelector(".main-content");
+        const toggleButton = document.getElementById("sidebarToggleButton");
+        if (!sidebar) {
+            return;
         }
 
-        function applyMobileClickEffect() {
-            if (window.innerWidth < 992) {
-                addClickEffect();
-                removeOutline();
-            }
+        sidebar.classList.remove("active");
+        document.body.classList.remove("sidebar-open");
+
+        if (window.innerWidth < 768) {
+            sidebar.classList.add("d-none");
         }
 
-        // Inicializa a navbar de acordo com o tamanho da tela quando a página é carregada
-        $(document).ready(function() {
-            if (window.matchMedia("(min-width: 768px)").matches) {
-                if ($(window).scrollTop() > 0) {
-                    $('nav').addClass('bg-light bg-opacity-75');
-                } else {
-                    $('nav').removeClass('bg-light bg-opacity-75');
-                }
-            } else {
-                $('nav').addClass('bg-light'); // Garante que a navbar tenha a classe bg-light em dispositivos móveis
-                $('nav').removeClass('bg-opacity-75'); // Remove a opacidade em dispositivos móveis
-            }
-        });
-
-        window.onload = function() {
-            // Inicializa a sidebar fechada
-            const sidebar = document.getElementById("mySidebar");
-            const content = document.querySelector(".main-content");
-            sidebar.style.width = "0";
+        if (content) {
+            content.classList.remove("sidebar-active");
             content.style.marginLeft = "0";
         }
 
+        if (toggleButton) {
+            toggleButton.setAttribute("aria-expanded", "false");
+        }
+    }
 
+    function ia() {
+        alert("O nosso modelo de inteligência artificial estará disponível em breve.");
+    }
 
-    </script>
-</body>
-</html>
+    function addClickEffect() {
+        document.querySelectorAll('.navbar-brand').forEach(function(element) {
+            element.addEventListener('mousedown', function() {
+                const icon = this.querySelector('i');
+                if (icon) {
+                    icon.classList.add('btn', 'btn-dark');
+                }
+            });
+            element.addEventListener('mouseup', function() {
+                const icon = this.querySelector('i');
+                if (icon) {
+                    icon.classList.remove('btn', 'btn-dark');
+                }
+            });
+            element.addEventListener('mouseleave', function() {
+                const icon = this.querySelector('i');
+                if (icon) {
+                    icon.classList.remove('btn', 'btn-dark');
+                }
+            });
+        });
+    }
+
+    function removeOutline() {
+        document.querySelectorAll('.navbar-brand').forEach(function(element) {
+            element.style.outline = 'none';
+        });
+    }
+
+    function applyMobileClickEffect() {
+        if (window.innerWidth < 992) {
+            addClickEffect();
+            removeOutline();
+        }
+    }
+
+    function updateNavbarBackground() {
+        const navElements = document.querySelectorAll('nav');
+        navElements.forEach(function(nav) {
+            if (window.matchMedia('(min-width: 768px)').matches) {
+                if (window.scrollY > 0) {
+                    nav.classList.add('bg-light', 'bg-opacity-75');
+                } else {
+                    nav.classList.remove('bg-opacity-75');
+                    nav.classList.remove('bg-light');
+                }
+            } else {
+                nav.classList.add('bg-light');
+                nav.classList.remove('bg-opacity-75');
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        closeSidebar();
+        updateNavbarBackground();
+        applyMobileClickEffect();
+
+        const toggleButton = document.getElementById('sidebarToggleButton');
+        if (toggleButton) {
+            toggleButton.addEventListener('click', function(event) {
+                event.preventDefault();
+                if (typeof window.toggleSidebar === 'function') {
+                    window.toggleSidebar();
+                }
+            });
+        }
+
+        // Inicializar dropdowns da sidebar
+        initializeSidebarDropdowns();
+
+        window.addEventListener('resize', function() {
+            const sidebar = document.getElementById("mySidebar");
+            if (!sidebar) {
+                return;
+            }
+
+            if (window.innerWidth >= 768) {
+                sidebar.classList.remove("d-none");
+            } else if (!sidebar.classList.contains("active")) {
+                sidebar.classList.add("d-none");
+            }
+        });
+
+        window.addEventListener('scroll', updateNavbarBackground);
+        window.addEventListener('resize', updateNavbarBackground);
+    });
+
+    function initializeSidebarDropdowns() {
+        // Manipular dropdowns da sidebar
+        const sidebarDropdowns = document.querySelectorAll('#mySidebar .dropdown');
+        
+        sidebarDropdowns.forEach(function(dropdown) {
+            const toggle = dropdown.querySelector('.dropdown-toggle');
+            const menu = dropdown.querySelector('.dropdown-menu');
+            
+            if (toggle && menu) {
+                toggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Fechar outros dropdowns
+                    sidebarDropdowns.forEach(function(otherDropdown) {
+                        if (otherDropdown !== dropdown) {
+                            const otherMenu = otherDropdown.querySelector('.dropdown-menu');
+                            if (otherMenu) {
+                                otherMenu.style.display = 'none';
+                            }
+                        }
+                    });
+                    
+                    // Toggle do dropdown atual
+                    if (menu.style.display === 'block') {
+                        menu.style.display = 'none';
+                    } else {
+                        menu.style.display = 'block';
+                    }
+                });
+            }
+        });
+
+        // Fechar dropdowns quando clicar fora
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#mySidebar .dropdown')) {
+                sidebarDropdowns.forEach(function(dropdown) {
+                    const menu = dropdown.querySelector('.dropdown-menu');
+                    if (menu) {
+                        menu.style.display = 'none';
+                    }
+                });
+            }
+        });
+    }
+</script>
+{% endif %}

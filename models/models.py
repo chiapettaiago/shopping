@@ -12,6 +12,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(150), nullable=False, unique=True)
     full_name = db.Column(db.String(150), nullable=False)
     subscription_status = db.Column(db.String(50), nullable=True)
+    is_admin = db.Column(db.Boolean, nullable=False, default=False)
 
 class ShoppingList(db.Model):
     id = db.Column(db.Integer, primary_key=True)

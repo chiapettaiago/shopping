@@ -8,22 +8,33 @@
     <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
     <link rel="manifest" href="{{ url_for('static', filename='images/site.webmanifest') }}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}">
     <style>
         body {
-            background: linear-gradient(135deg, #1a4b63, #2575fc);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             font-family: 'Roboto', sans-serif;
-            color: #1f2933;
-            padding: 1.5rem;
+            padding: 1.5rem 1.5rem 3rem;
+        }
+        .main-content {
+            margin-left: 0;
+            transition: margin-left 0.3s ease;
+        }
+        .main-content.sidebar-active {
+            margin-left: 250px;
+        }
+        @media (max-width: 768px) {
+            .main-content.sidebar-active {
+                margin-left: 0;
+            }
         }
         .card {
-            border: none;
-            border-radius: 1rem;
-            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.18);
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
             max-width: 720px;
             width: 100%;
         }
@@ -31,101 +42,140 @@
             border-bottom: none;
             background: transparent;
         }
+        .card-body {
+            padding: 2.5rem;
+        }
+        h2 {
+            color: #2d3748;
+            font-weight: 700;
+        }
         .form-label {
             font-weight: 600;
-            color: #1f2933;
+            color: #2d3748;
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            padding: 0.75rem;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
         }
         .btn-primary {
-            background-color: #1a4b63;
-            border-color: #1a4b63;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
         }
         .btn-primary:hover {
-            background-color: #163c50;
-            border-color: #163c50;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .btn-secondary {
+            border-radius: 10px;
+            padding: 0.75rem 2rem;
         }
         .badge-status {
             font-size: 0.85rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+        }
+        .alert {
+            border-radius: 12px;
+            border: none;
         }
     </style>
 </head>
 <body>
-    <div class="card bg-white p-4">
-        <div class="card-header text-center">
-            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo ME Finanças" width="80" class="mb-3">
-            <h1 class="h3 mb-2">Configurar conexão com o banco de dados</h1>
-            <p class="mb-0 text-muted">Informe os dados de acesso para que o ME Finanças possa armazenar suas informações.</p>
-            {% if db_configured %}
-                <span class="badge bg-success badge-status mt-3">Configuração ativa</span>
-            {% else %}
-                <span class="badge bg-warning text-dark badge-status mt-3">Nenhum banco configurado</span>
-            {% endif %}
-        </div>
-        <div class="card-body">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ 'danger' if category == 'error' else category }}" role="alert">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
+    {% include 'navbar.html' %}
+    <div class="main-content" id="mainContent">
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card bg-white p-4">
+                        <div class="card-header text-center">
+                            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo ME Finanças" width="80" class="mb-3">
+                            <h1 class="h3 mb-2">Configurar conexão com o banco de dados</h1>
+                            <p class="mb-0 text-muted">Informe os dados de acesso para que o ME Finanças possa armazenar suas informações.</p>
+                            {% if db_configured %}
+                                <span class="badge bg-success badge-status mt-3">Configuração ativa</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark badge-status mt-3">Nenhum banco configurado</span>
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            {% with messages = get_flashed_messages(with_categories=true) %}
+                                {% if messages %}
+                                    {% for category, message in messages %}
+                                        <div class="alert alert-{{ 'danger' if category == 'error' else category }}" role="alert">{{ message }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endwith %}
 
-            {% if test_result %}
-                <div class="alert alert-{{ 'success' if test_result.success else 'danger' }}" role="alert">
-                    {{ test_result.message }}
-                </div>
-            {% endif %}
+                            {% if test_result %}
+                                <div class="alert alert-{{ 'success' if test_result.success else 'danger' }}" role="alert">
+                                    {{ test_result.message }}
+                                </div>
+                            {% endif %}
 
-            <form method="POST" class="row g-3">
-                <input type="hidden" name="force_save" id="forceSave" value="0">
-                <div class="col-12">
-                    <label class="form-label" for="engine">Tipo de banco</label>
-                    <select class="form-select" id="engine" name="engine" onchange="toggleFields(this.value)">
-                        <option value="mysql" {% if form_data.engine == 'mysql' %}selected{% endif %}>MySQL / MariaDB</option>
-                        <option value="postgresql" {% if form_data.engine in ['postgresql', 'postgres'] %}selected{% endif %}>PostgreSQL</option>
-                        <option value="sqlite" {% if form_data.engine in ['sqlite', 'sqlite3'] %}selected{% endif %}>SQLite</option>
-                    </select>
-                </div>
+                            <form method="POST" class="row g-3">
+                                <input type="hidden" name="force_save" id="forceSave" value="0">
+                                <div class="col-12">
+                                    <label class="form-label" for="engine">Tipo de banco</label>
+                                    <select class="form-select" id="engine" name="engine" onchange="toggleFields(this.value)">
+                                        <option value="mysql" {% if form_data.engine == 'mysql' %}selected{% endif %}>MySQL / MariaDB</option>
+                                        <option value="postgresql" {% if form_data.engine in ['postgresql', 'postgres'] %}selected{% endif %}>PostgreSQL</option>
+                                        <option value="sqlite" {% if form_data.engine in ['sqlite', 'sqlite3'] %}selected{% endif %}>SQLite</option>
+                                    </select>
+                                </div>
 
-                <div class="col-md-6" data-db-field="host">
-                    <label class="form-label" for="host">Host</label>
-                    <input type="text" class="form-control" id="host" name="host" value="{{ form_data.host }}" placeholder="ex: localhost">
-                </div>
-                <div class="col-md-6" data-db-field="port">
-                    <label class="form-label" for="port">Porta</label>
-                    <input type="text" class="form-control" id="port" name="port" value="{{ form_data.port }}" placeholder="ex: 3306">
-                </div>
+                                <div class="col-md-6" data-db-field="host">
+                                    <label class="form-label" for="host">Host</label>
+                                    <input type="text" class="form-control" id="host" name="host" value="{{ form_data.host }}" placeholder="ex: localhost">
+                                </div>
+                                <div class="col-md-6" data-db-field="port">
+                                    <label class="form-label" for="port">Porta</label>
+                                    <input type="text" class="form-control" id="port" name="port" value="{{ form_data.port }}" placeholder="ex: 3306">
+                                </div>
 
-                <div class="col-md-6" data-db-field="username">
-                    <label class="form-label" for="username">Usuário</label>
-                    <input type="text" class="form-control" id="username" name="username" value="{{ form_data.username }}" placeholder="Nome do usuário">
-                </div>
-                <div class="col-md-6" data-db-field="password">
-                    <label class="form-label" for="password">Senha</label>
-                    <input type="password" class="form-control" id="password" name="password" value="{{ form_data.password }}" placeholder="Senha (deixe em branco para manter a atual)">
-                </div>
+                                <div class="col-md-6" data-db-field="username">
+                                    <label class="form-label" for="username">Usuário</label>
+                                    <input type="text" class="form-control" id="username" name="username" value="{{ form_data.username }}" placeholder="Nome do usuário">
+                                </div>
+                                <div class="col-md-6" data-db-field="password">
+                                    <label class="form-label" for="password">Senha</label>
+                                    <input type="password" class="form-control" id="password" name="password" value="{{ form_data.password }}" placeholder="Senha (deixe em branco para manter a atual)">
+                                </div>
 
-                <div class="col-12" data-db-field="database">
-                    <label class="form-label" for="database" id="databaseLabelText">Nome do banco / Caminho</label>
-                    <input type="text" class="form-control" id="database" name="database" value="{{ form_data.database }}" placeholder="Nome do banco de dados">
-                </div>
+                                <div class="col-12" data-db-field="database">
+                                    <label class="form-label" for="database" id="databaseLabelText">Nome do banco / Caminho</label>
+                                    <input type="text" class="form-control" id="database" name="database" value="{{ form_data.database }}" placeholder="Nome do banco de dados">
+                                </div>
 
-                {% if test_result and not test_result.success %}
-                    <div class="col-12">
-                        <div class="alert alert-warning" role="alert">
-                            Não foi possível validar a conexão automaticamente. Se tiver certeza das credenciais,
-                            é possível salvar assim mesmo e testar novamente mais tarde.
+                                {% if test_result and not test_result.success %}
+                                    <div class="col-12">
+                                        <div class="alert alert-warning" role="alert">
+                                            Não foi possível validar a conexão automaticamente. Se tiver certeza das credenciais,
+                                            é possível salvar assim mesmo e testar novamente mais tarde.
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                                <div class="col-12 d-flex flex-wrap gap-2 mt-4">
+                                    <button type="submit" name="action" value="test" class="btn btn-outline-primary" onclick="document.getElementById('forceSave').value = '0'">Testar conexão</button>
+                                    <button type="submit" name="action" value="save" class="btn btn-primary" onclick="document.getElementById('forceSave').value = '0'">Salvar configuração</button>
+                                    {% if test_result and not test_result.success %}
+                                        <button type="submit" name="action" value="save" class="btn btn-warning" onclick="document.getElementById('forceSave').value = '1'">Salvar mesmo assim</button>
+                                    {% endif %}
+                                </div>
+                            </form>
                         </div>
                     </div>
-                {% endif %}
-
-                <div class="col-12 d-flex flex-wrap gap-2 mt-4">
-                    <button type="submit" name="action" value="test" class="btn btn-outline-primary" onclick="document.getElementById('forceSave').value = '0'">Testar conexão</button>
-                    <button type="submit" name="action" value="save" class="btn btn-primary" onclick="document.getElementById('forceSave').value = '0'">Salvar configuração</button>
-                    {% if test_result and not test_result.success %}
-                        <button type="submit" name="action" value="save" class="btn btn-warning" onclick="document.getElementById('forceSave').value = '1'">Salvar mesmo assim</button>
-                    {% endif %}
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <title>Teste de Dropdowns - ME Finanças</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="static/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="static/fonts/css/all.min.css">
+    <style>
+        .floating-navbar {
+            margin: 7px 1rem;
+            border-radius: 7px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar {
+            height: 100vh;
+            width: 250px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: #343a40;
+            overflow-x: hidden;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            padding-top: 60px;
+        }
+
+        .sidebar a {
+            padding: 10px 15px;
+            text-decoration: none;
+            font-size: 18px;
+            color: #f8f9fa;
+            display: block;
+            transition: 0.3s;
+        }
+
+        .sidebar a:hover {
+            background-color: #495057;
+            color: white;
+        }
+
+        .sidebar .nav-item i {
+            margin-right: 10px;
+        }
+
+        .sidebar .dropdown {
+            position: relative;
+        }
+
+        .sidebar .dropdown-menu {
+            position: static;
+            float: none;
+            width: auto;
+            margin: 0;
+            background-color: #495057;
+            border: none;
+            box-shadow: none;
+            display: none;
+            padding-left: 20px;
+        }
+
+        .sidebar .dropdown-menu .dropdown-item {
+            color: #f8f9fa;
+            padding: 8px 15px;
+            border: none;
+            background: none;
+        }
+
+        .sidebar .dropdown-menu .dropdown-item:hover {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .sidebar .dropdown-toggle::after {
+            margin-left: auto;
+            float: right;
+            margin-top: 8px;
+        }
+
+        .open-btn {
+            font-size: 30px;
+            cursor: pointer;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            color: #333;
+            z-index: 2000;
+            background: transparent;
+            border: none;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .sidebar.active {
+            transform: translateX(0);
+        }
+
+        .content {
+            margin-left: 0;
+            padding: 20px;
+            transition: margin-left 0.3s;
+        }
+
+        .content.sidebar-active {
+            margin-left: 250px;
+        }
+    </style>
+</head>
+<body>
+    <button class="open-btn" id="sidebarToggleButton" type="button" aria-label="Alternar menu lateral" aria-expanded="false">
+        <span aria-hidden="true">&#9776;</span>
+    </button>
+
+    <div class="sidebar bg-dark text-white" id="mySidebar">
+        <div class="sidebar-header text-center py-4">
+            <h4 class="fw-bold">ME Finanças</h4>
+        </div>
+
+        <nav class="nav flex-column">
+            <a href="#" class="nav-link px-4 py-3 hover-effect">
+                Início
+            </a>
+
+            <div class="dropdown">
+                <a href="#" class="nav-link px-4 py-3 dropdown-toggle" data-toggle="dropdown">
+                    Finanças
+                </a>
+                <ul class="dropdown-menu bg-dark">
+                    <li><a class="dropdown-item text-white" href="#">Pagamentos</a></li>
+                    <li><a class="dropdown-item text-white" href="#">Pagamentos Realizados</a></li>
+                    <li><a class="dropdown-item text-white" href="#">Recebimentos</a></li>
+                </ul>
+            </div>
+
+            <div class="dropdown">
+                <a href="#" class="nav-link px-4 py-3 dropdown-toggle" data-toggle="dropdown">
+                    Despesas
+                </a>
+                <ul class="dropdown-menu bg-dark">
+                    <li><a class="dropdown-item text-white" href="#">Gastos</a></li>
+                    <li><a class="dropdown-item text-white" href="#">Histórico</a></li>
+                </ul>
+            </div>
+
+            <div class="dropdown">
+                <a href="#" class="nav-link px-4 py-3 dropdown-toggle" data-toggle="dropdown">
+                    Compras
+                </a>
+                <ul class="dropdown-menu bg-dark">
+                    <li><a class="dropdown-item text-white" href="#">Lista</a></li>
+                    <li><a class="dropdown-item text-white" href="#">Histórico</a></li>
+                </ul>
+            </div>
+
+            <a href="#" class="nav-link px-4 py-3 hover-effect">
+                Dashboard
+            </a>
+        </nav>
+    </div>
+
+    <div class="content" id="mainContent">
+        <div class="container mt-5">
+            <h1>Teste dos Dropdowns da Sidebar</h1>
+            <p>Clique no botão do menu (☰) para abrir a sidebar e teste os dropdowns:</p>
+            <ul>
+                <li><strong>Finanças</strong> - Deve mostrar: Pagamentos, Pagamentos Realizados, Recebimentos</li>
+                <li><strong>Despesas</strong> - Deve mostrar: Gastos, Histórico</li>
+                <li><strong>Compras</strong> - Deve mostrar: Lista, Histórico</li>
+            </ul>
+            <p>Os dropdowns agora funcionam corretamente com JavaScript customizado compatível com Bootstrap 4.</p>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="static/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById("mySidebar");
+            const content = document.getElementById("mainContent");
+            const toggleButton = document.getElementById("sidebarToggleButton");
+            
+            if (!sidebar) return;
+
+            const isOpen = sidebar.classList.toggle("active");
+            
+            if (toggleButton) {
+                toggleButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
+            }
+
+            if (content) {
+                content.classList.toggle("sidebar-active", isOpen);
+            }
+        }
+
+        function initializeSidebarDropdowns() {
+            const sidebarDropdowns = document.querySelectorAll('#mySidebar .dropdown');
+            
+            sidebarDropdowns.forEach(function(dropdown) {
+                const toggle = dropdown.querySelector('.dropdown-toggle');
+                const menu = dropdown.querySelector('.dropdown-menu');
+                
+                if (toggle && menu) {
+                    toggle.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // Fechar outros dropdowns
+                        sidebarDropdowns.forEach(function(otherDropdown) {
+                            if (otherDropdown !== dropdown) {
+                                const otherMenu = otherDropdown.querySelector('.dropdown-menu');
+                                if (otherMenu) {
+                                    otherMenu.style.display = 'none';
+                                }
+                            }
+                        });
+                        
+                        // Toggle do dropdown atual
+                        if (menu.style.display === 'block') {
+                            menu.style.display = 'none';
+                        } else {
+                            menu.style.display = 'block';
+                        }
+                    });
+                }
+            });
+
+            // Fechar dropdowns quando clicar fora
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('#mySidebar .dropdown')) {
+                    sidebarDropdowns.forEach(function(dropdown) {
+                        const menu = dropdown.querySelector('.dropdown-menu');
+                        if (menu) {
+                            menu.style.display = 'none';
+                        }
+                    });
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleButton = document.getElementById('sidebarToggleButton');
+            if (toggleButton) {
+                toggleButton.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    toggleSidebar();
+                });
+            }
+
+            // Inicializar dropdowns da sidebar
+            initializeSidebarDropdowns();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serviço Temporariamente Indisponível - ME Finanças</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='images/site.webmanifest') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(to bottom right, #6a11cb, #2575fc);
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            margin: 0;
+            background-attachment: fixed;
+            font-family: 'Roboto', sans-serif;
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .error-container {
+            max-width: 600px;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 3rem;
+            text-align: center;
+            box-shadow: 0 20px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .error-icon {
+            font-size: 4rem;
+            color: #dc3545;
+            margin-bottom: 1rem;
+        }
+        
+        .error-title {
+            color: #dc3545;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .error-message {
+            color: #6c757d;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .btn-retry {
+            background-color: #6a11cb;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-retry:hover {
+            background-color: #2575fc;
+            transform: translateY(-2px);
+        }
+        
+        .status-info {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-icon">
+            ⚠️
+        </div>
+        
+        <h1 class="error-title h2">Serviço Temporariamente Indisponível</h1>
+        
+        <div class="error-message">
+            <p>Nosso sistema está passando por manutenção ou enfrentando uma sobrecarga temporária.</p>
+            <p>Estamos trabalhando para resolver o problema o mais rápido possível.</p>
+        </div>
+        
+        <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
+            <button onclick="window.location.reload()" class="btn btn-primary btn-retry">
+                🔄 Tentar Novamente
+            </button>
+            <a href="mailto:suporte@mefinancas.com" class="btn btn-outline-secondary">
+                📧 Contatar Suporte
+            </a>
+        </div>
+        
+        <div class="status-info">
+            <strong>Código do Erro:</strong> 503 - Service Unavailable<br>
+            <strong>Horário:</strong> {{ moment().format('DD/MM/YYYY HH:mm:ss') if moment else 'N/A' }}
+        </div>
+        
+        <div class="mt-4">
+            <small class="text-muted">
+                Se o problema persistir, entre em contato conosco através do email de suporte acima.
+            </small>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <script>
+        // Auto-refresh a cada 30 segundos
+        setTimeout(function() {
+            window.location.reload();
+        }, 30000);
+        
+        // Mostrar tempo decorrido
+        let startTime = Date.now();
+        setInterval(function() {
+            let elapsed = Math.floor((Date.now() - startTime) / 1000);
+            let statusInfo = document.querySelector('.status-info');
+            if (statusInfo) {
+                statusInfo.innerHTML = statusInfo.innerHTML.replace(
+                    /Tempo de inatividade:.*?<br>/, 
+                    `Tempo de inatividade: ${elapsed}s<br>`
+                );
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
