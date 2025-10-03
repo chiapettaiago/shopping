@@ -1,6 +1,6 @@
-# Meu Tesouro
+# ME Finanças
 
-Meu Tesouro é um sistema de gerenciamento financeiro pessoal desenvolvido em Python usando Flask e SQLAlchemy. Ele permite que os usuários controlem suas finanças, registrem transações e visualizem gráficos interativos com seus dados financeiros. O sistema também possui uma interface amigável com comandos assistidos por IA para facilitar o controle dos dados.
+ME Finanças é um sistema de gerenciamento financeiro pessoal desenvolvido em Python usando Flask e SQLAlchemy. Ele permite que os usuários controlem suas finanças, registrem transações e visualizem gráficos interativos com seus dados financeiros. O sistema também possui uma interface amigável com comandos assistidos por IA para facilitar o controle dos dados.
 
 ## Funcionalidades
 
@@ -38,7 +38,7 @@ Meu Tesouro é um sistema de gerenciamento financeiro pessoal desenvolvido em Py
 - Docker (para o container Redis)
 
 ## Versão do sistema
-- Sistema de Gerenciamento Financeiro Meu Tesouro com J.A.R.V.I.S (versão 2410.2)
+- Sistema de Gerenciamento Financeiro ME Finanças com J.A.R.V.I.S (versão 2410.2)
 
 ## Recursos esperados na atualização 2410
 
@@ -46,4 +46,3 @@ Meu Tesouro é um sistema de gerenciamento financeiro pessoal desenvolvido em Py
 - Melhor Gerenciamento de Listas de Compras
 - Histórico Mensal
 - Uso do J.A.R.V.I.S em demais telas do sistema
-

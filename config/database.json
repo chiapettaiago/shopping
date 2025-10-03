@@ -1,0 +1,4 @@
+{
+  "engine": "sqlite",
+  "database": "instance/database.db"
+}

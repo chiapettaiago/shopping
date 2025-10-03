@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, make_respo
 from models.models import db, User, ShoppingList, debts, Balance, Diario, Report, Historico
 from controllers.ia_controller import process_user_input
 from sqlalchemy import exc, text, create_engine, desc
+from sqlalchemy.engine import URL
 from sqlalchemy.pool import QueuePool
 from flask_migrate import Migrate
 from datetime import datetime, timedelta, timezone
@@ -16,6 +17,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from itsdangerous import URLSafeTimedSerializer
 import io
 import os
+from pathlib import Path
 import calendar
 import time
 import plotly.graph_objs as go
@@ -34,6 +36,84 @@ context.check_hostname = False
 context.verify_mode = ssl.CERT_NONE
 
 
+BASE_DIR = Path(__file__).resolve().parent
+CONFIG_DIR = BASE_DIR / 'config'
+DB_CONFIG_PATH = CONFIG_DIR / 'database.json'
+FALLBACK_SQLITE_PATH = BASE_DIR / 'tmp' / 'mefinancas.db'
+FALLBACK_SQLITE_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+
+def load_db_config_from_file():
+    """Carrega um dicionário de configuração de banco salvo localmente."""
+    if not DB_CONFIG_PATH.exists():
+        return None
+
+    try:
+        with open(DB_CONFIG_PATH, 'r', encoding='utf-8') as config_file:
+            return json.load(config_file)
+    except (json.JSONDecodeError, OSError):
+        return None
+
+
+def _coerce_port(value):
+    if value in (None, ''):
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def build_database_url_from_dict(config_dict):
+    """Monta uma URL de conexão SQLAlchemy com base no dicionário informado."""
+    if not config_dict:
+        return None
+
+    engine_name = (config_dict.get('engine') or config_dict.get('dialect') or '').lower()
+
+    if engine_name in ('mysql', 'mysql+mysqlconnector'):
+        url_obj = URL.create(
+            drivername='mysql+mysqlconnector',
+            username=config_dict.get('username') or None,
+            password=config_dict.get('password') or None,
+            host=config_dict.get('host') or None,
+            port=_coerce_port(config_dict.get('port')),
+            database=config_dict.get('database') or None
+        )
+        return str(url_obj)
+
+    if engine_name in ('postgres', 'postgresql', 'postgresql+psycopg2'):
+        url_obj = URL.create(
+            drivername='postgresql+psycopg2',
+            username=config_dict.get('username') or None,
+            password=config_dict.get('password') or None,
+            host=config_dict.get('host') or None,
+            port=_coerce_port(config_dict.get('port')),
+            database=config_dict.get('database') or None
+        )
+        return str(url_obj)
+
+    if engine_name in ('sqlite', 'sqlite3'):
+        db_path = config_dict.get('database') or config_dict.get('path')
+        if not db_path:
+            return None
+
+        db_path = Path(db_path)
+        if not db_path.is_absolute():
+            db_path = BASE_DIR / db_path
+        db_path.parent.mkdir(parents=True, exist_ok=True)
+        url_obj = URL.create(drivername='sqlite', database=str(db_path))
+        return str(url_obj)
+
+    return None
+
+
+def persist_db_config(config_payload):
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    with open(DB_CONFIG_PATH, 'w', encoding='utf-8') as config_file:
+        json.dump(config_payload, config_file, indent=2, ensure_ascii=False)
+
+
 def load_env():
     """Carregar variáveis de ambiente do arquivo .env."""
     env_path = '.env'
@@ -49,6 +129,58 @@ def load_env():
 # Carregar variáveis de ambiente
 load_env()
 
+
+def determine_database_uri():
+    db_username = os.getenv('DB_USERNAME')
+    db_password = os.getenv('DB_PASSWORD')
+    db_host = os.getenv('DB_HOST')
+    db_name = os.getenv('DB_NAME')
+    db_port = os.getenv('DB_PORT')
+    database_url = (
+        os.getenv('DATABASE_URL')
+        or os.getenv('CLEARDB_DATABASE_URL')
+        or os.getenv('SQLALCHEMY_DATABASE_URI')
+    )
+
+    if database_url:
+        if database_url.startswith('mysql://'):
+            parsed_db_url = urlparse(database_url)
+            url_obj = URL.create(
+                drivername='mysql+mysqlconnector',
+                username=parsed_db_url.username,
+                password=parsed_db_url.password or None,
+                host=parsed_db_url.hostname,
+                port=parsed_db_url.port,
+                database=parsed_db_url.path.lstrip('/')
+            )
+            return str(url_obj), True, None
+
+        if database_url.startswith(('postgres://', 'postgresql://')):
+            normalized_url = database_url.replace('postgres://', 'postgresql://', 1)
+            return normalized_url, True, None
+
+        return database_url, True, None
+
+    if all([db_username, db_password, db_host, db_name]):
+        url_obj = URL.create(
+            drivername='mysql+mysqlconnector',
+            username=db_username,
+            password=db_password,
+            host=db_host,
+            port=_coerce_port(db_port),
+            database=db_name
+        )
+        return str(url_obj), True, None
+
+    file_config = load_db_config_from_file()
+    file_url = build_database_url_from_dict(file_config)
+    if file_url:
+        return file_url, True, file_config
+
+    fallback_url = URL.create(drivername='sqlite', database=str(FALLBACK_SQLITE_PATH))
+    return str(fallback_url), False, None
+
+
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 
 app = Flask(__name__)
@@ -56,34 +188,10 @@ app = Flask(__name__)
 # Ajusta a chave secreta com prioridade para variáveis de ambiente
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'homium-001')
 
-# Obtém as variáveis de ambiente para construir a URI do banco de dados
-db_username = os.getenv('DB_USERNAME')
-db_password = os.getenv('DB_PASSWORD')
-db_host = os.getenv('DB_HOST')
-db_name = os.getenv('DB_NAME')
-database_url = os.getenv('DATABASE_URL') or os.getenv('CLEARDB_DATABASE_URL') or os.getenv('SQLALCHEMY_DATABASE_URI')
-
-if database_url:
-    if database_url.startswith('mysql://'):
-        parsed_db_url = urlparse(database_url)
-        db_username = parsed_db_url.username
-        db_password = parsed_db_url.password or ''
-        db_host = parsed_db_url.hostname
-        db_name = parsed_db_url.path.lstrip('/')
-        app.config['SQLALCHEMY_DATABASE_URI'] = (
-            f'mysql+mysqlconnector://{db_username}:{db_password}@{db_host}/{db_name}'
-        )
-    elif database_url.startswith(('postgres://', 'postgresql://')):
-        normalized_url = database_url.replace('postgres://', 'postgresql://', 1)
-        app.config['SQLALCHEMY_DATABASE_URI'] = normalized_url
-    else:
-        app.config['SQLALCHEMY_DATABASE_URI'] = database_url
-elif all([db_username, db_password, db_host, db_name]):
-    app.config['SQLALCHEMY_DATABASE_URI'] = (
-        f'mysql+mysqlconnector://{db_username}:{db_password}@{db_host}/{db_name}'
-    )
-else:
-    raise RuntimeError('Database configuration is missing. Check environment variables.')
+database_uri, db_is_configured, file_config = determine_database_uri()
+app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
+app.config['DB_CONFIGURED'] = db_is_configured
+app.config['DB_FILE_CONFIGURATION'] = file_config
 app.config['SQLALCHEMY_POOL_SIZE'] = 5  # Reduzir o tamanho do pool
 app.config['SQLALCHEMY_MAX_OVERFLOW'] = 10  # Limitar conexões extras
 app.config['SQLALCHEMY_POOL_TIMEOUT'] = 30  # Timeout mais curto
@@ -118,14 +226,219 @@ csrf.init_app(app)
 
 app.config['WTF_CSRF_ENABLED'] = False  # Desabilita a proteção global
 
-engine = create_engine(
-    app.config['SQLALCHEMY_DATABASE_URI'],
-    poolclass=QueuePool,
-    pool_size=20,
-    max_overflow=0,
-    pool_recycle=3600,
-    execution_options={'autoflush': False, 'expire_on_commit': False}
-)
+def configure_sqlalchemy_engine(sqlalchemy_uri):
+    return create_engine(
+        sqlalchemy_uri,
+        poolclass=QueuePool,
+        pool_size=20,
+        max_overflow=0,
+        pool_recycle=3600,
+        execution_options={'autoflush': False, 'expire_on_commit': False}
+    )
+
+
+engine = configure_sqlalchemy_engine(app.config['SQLALCHEMY_DATABASE_URI'])
+
+
+def get_db_form_defaults(existing_config=None):
+    defaults = {
+        'engine': 'mysql',
+        'host': '',
+        'port': '',
+        'username': '',
+        'password': '',
+        'database': ''
+    }
+
+    if existing_config:
+        defaults['engine'] = existing_config.get('engine', defaults['engine'])
+        defaults['host'] = existing_config.get('host', defaults['host']) or ''
+        defaults['username'] = existing_config.get('username', defaults['username']) or ''
+        defaults['database'] = existing_config.get('database', defaults['database']) or ''
+
+        port_value = existing_config.get('port')
+        defaults['port'] = str(port_value) if port_value not in (None, '') else ''
+
+        if defaults['engine'] in ('sqlite', 'sqlite3'):
+            defaults['host'] = ''
+            defaults['port'] = ''
+            defaults['username'] = ''
+
+    return defaults
+
+
+def extract_form_payload(form_data, existing_config=None):
+    engine_name = (form_data.get('engine') or 'mysql').lower()
+    payload = {'engine': engine_name}
+
+    if engine_name in ('sqlite', 'sqlite3'):
+        payload['database'] = form_data.get('database', '').strip()
+        return payload
+
+    payload['host'] = form_data.get('host', '').strip()
+    payload['port'] = form_data.get('port', '').strip()
+    payload['username'] = form_data.get('username', '').strip()
+    password_value = form_data.get('password', '')
+
+    if not password_value and existing_config and existing_config.get('engine') == engine_name:
+        password_value = existing_config.get('password', '')
+
+    payload['password'] = password_value
+    payload['database'] = form_data.get('database', '').strip()
+    return payload
+
+
+def validate_db_payload(payload):
+    errors = []
+    engine_name = payload.get('engine')
+
+    if engine_name in ('sqlite', 'sqlite3'):
+        if not payload.get('database'):
+            errors.append('Informe o caminho do arquivo SQLite.')
+        return errors
+
+    if not payload.get('host'):
+        errors.append('O host do banco é obrigatório.')
+    if not payload.get('username'):
+        errors.append('O usuário do banco é obrigatório.')
+    if not payload.get('database'):
+        errors.append('O nome do banco é obrigatório.')
+
+    port_value = payload.get('port')
+    if port_value:
+        try:
+            int(port_value)
+        except (TypeError, ValueError):
+            errors.append('A porta deve ser um número inteiro.')
+
+    return errors
+
+
+def test_database_connection(sqlalchemy_uri):
+    test_engine = None
+    try:
+        test_engine = create_engine(
+            sqlalchemy_uri,
+            poolclass=QueuePool,
+            pool_size=1,
+            max_overflow=0,
+            pool_recycle=3600,
+            execution_options={'autoflush': False, 'expire_on_commit': False}
+        )
+        with test_engine.connect() as connection:
+            connection.execute(text('SELECT 1'))
+        return True, 'Conexão bem-sucedida.'
+    except Exception as error:  # noqa: B902 - queremos capturar qualquer erro de conexão
+        return False, str(error)
+    finally:
+        if test_engine:
+            test_engine.dispose()
+
+
+def apply_database_configuration(sqlalchemy_uri, payload):
+    global engine
+
+    app.config['SQLALCHEMY_DATABASE_URI'] = sqlalchemy_uri
+    app.config['DB_CONFIGURED'] = True
+    app.config['DB_FILE_CONFIGURATION'] = payload
+
+    try:
+        db.session.remove()
+    except Exception:
+        pass
+
+    try:
+        db.engine.dispose()
+    except Exception:
+        pass
+
+    try:
+        engine.dispose()
+    except Exception:
+        pass
+
+    engine = configure_sqlalchemy_engine(sqlalchemy_uri)
+
+
+@app.route('/database/setup', methods=['GET', 'POST'])
+def database_setup():
+    existing_config = load_db_config_from_file() or app.config.get('DB_FILE_CONFIGURATION') or {}
+    form_defaults = get_db_form_defaults(existing_config)
+    test_result = None
+
+    if form_defaults.get('engine') not in ('sqlite', 'sqlite3'):
+        form_defaults['password'] = ''
+
+    if request.method == 'POST':
+        form_payload = extract_form_payload(request.form, existing_config)
+        errors = validate_db_payload(form_payload)
+        action = request.form.get('action', 'test')
+        force_save_requested = request.form.get('force_save') == '1'
+        connection_uri = build_database_url_from_dict(form_payload) if not errors else None
+
+        if errors:
+            for error in errors:
+                flash(error, 'danger')
+        elif not connection_uri:
+            flash('Não foi possível montar a URL de conexão. Verifique os dados informados.', 'danger')
+        else:
+            if action == 'save' and force_save_requested:
+                success = False
+                message = 'A conexão não foi testada. Verifique manualmente assim que possível.'
+                test_result = {'success': False, 'message': message}
+            else:
+                success, message = test_database_connection(connection_uri)
+                test_result = {'success': success, 'message': message}
+
+            if action == 'save':
+                if success:
+                    payload_to_store = dict(form_payload)
+                    if payload_to_store.get('port') in ('', None):
+                        payload_to_store.pop('port', None)
+                    else:
+                        payload_to_store['port'] = int(payload_to_store['port'])
+
+                    persist_db_config(payload_to_store)
+                    apply_database_configuration(connection_uri, payload_to_store)
+                    flash('Configuração salva com sucesso.', 'success')
+                    return redirect(url_for('database_setup'))
+
+                if force_save_requested:
+                    payload_to_store = dict(form_payload)
+                    if payload_to_store.get('port') in ('', None):
+                        payload_to_store.pop('port', None)
+                    else:
+                        payload_to_store['port'] = int(payload_to_store['port'])
+
+                    persist_db_config(payload_to_store)
+                    apply_database_configuration(connection_uri, payload_to_store)
+                    flash(
+                        'Configuração salva, mas a conexão não pôde ser verificada automaticamente. '
+                        'Confira o banco assim que o acesso estiver disponível.',
+                        'warning'
+                    )
+                    return redirect(url_for('database_setup'))
+
+                flash(f'Não foi possível salvar: {message}', 'danger')
+
+        form_defaults = get_db_form_defaults(form_payload)
+        if form_payload.get('engine') not in ('sqlite', 'sqlite3'):
+            form_defaults['password'] = ''
+
+        return render_template(
+            'database_setup.html',
+            form_data=form_defaults,
+            test_result=test_result,
+            db_configured=app.config.get('DB_CONFIGURED', False)
+        )
+
+    return render_template(
+        'database_setup.html',
+        form_data=form_defaults,
+        test_result=test_result,
+        db_configured=app.config.get('DB_CONFIGURED', False)
+    )
+
 
 # Configure a sessão permanente com tempo limite de 5 minutos
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
@@ -146,6 +459,21 @@ serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
+
+@app.before_request
+def ensure_database_configuration():
+    if app.config.get('DB_CONFIGURED', False):
+        return
+
+    endpoint = request.endpoint or ''
+
+    if endpoint in ('database_setup', 'static'):
+        return
+
+    if request.path.startswith('/static/') or request.path.startswith('/favicon'):
+        return
+
+    return redirect(url_for('database_setup'))
 
 # Atualizar o tempo limite da sessão sempre que uma solicitação for recebida
 @app.before_request
@@ -247,7 +575,7 @@ def send_password_reset_email(email, reset_url):
     from email.mime.text import MIMEText
     import ssl
 
-    msg = MIMEText(f'''Redefinição de Senha - Meu Tesouro\n\n
+    msg = MIMEText(f'''Redefinição de Senha - ME Finanças\n\n
     Clique no link: {reset_url}\n\nLink válido por 1 hora.''')
     
     msg['Subject'] = 'Redefinição de Senha'

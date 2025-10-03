@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuração do Banco - ME Finanças</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='images/site.webmanifest') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a4b63, #2575fc);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Roboto', sans-serif;
+            color: #1f2933;
+            padding: 1.5rem;
+        }
+        .card {
+            border: none;
+            border-radius: 1rem;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.18);
+            max-width: 720px;
+            width: 100%;
+        }
+        .card-header {
+            border-bottom: none;
+            background: transparent;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #1f2933;
+        }
+        .btn-primary {
+            background-color: #1a4b63;
+            border-color: #1a4b63;
+        }
+        .btn-primary:hover {
+            background-color: #163c50;
+            border-color: #163c50;
+        }
+        .badge-status {
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="card bg-white p-4">
+        <div class="card-header text-center">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo ME Finanças" width="80" class="mb-3">
+            <h1 class="h3 mb-2">Configurar conexão com o banco de dados</h1>
+            <p class="mb-0 text-muted">Informe os dados de acesso para que o ME Finanças possa armazenar suas informações.</p>
+            {% if db_configured %}
+                <span class="badge bg-success badge-status mt-3">Configuração ativa</span>
+            {% else %}
+                <span class="badge bg-warning text-dark badge-status mt-3">Nenhum banco configurado</span>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }}" role="alert">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% if test_result %}
+                <div class="alert alert-{{ 'success' if test_result.success else 'danger' }}" role="alert">
+                    {{ test_result.message }}
+                </div>
+            {% endif %}
+
+            <form method="POST" class="row g-3">
+                <input type="hidden" name="force_save" id="forceSave" value="0">
+                <div class="col-12">
+                    <label class="form-label" for="engine">Tipo de banco</label>
+                    <select class="form-select" id="engine" name="engine" onchange="toggleFields(this.value)">
+                        <option value="mysql" {% if form_data.engine == 'mysql' %}selected{% endif %}>MySQL / MariaDB</option>
+                        <option value="postgresql" {% if form_data.engine in ['postgresql', 'postgres'] %}selected{% endif %}>PostgreSQL</option>
+                        <option value="sqlite" {% if form_data.engine in ['sqlite', 'sqlite3'] %}selected{% endif %}>SQLite</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6" data-db-field="host">
+                    <label class="form-label" for="host">Host</label>
+                    <input type="text" class="form-control" id="host" name="host" value="{{ form_data.host }}" placeholder="ex: localhost">
+                </div>
+                <div class="col-md-6" data-db-field="port">
+                    <label class="form-label" for="port">Porta</label>
+                    <input type="text" class="form-control" id="port" name="port" value="{{ form_data.port }}" placeholder="ex: 3306">
+                </div>
+
+                <div class="col-md-6" data-db-field="username">
+                    <label class="form-label" for="username">Usuário</label>
+                    <input type="text" class="form-control" id="username" name="username" value="{{ form_data.username }}" placeholder="Nome do usuário">
+                </div>
+                <div class="col-md-6" data-db-field="password">
+                    <label class="form-label" for="password">Senha</label>
+                    <input type="password" class="form-control" id="password" name="password" value="{{ form_data.password }}" placeholder="Senha (deixe em branco para manter a atual)">
+                </div>
+
+                <div class="col-12" data-db-field="database">
+                    <label class="form-label" for="database" id="databaseLabelText">Nome do banco / Caminho</label>
+                    <input type="text" class="form-control" id="database" name="database" value="{{ form_data.database }}" placeholder="Nome do banco de dados">
+                </div>
+
+                {% if test_result and not test_result.success %}
+                    <div class="col-12">
+                        <div class="alert alert-warning" role="alert">
+                            Não foi possível validar a conexão automaticamente. Se tiver certeza das credenciais,
+                            é possível salvar assim mesmo e testar novamente mais tarde.
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="col-12 d-flex flex-wrap gap-2 mt-4">
+                    <button type="submit" name="action" value="test" class="btn btn-outline-primary" onclick="document.getElementById('forceSave').value = '0'">Testar conexão</button>
+                    <button type="submit" name="action" value="save" class="btn btn-primary" onclick="document.getElementById('forceSave').value = '0'">Salvar configuração</button>
+                    {% if test_result and not test_result.success %}
+                        <button type="submit" name="action" value="save" class="btn btn-warning" onclick="document.getElementById('forceSave').value = '1'">Salvar mesmo assim</button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function toggleFields(engine) {
+            const relationalFields = ['host', 'port', 'username', 'password'];
+            relationalFields.forEach(function(field) {
+                const fieldEl = document.querySelector('[data-db-field="' + field + '"]');
+                if (!fieldEl) return;
+                fieldEl.style.display = (engine === 'sqlite') ? 'none' : 'block';
+            });
+
+            const databaseInput = document.getElementById('database');
+            const databaseLabel = document.getElementById('databaseLabelText');
+            if (engine === 'sqlite') {
+                databaseInput.placeholder = 'Caminho do arquivo (ex: data/mefinancas.db)';
+                databaseLabel.textContent = 'Caminho do arquivo SQLite';
+            } else {
+                databaseInput.placeholder = 'Nome do banco de dados';
+                databaseLabel.textContent = 'Nome do banco';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const engineSelect = document.getElementById('engine');
+            toggleFields(engineSelect.value);
+        });
+    </script>
+</body>
+</html>

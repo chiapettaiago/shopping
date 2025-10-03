@@ -55,7 +55,7 @@ def process_user_input(user_input, saldo, gastos, por_dia, usuario, balance, div
     gastos_nao_processados_fmt = f"R$ {gastos_nao_processados:.2f}"
 
     # Criação do contexto de forma mais estruturada
-    context_info = f"""Você é J.A.R.V.I.S., um assistente financeiro pessoal do sistema Meu Tesouro.
+    context_info = f"""Você é J.A.R.V.I.S., um assistente financeiro pessoal do sistema ME Finanças.
 
 Informações financeiras atuais:
 - Saldo disponível: {saldo_fmt}
