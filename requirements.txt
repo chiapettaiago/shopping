@@ -2,7 +2,7 @@ flask
 flask_sqlalchemy
 flask_migrate
 flask_login
-mysql_connector_python
+mysql-connector-python
 google-generativeai
 reportlab
 plotly
@@ -11,3 +11,8 @@ flask-mail
 redis
 gunicorn
 psycopg2-binary
+stripe
+Authlib
+PyMySQL
+python-dotenv
+certifi

@@ -65,6 +65,12 @@ STACKHERO_DEFAULT_DB_URL = (
     'mysql://root:TOS5UWYaAvq4HfCoBGaIVEmN7sBK0ACD@'
     '59zo8a.stackhero-network.com:4791/root?useSSL=true&requireSSL=true'
 )
+STACKHERO_URL_ENV_VARS = (
+    'STACKHERO_DATABASE_URL',
+    'STACKHERO_DB_URL',
+    'STACKHERO_MYSQL_URL',
+    'STACKHERO_MYSQL_DATABASE_URL',
+)
 
 
 def _is_legacy_db_target(value) -> bool:
@@ -103,22 +109,48 @@ db_host = os.getenv('DB_HOST')
 db_name = os.getenv('DB_NAME')
 
 # Configuração de banco de dados com fallback para SQLite
-database_url = os.getenv('DATABASE_URL')
+running_on_heroku = bool(os.getenv('DYNO'))
+database_url = os.getenv('DATABASE_URL', '').strip()
 
-# Se não houver DATABASE_URL, usar SQLite como fallback
-if not database_url:
-    # Usar SQLite local para desenvolvimento
-    sqlite_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance', 'database.db')
-    database_url = f'sqlite:///{sqlite_path}'
-    app.logger.info(f"Usando SQLite como banco de dados: {sqlite_path}")
-else:
+if database_url:
     app.logger.info("Usando DATABASE_URL configurada")
+else:
+    database_url = None
 
 # Verificar URLs legadas (manter para compatibilidade)
 if database_url and _is_legacy_db_target(database_url):
-    app.logger.warning('Ignorando host legado meutesouro.site; usando SQLite.')
+    app.logger.warning('Ignorando host legado meutesouro.site; procurando alternativa.')
+    database_url = None
+
+def _get_stackhero_database_url() -> str | None:
+    for env_name in STACKHERO_URL_ENV_VARS:
+        value = os.getenv(env_name)
+        if value:
+            return value.strip()
+    if running_on_heroku:
+        return STACKHERO_DEFAULT_DB_URL
+    return None
+
+# Se DATABASE_URL não estiver definido, tentar montar via credenciais explícitas
+if not database_url and all([db_username, db_password, db_host, db_name]):
+    if _is_legacy_db_target(db_host):
+        app.logger.warning('Host de banco legado detectado; usando Stackhero como fallback.')
+        database_url = _get_stackhero_database_url()
+    else:
+        database_url = f'mysql://{db_username}:{db_password}@{db_host}/{db_name}'
+
+# Fallback adicional para Stackhero
+if not database_url:
+    stackhero_url = _get_stackhero_database_url()
+    if stackhero_url and not _is_legacy_db_target(stackhero_url):
+        database_url = stackhero_url
+        app.logger.info('Usando Stackhero como banco de dados padrão.')
+
+# Último recurso: usar SQLite local
+if not database_url:
     sqlite_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance', 'database.db')
     database_url = f'sqlite:///{sqlite_path}'
+    app.logger.info(f"Usando SQLite como banco de dados: {sqlite_path}")
 
 engine_connect_args = {}
 
