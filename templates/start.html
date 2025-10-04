@@ -146,21 +146,18 @@
                         <a href="{{ url_for('dashboard') }}" class="btn btn-primary m-2">
                             <i class="fa-solid fa-chart-line"></i> Dashboard
                         </a>
+                        <a href="{{ url_for('balance') }}" class="btn btn-primary m-2">
+                            <i class="fa-solid fa-money-bill-wave"></i> Recebimentos
+                        </a>
+                        <a href="{{ url_for('debitos') }}" class="btn btn-primary m-2">
+                            <i class="fa-solid fa-money-check"></i> Pagamentos
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-                    <a href="{{ url_for('balance') }}" class="btn btn-primary btn-large m-2">
-                        <i class="fa-solid fa-money-bill-wave"></i> Recebimentos
-                    </a>
-                    <a href="{{ url_for('debitos') }}" class="btn btn-primary btn-large m-2">
-                        <i class="fa-solid fa-money-check"></i> Pagamentos
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
+    
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="{{ url_for('static', filename='fonts/js/all.js') }}" crossorigin="anonymous"></script>
 </body>

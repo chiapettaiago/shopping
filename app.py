@@ -4,7 +4,7 @@ from controllers.ia_controller import process_user_input
 from sqlalchemy import exc, text, desc, or_
 from sqlalchemy.pool import QueuePool
 from flask_migrate import Migrate
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, date
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf import CSRFProtect
@@ -335,25 +335,27 @@ serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 def load_user(user_id):
     return db.session.get(User, int(user_id))
 
-# Atualizar o tempo limite da sessão sempre que uma solicitação for recebida
 @app.before_request
 def update_session_timeout():
+    # Mantém a sessão viva durante a navegação
     session.modified = True
     session.permanent = True
 
-# Verificar se o tempo limite da sessão expirou e fazer logout do usuário, se necessário
 @app.before_request
 def check_session_timeout():
-    if 'last_activity' in session:
-        last_activity = session.get('last_activity')
-        now = datetime.now().astimezone(last_activity.tzinfo)
-        if (now - last_activity).total_seconds() > 600:  # 600 segundos = 10 minutos
-            # Fazer logout do usuário
-            logout_user()
-            # Redirecionar para a página de login ou para onde desejar
-            return redirect(url_for('auth'))
-    # Atualizar o registro de última atividade
-    session['last_activity'] = datetime.now(timezone.utc)
+    # Usa timestamp (int) para evitar problemas de serialização na sessão
+    try:
+        now_ts = int(time.time())
+        last_ts = session.get('last_activity_ts')
+        if last_ts is not None:
+            if (now_ts - int(last_ts)) > 600:  # 600s = 10 minutos
+                logout_user()
+                return redirect(url_for('auth'))
+        session['last_activity_ts'] = now_ts
+    except Exception as e:
+        # Em caso de qualquer problema com a sessão, reseta o marcador e segue
+        app.logger.warning(f'Falha ao verificar timeout de sessão: {e}')
+        session['last_activity_ts'] = int(time.time())
 
 def subscription_required(f):
     @wraps(f)
@@ -457,6 +459,34 @@ def before_request():
 def calcular_saldo(balance_total, debts_total, gastos_total):
     saldo_atualizado = balance_total - debts_total - gastos_total
     return round(saldo_atualizado, 2)
+
+# Utilitários de parsing seguros para dados vindos de formulários HTML
+def _parse_float(value: str, default: float = 0.0) -> float:
+    try:
+        # aceita vírgula decimal (pt-BR)
+        return float(str(value).replace(',', '.'))
+    except Exception:
+        return default
+
+def _parse_int(value: str, default: int = 0) -> int:
+    try:
+        return int(str(value))
+    except Exception:
+        try:
+            return int(float(str(value).replace(',', '.')))
+        except Exception:
+            return default
+
+def _parse_date(value: str) -> datetime | None:
+    # Aceita formatos comuns de inputs HTML e pt-BR
+    if isinstance(value, (datetime, date)):
+        return value if isinstance(value, datetime) else datetime.combine(value, datetime.min.time())
+    for fmt in ('%Y-%m-%d', '%d/%m/%Y'):
+        try:
+            return datetime.strptime(str(value), fmt)
+        except Exception:
+            continue
+    return None
 
 def send_password_reset_email(email, reset_url):
     import smtplib
@@ -1135,18 +1165,36 @@ def database_setup():
 @cache_route(timeout=300)
 @login_required
 def add():
-    name = request.form['name']
-    quantity = request.form['quantity']
-    price = request.form['price']
-    category = request.form['category']
-    current_time = datetime.now().date()
+    try:
+        name = (request.form.get('name') or '').strip()
+        quantity = _parse_int(request.form.get('quantity'))
+        price = _parse_float(request.form.get('price'))
+        category = (request.form.get('category') or '').strip()
+        current_time = datetime.now().date()
 
-    # Adicione validações e formatação necessárias aqui
+        if not name or not category:
+            flash('Preencha todos os campos obrigatórios.', 'danger')
+            return redirect(url_for('index'))
 
-    new_item = ShoppingList(name=name, quantity=quantity, price=price, category=category, status=0, date=current_time, username=current_user.username)
-    db.session.add(new_item)
-    db.session.commit()
-    
+        new_item = ShoppingList(
+            name=name,
+            quantity=quantity,
+            price=price,
+            category=category,
+            status=0,
+            date=current_time,
+            username=current_user.username
+        )
+        db.session.add(new_item)
+        db.session.commit()
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Erro ao inserir item na lista de compras: {e}')
+        flash('Erro ao salvar item. Verifique os dados e tente novamente.', 'danger')
+    finally:
+        db.session.remove()
+
     return redirect(url_for('index'))
 
 @app.route('/debts', methods=['GET','POST'])
@@ -1325,36 +1373,64 @@ def start():
 @cache_route(timeout=300)
 @login_required
 def add_balance():
-    name = request.form['name']
-    value = request.form['value']
-    data = request.form['data']
+    try:
+        name = (request.form.get('name') or '').strip()
+        value = _parse_float(request.form.get('value'))
+        data = _parse_date(request.form.get('data'))
 
-    # Adicione validações e formatação necessárias aqui
+        if not name or data is None:
+            flash('Preencha a descrição e a data corretamente.', 'danger')
+            return redirect(url_for('balance'))
 
-    new_item = Balance(name=name, value=value, status=0, date=data, username=current_user.username)
-    db.session.add(new_item)
-    db.session.commit()
-    db.session.remove()
-    return redirect(url_for('debitos'))
+        new_item = Balance(
+            name=name,
+            value=value,
+            status=0,
+            date=data,
+            username=current_user.username
+        )
+        db.session.add(new_item)
+        db.session.commit()
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Erro ao inserir recebimento: {e}')
+        flash('Erro ao salvar recebimento. Verifique os dados e tente novamente.', 'danger')
+    finally:
+        db.session.remove()
+
+    return redirect(url_for('balance'))
 
 # Rota para adicionar um gasto
 @app.route('/add_diario', methods=['POST'])
 @cache_route(timeout=300)
 def add_daily():
-    descricao = request.form['descricao']
-    valor = request.form['valor']
-    data_gasto = request.form['data_gasto']
-    
-    gasto = Diario(
-        name=descricao,
-        value=valor,
-        date=data_gasto,
-        status=0, 
-        username=current_user.username
-    )
-    
-    db.session.add(gasto)
-    db.session.commit()
+    try:
+        descricao = (request.form.get('descricao') or '').strip()
+        valor = _parse_float(request.form.get('valor'))
+        data_gasto = _parse_date(request.form.get('data_gasto'))
+
+        if not descricao or data_gasto is None:
+            flash('Preencha a descrição e a data corretamente.', 'danger')
+            return redirect(url_for('listar_gastos'))
+
+        gasto = Diario(
+            name=descricao,
+            value=valor,
+            date=data_gasto,
+            status=0,
+            username=current_user.username
+        )
+
+        db.session.add(gasto)
+        db.session.commit()
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Erro ao inserir gasto diário: {e}')
+        flash('Erro ao salvar gasto. Verifique os dados e tente novamente.', 'danger')
+    finally:
+        db.session.remove()
     
     return redirect(url_for('listar_gastos'))
 
@@ -1432,23 +1508,33 @@ def sitemap():
 @app.route('/report', methods=['POST'])
 def report():
     if request.method == 'POST':
-        email = request.form['reportEmail']
-        description = request.form['reportDescription']
-        attachment = request.files['reportAttachment']
+        try:
+            email = (request.form.get('reportEmail') or '').strip()
+            description = (request.form.get('reportDescription') or '').strip()
+            attachment = request.files.get('reportAttachment')
 
-        # Salvar o arquivo anexo
-        attachment_path = None
-        if attachment:
-            filename = attachment.filename
-            attachment_path = os.path.join('uploads', filename)
-            attachment.save(attachment_path)
+            # Salvar o arquivo anexo (se houver)
+            attachment_path = None
+            if attachment and attachment.filename:
+                from werkzeug.utils import secure_filename
+                uploads_dir = os.path.join(os.getcwd(), 'uploads')
+                os.makedirs(uploads_dir, exist_ok=True)
+                filename = secure_filename(attachment.filename)
+                attachment_path = os.path.join(uploads_dir, filename)
+                attachment.save(attachment_path)
 
-        # Inserir os dados no banco de dados
-        new_report = Report(email=email, description=description, attachment=attachment_path)
-        db.session.add(new_report)
-        db.session.commit()
+            # Inserir os dados no banco de dados
+            new_report = Report(email=email, description=description, attachment=attachment_path)
+            db.session.add(new_report)
+            db.session.commit()
 
-        flash('Problema reportado com sucesso!', 'success')
+            flash('Problema reportado com sucesso!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f'Erro ao registrar reporte: {e}')
+            flash('Erro ao enviar o reporte. Tente novamente.', 'danger')
+        finally:
+            db.session.remove()
         return redirect(url_for('flash_report'))
 
 # Rota para computar um gasto
@@ -1466,17 +1552,34 @@ def computar_gasto(id):
 @cache_route(timeout=300)
 @login_required
 def add_debts():
-    name = request.form['name']
-    maturity = request.form['maturity']
-    value = request.form['value']
-    current_time = datetime.now().date()
+    try:
+        name = (request.form.get('name') or '').strip()
+        maturity_raw = request.form.get('maturity')
+        value = _parse_float(request.form.get('value'))
+        current_time = datetime.now().date()
 
-    # Adicione validações e formatação necessárias aqui
+        maturity_dt = _parse_date(maturity_raw)
+        if not name or maturity_dt is None:
+            flash('Preencha o nome e o vencimento corretamente.', 'danger')
+            return redirect(url_for('debitos'))
 
-    new_item = debts(name=name, maturity=maturity, value=value, date=current_time, status=0, username=current_user.username)
-    db.session.add(new_item)
-    db.session.commit()
-    db.session.remove()
+        new_item = debts(
+            name=name,
+            maturity=maturity_dt,
+            value=value,
+            date=current_time,
+            status=0,
+            username=current_user.username
+        )
+        db.session.add(new_item)
+        db.session.commit()
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Erro ao inserir dívida: {e}')
+        flash('Erro ao salvar pagamento. Verifique os dados e tente novamente.', 'danger')
+    finally:
+        db.session.remove()
     return redirect(url_for('debitos'))
 
 # Rota para excluir um item
@@ -1507,12 +1610,18 @@ def delete_debts(id):
 def edit(id):
     item_to_edit = ShoppingList.query.get(id)
     if request.method == 'POST':
-        item_to_edit.name = request.form['name']
-        item_to_edit.quantity = request.form['quantity']
-        item_to_edit.category = request.form['category']
-        item_to_edit.price = request.form['price']
-        db.session.commit()
-        db.session.remove()
+        try:
+            item_to_edit.name = (request.form.get('name') or '').strip()
+            item_to_edit.quantity = _parse_int(request.form.get('quantity'))
+            item_to_edit.category = (request.form.get('category') or '').strip()
+            item_to_edit.price = _parse_float(request.form.get('price'))
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f'Erro ao editar item da lista: {e}')
+            flash('Erro ao editar item. Verifique os dados e tente novamente.', 'danger')
+        finally:
+            db.session.remove()
         return redirect(url_for('index'))
     return render_template('edit.html', item=item_to_edit)
 
@@ -1522,11 +1631,17 @@ def edit(id):
 def edit_debts(id):
     item_to_edit = debts.query.get(id)
     if request.method == 'POST':
-        item_to_edit.name = request.form['name']
-        item_to_edit.maturity = request.form['maturity']
-        item_to_edit.value = request.form['value']
-        db.session.commit()
-        db.session.remove()
+        try:
+            item_to_edit.name = (request.form.get('name') or '').strip()
+            item_to_edit.maturity = _parse_date(request.form.get('maturity'))
+            item_to_edit.value = _parse_float(request.form.get('value'))
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f'Erro ao editar dívida: {e}')
+            flash('Erro ao editar pagamento. Verifique os dados e tente novamente.', 'danger')
+        finally:
+            db.session.remove()
         return redirect(url_for('debitos'))
     return render_template('edit.html', item=item_to_edit)
 

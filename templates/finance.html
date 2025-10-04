@@ -169,7 +169,7 @@
                         </div>
                         <div class="form-group">
                             <label for="editMaturity{{ item.id }}">Vencimento:</label>
-                            <input type="date" class="form-control" id="editMaturity{{ item.id }}" name="maturity" value="{{ item.maturity }}" required>
+                            <input type="date" class="form-control" id="editMaturity{{ item.id }}" name="maturity" value="{{ item.maturity.strftime('%Y-%m-%d') }}" required>
                         </div>
                         <div class="form-group">
                             <label for="editValue{{ item.id }}">Valor:</label>
