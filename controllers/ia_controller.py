@@ -7,7 +7,10 @@ def obter_data_atual():
     return datetime.now().strftime("%d/%m/%Y")
 
 # Configuração do Gemini usando variável de ambiente
-genai.configure(api_key=os.getenv('AIzaSyAY4OKe9VNjUgNHgchSA7Um5c7vqR2dxSY'))
+# Lê de GEMINI_API_KEY ou GOOGLE_API_KEY e só configura se existir
+_GEMINI_API_KEY = os.getenv('GEMINI_API_KEY') or os.getenv('GOOGLE_API_KEY')
+if _GEMINI_API_KEY:
+    genai.configure(api_key=_GEMINI_API_KEY)
 
 # Configuração otimizada do modelo
 generation_config = {
@@ -21,6 +24,9 @@ generation_config = {
 # Cache do modelo para evitar recriação
 @lru_cache(maxsize=1)
 def get_model():
+    # Se a API key não estiver configurada, não tenta instanciar o modelo
+    if not _GEMINI_API_KEY:
+        return None
     return genai.GenerativeModel(
         model_name="gemma-3-27b-it",  # Modelo mais estável
         generation_config=generation_config
@@ -29,6 +35,11 @@ def get_model():
 def get_gemini_response(user_input, context_info):
     try:
         model = get_model()
+        if model is None:
+            return (
+                "Assistente indisponível no momento. Configure a variável "
+                "de ambiente GEMINI_API_KEY para habilitar as respostas."
+            )
         # Inicia uma nova sessão a cada chamada para evitar problemas de contexto
         chat = model.start_chat(history=[])
         
@@ -37,8 +48,11 @@ def get_gemini_response(user_input, context_info):
         
         response = chat.send_message(full_prompt)
         return response.text.strip()
-    except Exception as e:
-        return f"Desculpe, ocorreu um erro ao processar sua solicitação. Por favor, tente novamente mais tarde."
+    except Exception:
+        return (
+            "Desculpe, ocorreu um erro ao processar sua solicitação. "
+            "Por favor, tente novamente mais tarde."
+        )
 
 def process_user_input(user_input, saldo, gastos, por_dia, usuario, balance, dividas, gastos_nao_processados, debts_list, debts_values):
     if not user_input or not isinstance(user_input, str):

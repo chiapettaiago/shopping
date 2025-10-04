@@ -123,12 +123,12 @@ if database_url and _is_legacy_db_target(database_url):
     database_url = None
 
 def _get_stackhero_database_url() -> str | None:
+    # Usa apenas valores explícitos das variáveis de ambiente.
+    # Não faz fallback para URLs hardcoded em produção (Heroku).
     for env_name in STACKHERO_URL_ENV_VARS:
         value = os.getenv(env_name)
         if value:
             return value.strip()
-    if running_on_heroku:
-        return STACKHERO_DEFAULT_DB_URL
     return None
 
 # Se DATABASE_URL não estiver definido, tentar montar via credenciais explícitas
@@ -374,9 +374,53 @@ def db_required(f):
                 db.session.execute(text("SELECT 1"))
             return f(*args, **kwargs)
         except Exception as e:
-            app.logger.warning(f"Banco indisponível: {e}")
+            # Log detalhado do erro para diagnóstico em produção
+            import traceback
+            uri = app.config.get('SQLALCHEMY_DATABASE_URI', 'N/A')
+            # Evitar logar senha
+            safe_uri = uri
+            if '://' in uri:
+                try:
+                    parsed = urlparse(uri)
+                    redacted_netloc = parsed.netloc
+                    if '@' in parsed.netloc:
+                        cred, host = parsed.netloc.split('@', 1)
+                        if ':' in cred:
+                            user_part = cred.split(':', 1)[0]
+                        else:
+                            user_part = cred
+                        redacted_netloc = f"{user_part}:***@{host}"
+                    safe_uri = parsed._replace(netloc=redacted_netloc).geturl()
+                except Exception:
+                    pass
+            app.logger.error("[db_required] Falha ao verificar conexão com o banco.")
+            app.logger.error(f"URI: {safe_uri}")
+            app.logger.error(f"Tipo: {type(e).__name__} - {e}")
+            app.logger.debug(traceback.format_exc())
+            # Em vez de bloquear toda a rota, apresentar página amigável
             return render_template('db_unavailable.html'), 503
     return decorated_function
+
+# Rota de health check simples (útil para Heroku / monitoramento)
+@app.route('/healthz')
+def healthz():
+    from sqlalchemy import text as _text
+    status = 'ok'
+    db_ok = True
+    error = None
+    try:
+        db.session.execute(_text('SELECT 1'))
+    except Exception as e:
+        db_ok = False
+        status = 'degraded'
+        error = f"{type(e).__name__}: {e}"[:300]
+    return jsonify({
+        'status': status,
+        'database': db_ok,
+        'time': datetime.utcnow().isoformat() + 'Z',
+        'app_version': os.getenv('RELEASE_VERSION', 'local'),
+        'error': error
+    }), (200 if db_ok else 503)
 
 def get_user_data(user_id):
     user_data = db.session.query(User).filter_by(id=user_id).first()
@@ -634,7 +678,6 @@ def handle_checkout_session(session):
 
 
 @app.route('/auth', methods=['GET', 'POST'])
-@db_required
 def auth():
     if request.method == 'POST':
         form_action = request.form.get('action', 'login')
@@ -1180,11 +1223,7 @@ def balance():
     db.session.remove()
     return render_template('balance.html', balance_list=balance_list, total_price=total_price_formatado, username=current_user.full_name)
 
-@app.route('/delete_history', methods=['POST'])
-def delete_history():
-    # Aqui você limpa o histórico de chat, pode ser no banco de dados ou em sessão
-    session.pop('chat_history', None)
-    return redirect(url_for('assistente_ia'))
+## Rota unificada de exclusão de histórico está definida acima com login_required
 
 @app.route('/ia', methods=['GET', 'POST'])
 @login_required
@@ -1358,19 +1397,18 @@ def flash_report():
 
 @app.route('/sitemap.xml')
 def sitemap():
-    # Consultar as URLs das tabelas relevantes
+    # Base dinâmica conforme domínio atual
+    base = request.host_url.rstrip('/')
     pages = [
-        {'url': 'https://meutesouro.site/', 'lastmod': datetime.utcnow(), 'changefreq': 'daily', 'priority': 1.0},
-        {'url': 'https://meutesouro.site/about', 'lastmod': datetime.utcnow(), 'changefreq': 'daily', 'priority': 1.0},
-        {'url': 'https://meutesouro.site/balance', 'lastmod': datetime.utcnow(), 'changefreq': 'daily', 'priority': 1.0},
-        {'url': 'https://meutesouro.site/debts_history', 'lastmod': datetime.utcnow(), 'changefreq': 'daily', 'priority': 1.0},
-        {'url': 'https://meutesouro.site/debts', 'lastmod': datetime.utcnow(), 'changefreq': 'daily', 'priority': 1.0},
-        {'url': 'https://meutesouro.site/history', 'lastmod': datetime.utcnow(), 'changefreq': 'daily', 'priority': 1.0},
-        {'url': 'https://meutesouro.site/ia', 'lastmod': datetime.utcnow(), 'changefreq': 'daily', 'priority': 1.0},
-        {'url': 'https://meutesouro.site/dashboard', 'lastmod': datetime.utcnow(), 'changefreq': 'daily', 'priority': 1.0},
-        {'url': 'https://meutesouro.site/account', 'lastmod': datetime.utcnow(), 'changefreq': 'daily', 'priority': 1.0},
-        
-        # Adicione URLs relevantes das tabelas aqui
+        {'path': url_for('index'), 'lastmod': datetime.utcnow(), 'changefreq': 'daily', 'priority': 1.0},
+        {'path': url_for('about'), 'lastmod': datetime.utcnow(), 'changefreq': 'daily', 'priority': 0.8},
+        {'path': url_for('balance'), 'lastmod': datetime.utcnow(), 'changefreq': 'daily', 'priority': 0.8},
+        {'path': url_for('debts_history'), 'lastmod': datetime.utcnow(), 'changefreq': 'daily', 'priority': 0.7},
+        {'path': url_for('debitos'), 'lastmod': datetime.utcnow(), 'changefreq': 'daily', 'priority': 0.7},
+        {'path': url_for('history'), 'lastmod': datetime.utcnow(), 'changefreq': 'daily', 'priority': 0.7},
+        {'path': url_for('assistente_ia'), 'lastmod': datetime.utcnow(), 'changefreq': 'daily', 'priority': 0.6},
+        {'path': url_for('dashboard'), 'lastmod': datetime.utcnow(), 'changefreq': 'daily', 'priority': 0.8},
+        {'path': url_for('account'), 'lastmod': datetime.utcnow(), 'changefreq': 'daily', 'priority': 0.6},
     ]
 
     # Criar o conteúdo do sitemap XML
@@ -1378,8 +1416,9 @@ def sitemap():
     sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
 
     for page in pages:
+        loc = f"{base}{page['path']}"
         sitemap_xml += '  <url>\n'
-        sitemap_xml += f'    <loc>{page["url"]}</loc>\n'
+        sitemap_xml += f'    <loc>{loc}</loc>\n'
         sitemap_xml += f'    <lastmod>{page["lastmod"].strftime("%Y-%m-%d")}</lastmod>\n'
         sitemap_xml += f'    <changefreq>{page["changefreq"]}</changefreq>\n'
         sitemap_xml += f'    <priority>{page["priority"]}</priority>\n'
@@ -1740,7 +1779,7 @@ if __name__ == '__main__':
     app.run(
         debug=False,  # Desativar debug em produção
         host='0.0.0.0',
-        port=3000,
+        port=int(os.getenv('PORT', 3000)),
         threaded=True,
         processes=1  # Usar apenas 1 processo
     )
